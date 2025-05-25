@@ -1,16 +1,19 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 dotenv.config();
 
-export const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: Number(process.env.MAIL_PORT),
-  secure: true, // true para el puerto 465
+  secure: true,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
+// Opción 1: si tienes un MAIL_FROM definido en .env
+const MAIL_FROM = process.env.EMAIL_USER;
 
-export const MAIL_FROM = process.env.MAIL_FROM || process.env.MAIL_USER;
+export default transporter;
+export { MAIL_FROM };

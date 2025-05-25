@@ -8,13 +8,13 @@ import Agent from '../Dto/AgentsDto';
 
 class usuarioServi {
     
-    static async register(usuario: User) {
-        usuario.password = await generateHash(usuario.password);
-        return await UserRepository.createUsuario(usuario);
+    static async register(user: User) {
+        user.password = await generateHash(user.password);
+        return await UserRepository.createUser(user);
     }
 
     static async login(login: Login) {
-        return await UserRepository.buscarUsuario(login);
+        return await UserRepository.searchUser(login);
     }
 
    static async registerAgent(agent: Agent) {

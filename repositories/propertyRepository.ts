@@ -1,104 +1,142 @@
 import db from '../config/config-db';
 
+interface SearchFilters {
+  socioeconomic_stratum?: number;
+  neighborhood?: string;
+  city?: string;
+  price_min?: number;
+  price_max?: number;
+  property_type_id?: number;
+  operation_type?: string;
+  bedrooms_min?: number;
+  bedrooms_max?: number;
+  bathrooms_min?: number;
+  bathrooms_max?: number;
+  parking_spaces_min?: number;
+  built_area_min?: number;
+  built_area_max?: number;
+  total_area_min?: number;
+  total_area_max?: number;
+  features?: string[];
+  order?: string;
+}
+
 export class PropertyRepository {
-  // Crear propiedad
+  // Create property
   static async create(property: any) {
-    const sql = `CALL CrearPropiedad(?, ?, ?, ?, ?, ?)`;
+    const sql = `CALL CreateProperty(?, ?, ?, ?, ?, ?)`;
     const values = [
-      property.titulo,
-      property.descripcion,
-      property.precio,
-      property.ubicacion,
-      property.tipo, // venta/alquiler
-      property.usuario_id
+      property.title,
+      property.description,
+      property.price,
+      property.location,
+      property.type,
+      property.user_id
     ];
     const [rows]: any = await db.execute(sql, values);
     return rows;
   }
 
-  // Búsqueda avanzada
-  static async buscarPropiedadesAvanzado(filtros: any): Promise<any[]> {
-  let sql = `SELECT * FROM Propiedad WHERE 1=1`;
-  const values: any[] = [];
+  // Advanced search
+  static async searchAdvanced(filters: SearchFilters): Promise<any[]> {
+    let sql = ` SELECT * FROM property WHERE 1=1 `;
+    const values: any[] = [];
 
-  if (filtros.estrato) {
-    sql += ` AND estrato = ?`;
-    values.push(Number(filtros.estrato));
+    if (filters.socioeconomic_stratum) {
+      sql +=  ` AND socioeconomic_stratum = ? `;
+      values.push(filters.socioeconomic_stratum);
+    }
+
+    if (filters.city) {
+      sql +=  ` AND city LIKE ? `;
+      values.push(`%${filters.city}%`);
+    }
+
+    if (filters.neighborhood) {
+      sql +=  ` AND neighborhood LIKE ? `;
+      values.push(`%${filters.neighborhood}%`);
+    }
+
+    if (filters.price_min) {
+      sql +=  ` AND price >= ? `;
+      values.push(filters.price_min);
+    }
+
+    if (filters.price_max) {
+      sql += ` AND price <= ? `;
+      values.push(filters.price_max);
+    }
+
+    if (filters.property_type_id) {
+      sql +=  ` AND property_type_id = ? `;
+      values.push(filters.property_type_id);
+    }
+
+    if (filters.operation_type) {
+      sql += ` AND operation_type = ? `;
+      values.push(filters.operation_type);
+    }
+
+    if (filters.bedrooms_min) {
+      sql += ` AND bedrooms >= ? `;
+      values.push(filters.bedrooms_min);
+    }
+
+    if (filters.bedrooms_max) {
+      sql += ` AND bedrooms <= ? `;
+      values.push(filters.bedrooms_max);
+    }
+
+    if (filters.bathrooms_min) {
+      sql += ` AND bathrooms >= ? `;
+      values.push(filters.bathrooms_min);
+    }
+
+    if (filters.bathrooms_max) {
+      sql +=  ` AND bathrooms <= ? `;
+      values.push(filters.bathrooms_max);
+    }
+
+    if (filters.parking_spaces_min) {
+      sql +=  ` AND parking_spaces >= ? `;
+      values.push(filters.parking_spaces_min);
+    }
+
+    if (filters.built_area_min) {
+      sql +=  ` AND built_area >= ? `;
+      values.push(filters.built_area_min);
+    }
+
+    if (filters.built_area_max) {
+      sql +=  ` AND built_area <= ? `;
+      values.push(filters.built_area_max);
+    }
+
+    if (filters.total_area_min) {
+      sql += ` AND total_area >= ? `;
+      values.push(filters.total_area_min);
+    }
+
+    if (filters.total_area_max) {
+      sql += ` AND total_area <= ?` ;
+      values.push(filters.total_area_max);
+    }
+
+    // Ordenamiento dinámico
+    if (filters.order === 'price_asc') {
+      sql +=  ` ORDER BY price ASC `;
+    } else if (filters.order === 'price_desc') {
+      sql +=  ` ORDER BY price DESC `;
+    } else {
+      sql +=  ` ORDER BY publish_date DESC `;
+    }
+
+    try {
+      const [rows]: any = await db.execute(sql, values);
+      return rows;
+    } catch (err) {
+      console.error("Error ejecutando SQL:", err);
+      throw err;
+    }
   }
-
-  if (filtros.ciudad) {
-    sql += ` AND ciudad LIKE ?`;
-    values.push(`%${filtros.ciudad}%`);
-  }
-
-  if (filtros.barrio) {
-    sql += ` AND barrio LIKE ?`;
-    values.push(`%${filtros.barrio}%`);
-  }
-
-  if (filtros.precio_min) {
-    sql += ` AND precio >= ?`;
-    values.push(Number(filtros.precio_min));
-  }
-
-  if (filtros.precio_max) {
-    sql += ` AND precio <= ?`;
-    values.push(Number(filtros.precio_max));
-  }
-
-  if (filtros.tipo_propiedad) {
-    sql += ` AND id_tipo_propiedad = ?`;
-    values.push(Number(filtros.tipo_propiedad));
-  }
-
-  if (filtros.tipo_operacion) {
-    sql += ` AND tipo_operacion = ?`;
-    values.push(filtros.tipo_operacion);
-  }
-
-  if (filtros.habitaciones_min) {
-    sql += ` AND habitaciones >= ?`;
-    values.push(Number(filtros.habitaciones_min));
-  }
-
-  if (filtros.habitaciones_max) {
-    sql += ` AND habitaciones <= ?`;
-    values.push(Number(filtros.habitaciones_max));
-  }
-
-  if (filtros.banos_min) {
-    sql += ` AND banos >= ?`;
-    values.push(Number(filtros.banos_min));
-  }
-
-  if (filtros.banos_max) {
-    sql += ` AND banos <= ?`;
-    values.push(Number(filtros.banos_max));
-  }
-
-  if (filtros.parqueaderos_min) {
-    sql += ` AND parqueaderos >= ?`;
-    values.push(Number(filtros.parqueaderos_min));
-  }
-
-  if (filtros.area_min) {
-    sql += ` AND area_construida >= ?`;
-    values.push(Number(filtros.area_min));
-  }
-
-  if (filtros.area_max) {
-    sql += ` AND area_construida <= ?`;
-    values.push(Number(filtros.area_max));
-  }
-
-  sql += ` ORDER BY fecha_publicacion DESC`;
-
-  const [rows]: any = await db.execute(sql, values);
-  return rows;
 }
-
-}
-
-
-  
-

@@ -8,32 +8,32 @@ import Agent from '../Dto/AgentsDto';
 
 class usuarioRepo {
 
- static async createUsuario( Persona:User){
-    const sql = 'CALL CrearUsuario(?, ?, ?, ?, ?, ?)';
-      const values = [Persona.nombre,Persona.apellido,Persona.telefono, Persona.correo,Persona.password, 2];
+ static async createUser( Person:User){
+    const sql = 'CALL CreateUser(?, ?, ?, ?, ?, ?)';
+      const values = [Person.first_name,Person.last_name,Person.phone, Person.email,Person.password, 3];
       return db.execute(sql, values);
   }
 
     
-  static async buscarUsuario(login: Login) {
-    const sql = 'call loginUsuario(?)';
+  static async searchUser(login: Login) {
+    const sql = 'call loginUser(?)';
     const values = [login.email];
     const [rows]: any = await db.execute(sql, values);
 
     if (rows.length > 0) {
-      const usuario = rows[0][0];
+      const user = rows[0][0];
       
-      console.log("🔍 Usuario encontrado:", usuario); // Verifica que la contraseña se esté recuperando correctamente
+      console.log("🔍 Usuario encontrado:", user); // Verifica que la contraseña se esté recuperando correctamente
 
-      if (!usuario.password) {
+      if (!user.password) {
         throw new Error("El usuario no tiene contraseña almacenada");
       }
 
       // Compara la contraseña ingresada con el hash almacenado
-      const isPasswordValid = await bcrypt.compare(login.password, usuario.password);
+      const isPasswordValid = await bcrypt.compare(login.password, user.password);
 
       if (isPasswordValid) {
-        return { logged: true, status: "Successful authentication", id: usuario.id_usuario };
+        return { logged: true, status: "Successful authentication", id: user.person_id };
       }
 
       return { logged: false, status: "Invalid password" };
@@ -63,6 +63,11 @@ static async createAgente(agente: Agent) {
   }
 }
 
+static async actualizarContrasena(email: string, nuevaContrasena: string) {
+    const sql = 'CALL sp_actualizar_contrasena(?, ?)';
+    const values = [email, nuevaContrasena];
+    return db.execute(sql, values);
+  }
 }
 export default usuarioRepo;
 

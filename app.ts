@@ -18,8 +18,8 @@ import reportesRoute from './routes/reportesPropRoutes';
 import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
 import propiedadesRoutes  from './routes/propiedadRoutes';
+import authRoutes from './routes/authRoutes';
 
- 
 dotenv.config();
 
 const app = express();
@@ -44,6 +44,7 @@ app.use('/api/reportes', reportesRoute);
 app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
 app.use('/api/propiedades', propiedadesRoutes)
+app.use('/auth', authRoutes);
 
 
 

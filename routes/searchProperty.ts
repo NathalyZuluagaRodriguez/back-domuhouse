@@ -3,56 +3,55 @@ import { PropertyRepository } from '../repositories/propertyRepository';
 
 const router = Router();
 
-// GET /busqueda-avanzada
-router.get('/busqueda', async (req, res) => {
+router.get('/search', async (req, res) => {
   try {
     const {
-      estrato,
-      barrio,
-      ciudad,
-      precio_min,
-      precio_max,
-      tipo_propiedad,
-      tipo_operacion,
-      habitaciones_min,
-      habitaciones_max,
-      banos_min,
-      banos_max,
-      parqueaderos,
-      area_construida_min,
-      area_construida_max,
-      area_total_min,
-      area_total_max,
-      caracteristicas, // lista de características separadas por coma
-      orden,
+      socioeconomic_stratum,
+      neighborhood,
+      city,
+      price_min,
+      price_max,
+      property_type,
+      operation_type,
+      bedrooms_min,
+      bedrooms_max,
+      bathrooms_min,
+      bathrooms_max,
+      parking_spaces,
+      built_area_min,
+      built_area_max,
+      total_area_min,
+      total_area_max,
+      features,
+      order,
     } = req.query;
 
-    const filtros = {
-      estrato: estrato ? Number(estrato) : undefined,
-      barrio: barrio?.toString(),
-      ciudad: ciudad?.toString(),
-      precio_min: precio_min ? Number(precio_min) : undefined,
-      precio_max: precio_max ? Number(precio_max) : undefined,
-      tipo_propiedad: tipo_propiedad?.toString(),
-      tipo_operacion: tipo_operacion?.toString(),
-      habitaciones_min: habitaciones_min ? Number(habitaciones_min) : undefined,
-      habitaciones_max: habitaciones_max ? Number(habitaciones_max) : undefined,
-      banos_min: banos_min ? Number(banos_min) : undefined,
-      banos_max: banos_max ? Number(banos_max) : undefined,
-      parqueaderos: parqueaderos ? Number(parqueaderos) : undefined,
-      area_construida_min: area_construida_min ? Number(area_construida_min) : undefined,
-      area_construida_max: area_construida_max ? Number(area_construida_max) : undefined,
-      area_total_min: area_total_min ? Number(area_total_min) : undefined,
-      area_total_max: area_total_max ? Number(area_total_max) : undefined,
-      caracteristicas: caracteristicas ? caracteristicas.toString().split(',') : undefined,
-      orden: orden?.toString()
+    const filters = {
+      socioeconomic_stratum: socioeconomic_stratum ? Number(socioeconomic_stratum) : undefined,
+      neighborhood: neighborhood?.toString(),
+      city: city?.toString(),
+      price_min: price_min ? Number(price_min) : undefined,
+      price_max: price_max ? Number(price_max) : undefined,
+      property_type_id: property_type ? Number(property_type) : undefined,
+      operation_type: operation_type?.toString(),
+      bedrooms_min: bedrooms_min ? Number(bedrooms_min) : undefined,
+      bedrooms_max: bedrooms_max ? Number(bedrooms_max) : undefined,
+      bathrooms_min: bathrooms_min ? Number(bathrooms_min) : undefined,
+      bathrooms_max: bathrooms_max ? Number(bathrooms_max) : undefined,
+      parking_spaces_min: parking_spaces ? Number(parking_spaces) : undefined,
+      built_area_min: built_area_min ? Number(built_area_min) : undefined,
+      built_area_max: built_area_max ? Number(built_area_max) : undefined,
+      total_area_min: total_area_min ? Number(total_area_min) : undefined,
+      total_area_max: total_area_max ? Number(total_area_max) : undefined,
+      features: features ? features.toString().split(',') : undefined,
+      order: order?.toString(),
     };
 
-    const propiedades = await PropertyRepository.buscarPropiedadesAvanzado(filtros);
-    res.status(200).json(propiedades);
+    const properties = await PropertyRepository.searchAdvanced(filters);
+    res.status(200).json(properties);
   } catch (error) {
-    console.error('Error en búsqueda avanzada:', error);
-    res.status(500).json({ message: 'Error en la búsqueda avanzada' });
+    console.error('Error in advanced search:', error);
+    res.status(500).json({ message: 'Error in advanced search' });
   }
 });
 

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 let generateToken = (properties: any, minutes: number) => {
-    const secretKey = process.env.KEY_TOKEN; 
+    const secretKey = process.env.JWT_SECRET; 
     
     if (!secretKey) {
         throw new Error("La clave secreta JWT no está definida en el archivo .env");

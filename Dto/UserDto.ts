@@ -1,38 +1,38 @@
 class User {
 
-  private _nombre: string;
-  private _apellido: string;
-  private _correo: string;
-  private _telefono: string;
+  private _first_name: string;
+  private _last_name: string;
+  private _email: string;
+  private _phone: string;
   private _Password: string;
 
   constructor(
-      nombre: string,
-      apellido: string,
-      correo: string,
-      telefono: string,
+      first_name: string,
+      last_name: string,
+      email: string,
+      phone: string,
       password: string
   ) {
-      this._nombre = nombre;
-      this._apellido = apellido;
-      this._correo = correo;
-      this._telefono = telefono;
+      this._first_name = first_name;
+      this._last_name = last_name;
+      this._email = email;
+      this._phone = phone;
       this._Password = password;
   }
 
   //Getters
-  get nombre(): string {
-      return this._nombre;
+  get first_name(): string {
+      return this._first_name;
   }
-  get apellido():string {
-        return this._apellido;
+  get last_name():string {
+        return this._last_name;
   }
-  get correo(): string {
-      return this._correo;
+  get email(): string {
+      return this._email;
   }
 
-  get telefono(): string {
-      return this._telefono;
+  get phone(): string {
+      return this._phone;
   }
 
 
@@ -40,18 +40,18 @@ class User {
       return this._Password;
   }
   //Setters
-  set nombre(nombre: string) {
-      this._nombre = nombre;
+  set first_name(first_name: string) {
+      this._first_name = first_name;
   }   
-  set apellido(apellido: string){
-    this._apellido = apellido
+  set last_name(last_name: string){
+    this._last_name = last_name
   }
-  set correo(correo: string) {
-      this._correo = correo;
+  set email(email: string) {
+      this._email = email;
   }
 
-  set telefono(telefono: string) {
-      this._telefono = telefono;
+  set phone(phone: string) {
+      this._phone = phone;
   }
 
   set password(password: string) {
