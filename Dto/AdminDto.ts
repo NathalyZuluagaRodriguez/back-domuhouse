@@ -1,7 +1,7 @@
 export interface AdminRegisterDto {
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  correo: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  email: string;
   password: string;
 }

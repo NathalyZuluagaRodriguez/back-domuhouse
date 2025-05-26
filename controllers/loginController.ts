@@ -25,6 +25,8 @@ let login = async (req: Request, res: Response) => {
     console.error("❌ Error en login:", error);
     return res.status(500).json({ error: "Error en el servidor" });
   }
+
+  
 }
 
 

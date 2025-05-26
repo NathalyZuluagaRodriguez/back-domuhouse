@@ -12,13 +12,13 @@ export const registerAdmin = async (adminData: AdminRegisterDto) => {
   const adminConPasswordHash = {
     ...adminData,
     password: hashedPassword,
-    id_rol: idRolAdmin
+    role_id: idRolAdmin
   };
 
   const result = await adminRepository.insertAdmin(adminConPasswordHash);
 
   // ✅ Enviar correo de notificación
-  await sendAdminRegisterMail(adminData.correo, adminData.nombre);
+  await sendAdminRegisterMail(adminData.email, adminData.first_name);
   
   return result;
 };

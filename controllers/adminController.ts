@@ -5,13 +5,13 @@ import { deleteAdmin } from '../repositories/AdminRepository';
 
 export const eliminarAdmin = async (req: Request, res: Response) => {
   try {
-    const { correo } = req.body;
+    const { email } = req.body;
 
-    if (!correo) {
+    if (!email) {
       return res.status(400).json({ message: 'Correo es requerido' });
     }
 
-    const resultado = await adminService.eliminarAdmin(correo);
+    const resultado = await adminService.eliminarAdmin(email);
 
     if (!resultado) {
       return res.status(404).json({ message: 'Admin no encontrado o ya eliminado' });
@@ -27,8 +27,8 @@ export const eliminarAdmin = async (req: Request, res: Response) => {
 
 export const registerAdmin = async (req: Request, res: Response) => {
   try {
-    const nuevoAdmin = await adminService.registerAdmin(req.body);
-    res.status(201).json({ message: 'Administrador registrado exitosamente', data: nuevoAdmin });
+    const newAdmin = await adminService.registerAdmin(req.body);
+    res.status(201).json({ message: 'Administrador registrado exitosamente', data: newAdmin });
   } catch (error: any) {
     res.status(500).json({ message: 'Error al registrar el administrador', error: error.message });
   }

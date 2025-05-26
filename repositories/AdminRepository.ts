@@ -1,20 +1,22 @@
 import db from '../config/config-db';
 
 interface AdminData {
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  correo: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  email: string;
   password: string;
-  id_rol: number;
+  role_id: number;
 }
 
 export const insertAdmin = async (data: AdminData) => {
+    console.log("🔍 Valores recibidos en insertAdmin:", data);
+
   const query = `
-    INSERT INTO Persona (nombre, apellido, telefono, correo, password, id_rol)
+    INSERT INTO Person (first_name, last_name, phone, email, password, role_id)
     VALUES (?, ?, ?, ?, ?, ?)
   `;
-  const values = [data.nombre, data.apellido, data.telefono, data.correo, data.password, data.id_rol];
+  const values = [data.first_name, data.last_name, data.phone, data.email, data.password, data.role_id];
 
   const [result] = await db.execute(query, values);
   return result;
@@ -23,8 +25,8 @@ export const insertAdmin = async (data: AdminData) => {
 
 export const deleteAdmin = async (correo: string) => {
   const query = `
-    DELETE FROM Persona 
-    WHERE correo = ? AND id_rol = 1
+    DELETE FROM Person
+    WHERE email = ? AND role_id = 1
   `;
   const [result] = await db.execute(query, [correo]);
   return result;
