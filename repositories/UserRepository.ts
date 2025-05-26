@@ -2,72 +2,44 @@ import db from '../config/config-db';
 import bcrypt from "bcryptjs";
 import User from '../Dto/UserDto';
 import Login from '../Dto/loginDto';
-import Agent from '../Dto/AgentsDto';
 
 
 
 class usuarioRepo {
 
- static async createUser( Person:User){
+  static async createUser( Person:User){
     const sql = 'CALL CreateUser(?, ?, ?, ?, ?, ?)';
       const values = [Person.first_name,Person.last_name,Person.phone, Person.email,Person.password, 3];
       return db.execute(sql, values);
   }
-
     
-  static async searchUser(login: Login) {
-    const sql = 'call loginUser(?)';
-    const values = [login.email];
-    const [rows]: any = await db.execute(sql, values);
+ static async searchUser(login: Login) {
+  const sql = 'call loginUser(?)';
+  const values = [login.email];
+  const [rows]: any = await db.execute(sql, values);
 
-    if (rows.length > 0) {
-      const user = rows[0][0];
-      
-      console.log("🔍 Usuario encontrado:", user); // Verifica que la contraseña se esté recuperando correctamente
+  console.log("Resultado de la consulta SQL:", rows);
 
-      if (!user.password) {
-        throw new Error("El usuario no tiene contraseña almacenada");
-      }
+  if (rows.length > 0 && rows[0].length > 0) {
+    const user = rows[0][0];
+    console.log("🔍 Usuario encontrado:", user);
 
-      // Compara la contraseña ingresada con el hash almacenado
-      const isPasswordValid = await bcrypt.compare(login.password, user.password);
-
-      if (isPasswordValid) {
-        return { logged: true, status: "Successful authentication", id: user.person_id };
-      }
-
-      return { logged: false, status: "Invalid password" };
- 
+    if (!user.password) {
+      throw new Error("El usuario no tiene contraseña almacenada");
     }
-    return { logged: false, status: "Invalid username or password" };
 
+    const isPasswordValid = await bcrypt.compare(login.password, user.password);
+
+    if (isPasswordValid) {
+      return { logged: true, status: "Successful authentication", id: user.person_id };
+    }
+
+    return { logged: false, status: "Invalid password" };
   }
 
-static async createAgente(agente: Agent) {
-  const sql = 'CALL CrearAgente(?, ?, ?, ?, ?, ?, ?)';
-  const values = [
-    agente.nombre,
-    agente.apellido,
-    agente.telefono,
-    agente.email,
-    agente.password,
-    agente.id_inmobiliaria,
-    agente.id_rol
-  ];
-  try {
-    const [rows]: any = await db.execute(sql, values);
-    return rows;
-  } catch (error) {
-    console.error("❌ Error ejecutando procedimiento CrearAgente:", error);
-    throw error;
-  }
+  return { logged: false, status: "User not found" }; // ← Nuevo
 }
 
-static async actualizarContrasena(email: string, nuevaContrasena: string) {
-    const sql = 'CALL sp_actualizar_contrasena(?, ?)';
-    const values = [email, nuevaContrasena];
-    return db.execute(sql, values);
-  }
+
 }
 export default usuarioRepo;
-

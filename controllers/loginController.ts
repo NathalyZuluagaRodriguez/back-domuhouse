@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-let login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const login = await usuarioServi.login(new Login(email, password));
@@ -25,9 +25,4 @@ let login = async (req: Request, res: Response) => {
     console.error("❌ Error en login:", error);
     return res.status(500).json({ error: "Error en el servidor" });
   }
-
-  
 }
-
-
-export default login;
