@@ -1,6 +1,7 @@
 import realEstateRepo from "../repositories/realEstatesRepositorys";
 import sendEmail from "../utils/sendEmailer"; 
 
+//interface de inmobiliaria
 interface NewRealEstate {
     name: string,
     nit: string,
