@@ -31,13 +31,13 @@ class usuarioRepo {
     const isPasswordValid = await bcrypt.compare(login.password, user.password);
 
     if (isPasswordValid) {
-      return { logged: true, status: "Successful authentication", id: user.person_id };
+      return { logged: true, status: "Autenticacion Exitosa", id: user.person_id };
     }
 
-    return { logged: false, status: "Invalid password" };
+    return { logged: false, status: "Contraseña incorrecta" };
   }
 
-  return { logged: false, status: "User not found" }; // ← Nuevo
+  return { logged: false, status: "Usuario no encontrado" }; // ← Nuevo
 }
 
 
