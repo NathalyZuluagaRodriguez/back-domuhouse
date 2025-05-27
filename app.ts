@@ -10,15 +10,16 @@ import adminRoutes from './routes/adminRoutes';
 import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
-// import agentRoutes from "./routes/agentRoutes";
-// import  propertyRoutes  from './routes/agentRoutes'
-// import  ventasAlquileresRoute  from './routes/agentRoutes'
-// import reporteRoutes from './routes/agentRoutes';
+import agentRoutes from "./routes/agentRoutes";
+import  propertyRoutes  from './routes/agentRoutes'
+import  ventasAlquileresRoute  from './routes/agentRoutes'
+import reporteRoutes from './routes/agentRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
 import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
-import PropertyRoutes  from './routes/propertiesRoutes';
-// import authRoutes from './routes/authRoutes';
+import propiedadesRoutes  from './routes/propiedadRoutes';
+import authRoutes from './routes/authRoutes';
+import realEstateRoutes from './routes/realEstateRoutes';
 
 dotenv.config();
 
@@ -36,15 +37,16 @@ app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
 app.use('/api/admin', adminRoutes);
-// app.use("/api", agentRoutes);
-// app.use("/api", propertyRoutes); 
-// app.use("/api", ventasAlquileresRoute);
-// app.use(reporteRoutes);
+app.use("/api", agentRoutes);
+app.use("/api", propertyRoutes); 
+app.use("/api", ventasAlquileresRoute);
+app.use(reporteRoutes);
 app.use('/api/reportes', reportesRoute);
 app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
-app.use('/api/propiedades', PropertyRoutes)
-// app.use('/auth', authRoutes);
+app.use('/api/propiedades', propiedadesRoutes)
+app.use('/auth', authRoutes);
+app.use('/api/inmobiliarias', realEstateRoutes);
 
 
 
