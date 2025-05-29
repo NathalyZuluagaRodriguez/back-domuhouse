@@ -48,7 +48,7 @@ app.use('/api/admin', adminRoutes);
 // app.use('/api/reportes', reportesRoute);
 app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
-app.use('/api/propiedades', propiedadesRoutes)
+app.use('/api/propiedades', propertiesRoutes)
 app.use('/auth', authRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);
 

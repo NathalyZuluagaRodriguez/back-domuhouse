@@ -153,30 +153,3 @@ export const getPropertiesByType = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.sqlMessage || 'Error interno' });
   }
 };
-
-
-export const getPropertiesByType = async (req: Request, res: Response) => {
-  try {
-    const { property_type_id } = req.params;
-
-    // Verifica que id_tipo_propiedad sea un número válido
-    if (isNaN(Number(property_type_id))) {
-      return res.status(400).json({ error: 'El ID de tipo de propiedad debe ser un número válido' });
-    }
-
-    // Consulta para obtener propiedades filtradas por tipo
-    const [result] = await Promisepool.query(
-      'SELECT * FROM Property WHERE property_type_id = ?',
-      [property_type_id]
-    );
-
-    if (Array.isArray(result) && result.length === 0) {
-      return res.status(404).json({ mensaje: 'No se encontraron propiedades para este tipo' });
-    }
-
-    res.json({ property: result });
-  } catch (error: any) {
-    console.error('Error al obtener propiedades por tipo:', error);
-    res.status(500).json({ error: error.sqlMessage || 'Error interno' });
-  }
-};
