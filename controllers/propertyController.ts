@@ -128,7 +128,6 @@ export const getApprovedProperties = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getPropertiesByType = async (req: Request, res: Response) => {
   try {
     const { property_type_id } = req.params;

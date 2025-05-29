@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../config/config-db';
-import registerAgent from "../controllers/registerAgentController";
+//import registerAgent from "../controllers/registerAgentController";
 import getPropertiesByAgent from "../controllers/propertyByController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
 import getAgentePerformanceById from "../controllers/getAlquileresVentaController";
@@ -8,7 +8,7 @@ import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 
 const router = Router();
 
-router.post("/registro-agente", registerAgent);
+//router.post("/registro-agente", registerAgent);
 router.get("/propiedades-agente/:id", getPropertiesByAgent);
 router.get("/ventas-alquileres", getVentasAlquileres);
 router.get("/reporte-desempeno-agentes", getReporteDesempenoAgentes);
