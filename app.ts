@@ -17,7 +17,7 @@ import reporteRoutes from './routes/agentRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
 import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
-import propiedadesRoutes  from './routes/propiedadRoutes';
+import propiedadesRoutes  from './routes/propertiesRoutes';
 import authRoutes from './routes/authRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 

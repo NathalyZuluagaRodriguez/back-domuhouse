@@ -8,25 +8,25 @@ import Login from '../Dto/loginDto';
 
 class usuarioServi {
     
-    static async register(user: User) {
-        user.password = await generateHash(user.password);
-        return await UserRepository.createUser(user);
-    }
+  static async register(user: User) {
+      user.password = await generateHash(user.password);
+      return await UserRepository.createUser(user);
+  }
 
-    static async login(login: Login) {
-        return await UserRepository.searchUser(login);
-    }
+  static async login(login: Login) {
+      return await UserRepository.searchUser(login);
+  }
 
   // static async registerAgent(agent: Agent) {
-  //       try {
-  //         console.log("Agente recibido en servicio:", agent);
-  //         agent.password = await generateHash(agent.password);
-  //         return await UserRepository.createAgente(agent);
-  //       } catch (error) {
+  //   try {
+  //     console.log("Agente recibido en servicio:", agent);
+  //       agent.password = await generateHash(agent.password);
+  //       return await UserRepository.createAgente(agent);
+  //     } catch (error) {
   //         console.error('Error al registrar agente:', error);
-  //         throw new Error('No se pudo registrar el agente');
-  //       }
+  //       throw new Error('No se pudo registrar el agente');
   //     }
+  // }
 
 }
 
