@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from "dotenv";
 import cors from "cors";
+import multer from 'multer';
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
 import searchRoutes from './routes/searchProperty';
@@ -10,10 +11,10 @@ import adminRoutes from './routes/adminRoutes';
 import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
-import agentRoutes from "./routes/agentRoutes";
-import  propertyRoutes  from './routes/agentRoutes'
-import  ventasAlquileresRoute  from './routes/agentRoutes'
-import reporteRoutes from './routes/agentRoutes';
+// import agentRoutes from "./routes/agentRoutes";
+// import  propertyRoutes  from './routes/agentRoutes'
+// import  ventasAlquileresRoute  from './routes/agentRoutes'
+// import reporteRoutes from './routes/agentRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
 import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
@@ -24,7 +25,10 @@ import realEstateRoutes from './routes/realEstateRoutes';
 dotenv.config();
 
 const app = express();
+const upload = multer({ dest: 'uploads/' });
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use('/login',login);
@@ -37,14 +41,14 @@ app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
 app.use('/api/admin', adminRoutes);
-app.use("/api", agentRoutes);
-app.use("/api", propertyRoutes); 
-app.use("/api", ventasAlquileresRoute);
-app.use(reporteRoutes);
-app.use('/api/reportes', reportesRoute);
+// app.use("/api", agentRoutes);
+// app.use("/api", propertyRoutes); 
+// app.use("/api", ventasAlquileresRoute);
+// app.use(reporteRoutes);
+// app.use('/api/reportes', reportesRoute);
 app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
-app.use('/api/propiedades', propertiesRoutes)
+app.use('/api/propiedades', propiedadesRoutes)
 app.use('/auth', authRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);
 
