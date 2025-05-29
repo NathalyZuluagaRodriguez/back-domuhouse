@@ -39,6 +39,13 @@ class usuarioRepo {
     return { logged: false, status: "Invalid username or password" };
 
   }
+
+  static async updatePassword(email: string, newPassword: string) {
+    const sql = 'CALL sp_update_password(?, ?)';
+    const values = [email, newPassword];
+    return db.execute(sql, values);
+  }
+
 }
 
 export default usuarioRepo;
