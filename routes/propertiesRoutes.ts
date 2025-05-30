@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import upload from '../middleware/upload';
 
 import {
@@ -14,12 +13,25 @@ import {
 
 const router = Router();
 
+// RUTAS MÁS ESPECÍFICAS PRIMERO
+router.put('/approve/:id', approveProperty);
 
-router.post('/properties', upload.array('images', 10), createProperty); // máx. 10 imágenes
-router.put('/:id', editProperty);
-router.delete('/:id', deleteProperty);
-router.put('/aprobar/:id', approveProperty);
-router.get('/', getProperties);
 router.get('/aprobadas', getApprovedProperties);
 router.get('/tipo/:property_type_id', getPropertiesByType);
+router.get('/', getProperties);
+
+// Rutas con parámetros al final
+router.post('/', upload.array('images', 10), createProperty);
+router.put('/:id', editProperty);
+router.delete('/:id', deleteProperty);
+
+// Middleware de debug para esta ruta específica
+router.use('/aprobar/:id', (req, res, next) => {
+    console.log('🔍 Ruta /aprobar/:id alcanzada');
+    console.log('Method:', req.method);
+    console.log('Params:', req.params);
+    console.log('ID recibido:', req.params.id);
+    next();
+});
+
 export default router;
