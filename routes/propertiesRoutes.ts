@@ -1,37 +1,43 @@
-import { Router } from 'express';
-import upload from '../middleware/upload';
-
+// routes/propertiesRoutes.ts
+import express from 'express';
+import upload from '../middleware/upload'; // Tu middleware de multer
 import {
   createProperty,
   editProperty,
   deleteProperty,
   approveProperty,
   getProperties,
-  getApprovedProperties, 
-  getPropertiesByType
+  getApprovedProperties,
+  getPropertiesByType,
+  getPropertyById
 } from '../controllers/propertyController';
 
-const router = Router();
+const router = express.Router();
 
-// RUTAS MÁS ESPECÍFICAS PRIMERO
-router.put('/approve/:id', approveProperty);
+// 🏠 RUTAS PÚBLICAS (sin autenticación)
 
-router.get('/aprobadas', getApprovedProperties);
-router.get('/tipo/:property_type_id', getPropertiesByType);
-router.get('/', getProperties);
-
-// Rutas con parámetros al final
+// ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
 router.post('/', upload.array('images', 10), createProperty);
+
+// ✅ Editar propiedad
 router.put('/:id', editProperty);
+
+// ✅ Eliminar propiedad
 router.delete('/:id', deleteProperty);
 
-// Middleware de debug para esta ruta específica
-router.use('/aprobar/:id', (req, res, next) => {
-    console.log('🔍 Ruta /aprobar/:id alcanzada');
-    console.log('Method:', req.method);
-    console.log('Params:', req.params);
-    console.log('ID recibido:', req.params.id);
-    next();
-});
+// ✅ Aprobar propiedad
+router.patch('/:id/approve', approveProperty);
+
+// ✅ Obtener todas las propiedades
+router.get('/', getProperties);
+
+// ✅ Obtener propiedades aprobadas
+router.get('/approved', getApprovedProperties);
+
+// ✅ Obtener propiedades por tipo
+router.get('/type/:property_type_id', getPropertiesByType);
+
+// ✅ Obtener propiedad por ID (debe ir al final para evitar conflictos)
+router.get('/:id', getPropertyById);
 
 export default router;

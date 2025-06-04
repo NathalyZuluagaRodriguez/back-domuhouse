@@ -1,6 +1,6 @@
 import db from '../config/config-db';
 
-interface SearchFilters {
+export interface SearchFilters {
   socioeconomic_stratum?: number;
   neighborhood?: string;
   city?: string;
@@ -26,6 +26,7 @@ export class PropertyRepository {
   static async create(property: any) {
     const sql = `CALL CreateProperty(?, ?, ?, ?, ?, ?)`;
     const values = [
+      property.address,
       property.title,
       property.description,
       property.price,
@@ -39,7 +40,7 @@ export class PropertyRepository {
 
   // Advanced search
   static async searchAdvanced(filters: SearchFilters): Promise<any[]> {
-    let sql = ` SELECT * FROM property WHERE 1=1 `;
+    let sql = ` SELECT * FROM Property WHERE 1=1 AND approved = TRUE `;
     const values: any[] = [];
 
     if (filters.socioeconomic_stratum) {
@@ -122,7 +123,7 @@ export class PropertyRepository {
       values.push(filters.total_area_max);
     }
 
-    // Ordenamiento dinámico
+    // Ordenamiento dinÃ¡mico
     if (filters.order === 'price_asc') {
       sql +=  ` ORDER BY price ASC `;
     } else if (filters.order === 'price_desc') {
