@@ -4,7 +4,7 @@ import { registerAdmin, eliminarAdmin } from '../controllers/adminController';
 
 const router = Router();
 
-router.post('/admin/registro', registerAdmin);
+router.post('/registro', registerAdmin);
 router.delete('/admin/eliminar', eliminarAdmin); // mejor semántica
 
 
