@@ -1,25 +1,43 @@
-import { Router } from 'express';
-import multer from 'multer';
-import upload from '../middleware/upload';
-
+// routes/propertiesRoutes.ts
+import express from 'express';
+import upload from '../middleware/upload'; // Tu middleware de multer
 import {
   createProperty,
   editProperty,
   deleteProperty,
   approveProperty,
   getProperties,
-  getApprovedProperties, 
-  getPropertiesByType
+  getApprovedProperties,
+  getPropertiesByType,
+  getPropertyById
 } from '../controllers/propertyController';
 
-const router = Router();
+const router = express.Router();
 
+// 🏠 RUTAS PÚBLICAS (sin autenticación)
 
-router.post('/properties', upload.array('images', 10), createProperty); // máx. 10 imágenes
+// ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
+router.post('/', upload.array('images', 10), createProperty);
+
+// ✅ Editar propiedad
 router.put('/:id', editProperty);
+
+// ✅ Eliminar propiedad
 router.delete('/:id', deleteProperty);
-router.put('/aprobar/:id', approveProperty);
+
+// ✅ Aprobar propiedad
+router.patch('/:id/approve', approveProperty);
+
+// ✅ Obtener todas las propiedades
 router.get('/', getProperties);
-router.get('/aprobadas', getApprovedProperties);
-router.get('/tipo/:property_type_id', getPropertiesByType);
+
+// ✅ Obtener propiedades aprobadas
+router.get('/approved', getApprovedProperties);
+
+// ✅ Obtener propiedades por tipo
+router.get('/type/:property_type_id', getPropertiesByType);
+
+// ✅ Obtener propiedad por ID (debe ir al final para evitar conflictos)
+router.get('/:id', getPropertyById);
+
 export default router;
