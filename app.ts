@@ -21,6 +21,7 @@ import register from './routes/register';
 import propertiesRoutes  from './routes/propertiesRoutes';
 import authRoutes from './routes/authRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
+import logout from './routes/logout';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/register',register);
 app.use('/api/propiedades', propertiesRoutes)
 app.use('/auth', authRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);
+app.use('/logout', logout);
 
 
 
