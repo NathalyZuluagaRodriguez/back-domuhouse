@@ -45,7 +45,16 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
+
 app.use('/api/auth', authRoutes);
+
+// app.use("/api", agentRoutes);
+// app.use("/api", propertyRoutes); 
+// app.use("/api", ventasAlquileresRoute);
+// app.use(reporteRoutes);
+// app.use('/api/reportes', reportesRoute);
+app.use('/api/propiedades', propertiesRoutes)
+app.use('/auth', authRoutes);
 
 // 🔐 Autenticación y registro
 app.use('/login', login);
