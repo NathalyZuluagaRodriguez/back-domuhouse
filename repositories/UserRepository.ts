@@ -46,7 +46,7 @@ class usuarioRepo {
 
   return { logged: false, status: "Invalid username or password" };
 
-  }
+}
 
 static async createAgente(agente: Agent) {
   const sql = 'CALL CrearAgente(?, ?, ?, ?, ?, ?, ?)';

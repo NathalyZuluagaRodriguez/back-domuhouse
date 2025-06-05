@@ -352,6 +352,8 @@ export const getProperties = async (req: Request, res: Response) => {
   }
 };
 
+
+
 export const getApprovedProperties = async (req: Request, res: Response) => {
   try {
     console.log('✅ getApprovedProperties - Obteniendo propiedades aprobadas...');
