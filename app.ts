@@ -40,7 +40,7 @@ import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida
 
 // ✅ Prefijo consistente para rutas API
 app.use('/api/properties', propertiesRoutes);
-app.use('/api/inmobiliarias', realEstateRoutes);
+app.use('/api/inmobiliarias', realEstateRoutes);   // ← Aquí montamos las rutas de inmobiliarias
 app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
@@ -104,6 +104,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📱 API Base URL: http://localhost:${PORT}`);
   console.log(`🏠 Properties Endpoint: http://localhost:${PORT}/api/properties`);
+  console.log(`🏠 Real Estate Endpoint: http://localhost:${PORT}/api/inmobiliarias`); // Confirmamos el endpoint aquí
   console.log(`🤖 IA Endpoint: http://localhost:${PORT}/ia`);
 });
 
