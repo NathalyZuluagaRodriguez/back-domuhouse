@@ -59,7 +59,7 @@ export const editProperty = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const {
-      property_title, adress, description, price, status, socioeconomic_stratum,
+      property_title, adress, description, image, price, status, socioeconomic_stratum,
       city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
       built_area, total_area, latitude, longitude
     } = req.body;
@@ -67,7 +67,7 @@ export const editProperty = async (req: Request, res: Response) => {
     const [result] = await Promisepool.query(
       'CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        id, property_title, adress, description, price, status, socioeconomic_stratum,
+        id, property_title, adress, description, image, price, status, socioeconomic_stratum,
         city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
         built_area, total_area, latitude, longitude
       ]
