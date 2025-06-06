@@ -3,6 +3,28 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
 
+import login from './routes/login';
+import rolesRoutes from './routes/roles';
+import searchRoutes from './routes/searchProperty';
+import agendaRoutes from './routes/Agenda';
+import iaRoute from './routes/iaRoutes';
+import adminRoutes from './routes/adminRoutes';
+import invitacionRoutes from './routes/invitacionRoutes';
+import passwordRoutes from './routes/passwordRoutes';
+import registroRoutes from './routes/confirmacionRoutes';
+// import agentRoutes from "./routes/agentRoutes";
+// import  propertyRoutes  from './routes/agentRoutes'
+// import  ventasAlquileresRoute  from './routes/agentRoutes'
+// import reporteRoutes from './routes/agentRoutes';
+import reportesRoute from './routes/reportesPropRoutes';
+import busquedaRoutes from './routes/searchProperty'; 
+import register from './routes/register';
+import propertiesRoutes  from './routes/propertiesRoutes';
+import authRoutes from './routes/authRoutes';
+import realEstateRoutes from './routes/realEstateRoutes';
+import logout from './routes/logout';
+
+
 // 🔧 Cargar variables de entorno
 dotenv.config();
 
@@ -46,6 +68,17 @@ app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
 app.use('/api/auth', authRoutes);
+
+// app.use("/api", agentRoutes);
+// app.use("/api", propertyRoutes); 
+// app.use("/api", ventasAlquileresRoute);
+// app.use(reporteRoutes);
+// app.use('/api/reportes', reportesRoute);
+app.use('/busqueda', busquedaRoutes);
+app.use('/register',register);
+app.use('/api/propiedades', propertiesRoutes)
+app.use('/auth', authRoutes);
+app.use('/logout', logout);
 
 // 🔐 Autenticación y registro
 app.use('/login', login);
