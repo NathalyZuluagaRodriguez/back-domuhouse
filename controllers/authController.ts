@@ -84,7 +84,7 @@
 
 //     const token = generateToken({ correo }, 15); // Token válido por 15 minutos
 
-    const recoveryUrl = `https://domuhouse-express.onrender.com/auth/restablecer-contrasena?token=${token}`;
+    // const recoveryUrl = `https://domuhouse-express.onrender.com/auth/restablecer-contrasena?token=${token}`;
 
 //     await transporter.sendMail({
 //       from: MAIL_FROM,
