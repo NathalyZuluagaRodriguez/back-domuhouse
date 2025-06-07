@@ -20,7 +20,7 @@ import reportesRoute from './routes/reportesPropRoutes';
 import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
 import propertiesRoutes  from './routes/propertiesRoutes';
-import authRoutes from './routes/authRoutes';
+// import authRoutes from './routes/authRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
 
@@ -44,21 +44,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// 📦 RUTAS IMPORTADAS
-import propertiesRoutes from './routes/propertiesRoutes';
-import authRoutes from './routes/authRoutes';
-import login from './routes/login';
-import register from './routes/register';
-import realEstateRoutes from './routes/realEstateRoutes';
-import adminRoutes from './routes/adminRoutes';
-import invitacionRoutes from './routes/invitacionRoutes';
-import passwordRoutes from './routes/passwordRoutes';
-import registroRoutes from './routes/confirmacionRoutes';
-import rolesRoutes from './routes/roles';
-import agendaRoutes from './routes/Agenda';
-import iaRoute from './routes/iaRoutes';
-import searchRoutes from './routes/searchProperty';
-import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida por si alguna usa prefijo distinto
+
+// import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida por si alguna usa prefijo distinto
 
 // ✅ Prefijo consistente para rutas API
 app.use('/api/properties', propertiesRoutes);
@@ -67,7 +54,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
-app.use('/api/auth', authRoutes);
+// app.use('/api/auth', authRoutes);
 
 // app.use("/api", agentRoutes);
 // app.use("/api", propertyRoutes); 
@@ -77,19 +64,19 @@ app.use('/api/auth', authRoutes);
 app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
 app.use('/api/propiedades', propertiesRoutes)
-app.use('/auth', authRoutes);
+// app.use('/auth', authRoutes);
 app.use('/logout', logout);
 
 // 🔐 Autenticación y registro
-app.use('/login', login);
+app.use('/login', login); 
 app.use('/register', register);
 
 // 🔍 Otras rutas sin prefijo
 app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
-app.use('/busqueda', busquedaRoutes);
-app.use('/search', searchRoutes);
+// app.use('/busqueda', busquedaRoutes);
+app.use('/api/search', searchRoutes);
 
 // ✅ Ruta base de salud
 app.get('/', (_req, res) => {

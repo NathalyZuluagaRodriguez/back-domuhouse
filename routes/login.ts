@@ -4,7 +4,7 @@ import login from "../controllers/loginController";
 const router = Router();
 
 
-router.post('/login', login);
+router.post('/', login);
 
 
 export default router;
