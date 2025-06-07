@@ -538,3 +538,104 @@ export const getPropertyById = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getPropertyImages = async (req: Request, res: Response) => {
+  try {
+    console.log('🖼️ getPropertyImages - ID:', req.params.id);
+    const { id } = req.params;
+
+    // Validar que el ID sea válido
+    if (!id) {
+      return res.status(400).json({ 
+        error: 'ID de propiedad es requerido',
+        success: false 
+      });
+    }
+
+    const propertyId = parseInt(id);
+    if (isNaN(propertyId) || propertyId <= 0) {
+      return res.status(400).json({ 
+        error: 'ID de propiedad debe ser un número válido mayor a 0',
+        success: false 
+      });
+    }
+
+    console.log('🔍 Buscando imágenes para propiedad ID:', propertyId);
+
+    // Consultar solo las imágenes de la propiedad
+    const [result]: any = await Promisepool.execute(
+      `SELECT 
+        property_id,
+        property_title,
+        image,
+        approved
+      FROM Property 
+      WHERE property_id = ?`,
+      [propertyId]
+    );
+
+    console.log('📊 Resultado de la consulta:', result ? result.length : 'No hay resultado');
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ 
+        error: 'Propiedad no encontrada',
+        message: 'La propiedad solicitada no existe',
+        success: false,
+        property_id: propertyId
+      });
+    }
+
+    const property = result[0];
+
+    // Verificar que la propiedad esté aprobada
+    if (!property.approved) {
+      return res.status(403).json({
+        error: 'Propiedad no disponible',
+        message: 'La propiedad no está aprobada para visualización pública',
+        success: false
+      });
+    }
+
+    // Procesar las imágenes
+    let images: string[] = [];
+    
+    if (property.image && typeof property.image === 'string') {
+      try {
+        const parsedImages = JSON.parse(property.image);
+        if (Array.isArray(parsedImages)) {
+          images = parsedImages;
+        }
+      } catch (parseError) {
+        console.warn('⚠️ Error parsing images JSON:', parseError);
+        images = [];
+      }
+    }
+
+    console.log(`✅ Se encontraron ${images.length} imágenes para la propiedad: ${property.property_title}`);
+    
+    res.status(200).json({
+      success: true,
+      property_id: propertyId,
+      property_title: property.property_title,
+      images: images,
+      images_count: images.length,
+      message: 'Imágenes obtenidas correctamente'
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error completo in getPropertyImages:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      sql: error.sql
+    });
+    
+    res.status(500).json({ 
+      error: 'Error interno del servidor al obtener las imágenes', 
+      detail: error.message,
+      success: false,
+      timestamp: new Date().toISOString()
+    });
+  }
+};

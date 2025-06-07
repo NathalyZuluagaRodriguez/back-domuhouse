@@ -9,7 +9,8 @@ import {
   getProperties,
   getApprovedProperties,
   getPropertiesByType,
-  getPropertyById
+  getPropertyById,
+  getPropertyImages 
 } from '../controllers/propertyController';
 
 const router = express.Router();
@@ -19,11 +20,15 @@ const router = express.Router();
 // ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
 router.post('/', upload.array('images', 10), createProperty);
 
+
+
 // ✅ Editar propiedad
 router.put('/:id', editProperty);
 
 // ✅ Eliminar propiedad
 router.delete('/:id', deleteProperty);
+
+router.get('/:id/images', getPropertyImages);
 
 // ✅ Aprobar propiedad
 router.patch('/:id/approve', approveProperty);
