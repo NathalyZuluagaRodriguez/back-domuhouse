@@ -6,7 +6,7 @@ import upload from '../middleware/upload';
 
 const router = Router();
 
-router.post('/admin/registro', registerAdmin);
+router.post('/registro', registerAdmin);
 router.delete('/admin/eliminar', eliminarAdmin); // mejor semántica
 router.post('/properties',upload.array('images', 10),createProperty)
 
