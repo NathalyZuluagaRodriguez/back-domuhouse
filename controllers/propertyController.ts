@@ -243,28 +243,15 @@ export const editProperty = async (req: Request, res: Response) => {
     console.log('✏️ editProperty - ID:', req.params.id);
     const { id } = req.params;
     const {
-      property_title, 
-      address,
-      description, 
-      price, 
-      status, 
-      socioeconomic_stratum,
-      city, 
-      neighborhood, 
-      operation_type, 
-      bedrooms, 
-      bathrooms, 
-      parking_spaces,
-      built_area, 
-      total_area, 
-      latitude, 
-      longitude
+      property_title, adress, description, price, status, socioeconomic_stratum,
+      city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
+      built_area, total_area, latitude, longitude
     } = req.body;
 
     const [result] = await Promisepool.query(
       'CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        id, property_title, address, description, price, status, socioeconomic_stratum,
+        id, property_title, adress, description, price, status, socioeconomic_stratum,
         city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
         built_area, total_area, latitude, longitude
       ]
