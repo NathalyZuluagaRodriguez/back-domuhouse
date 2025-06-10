@@ -61,21 +61,17 @@ app.use('/api/registro', registroRoutes);
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);
 // app.use('/api/reportes', reportesRoute);
-app.use('/busqueda', busquedaRoutes);
 app.use('/register',register);
-app.use('/api/propiedades', propertiesRoutes)
 // app.use('/auth', authRoutes);
 app.use('/logout', logout);
 
 // 🔐 Autenticación y registro
 app.use('/login', login); 
-app.use('/register', register);
 
 // 🔍 Otras rutas sin prefijo
-app.use('/roles', rolesRoutes);
+// app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
-// app.use('/busqueda', busquedaRoutes);
 app.use('/api/search', searchRoutes);
 
 // ✅ Ruta base de salud

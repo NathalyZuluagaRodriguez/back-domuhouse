@@ -7,7 +7,7 @@ import { transporter } from '../utils/mailerContraseña'; // nodemailer configur
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecreto123';
 
 // 🟢 1. Enviar correo de recuperación
-export const enviarCorreoRecuperacion = async (req: Request, res: Response) => {
+export const SendRecoveryMail = async (req: Request, res: Response) => {
   const { correo } = req.body;
 
   try {
@@ -42,7 +42,7 @@ export const enviarCorreoRecuperacion = async (req: Request, res: Response) => {
 };
 
 // 🟢 2. Cambiar contraseña con token
-export const cambiarPassword = async (req: Request, res: Response) => {
+export const changePassword = async (req: Request, res: Response) => {
   const { token, nuevaPassword } = req.body;
 
   if (!token || !nuevaPassword) {
