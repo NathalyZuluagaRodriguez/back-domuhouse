@@ -18,7 +18,7 @@ const router = express.Router();
 // 🏠 RUTAS PÚBLICAS (sin autenticación)
 
 // ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
-router.post('/', upload.array('images', 10), createProperty);
+router.post('/create', upload.array('images', 10), createProperty);
 
 // ✅ Editar propiedad
 router.put('/editar/:id', editProperty);
@@ -33,7 +33,7 @@ router.get('/details/:id/images', getPropertyImages);
 router.patch('/:id/approve', approveProperty);
 
 // ✅ Obtener todas las propiedades
-router.get('/obtener', getProperties);
+router.get('/get', getProperties);
 
 // ✅ Obtener propiedades aprobadas
 router.get('/approved', getApprovedProperties);
