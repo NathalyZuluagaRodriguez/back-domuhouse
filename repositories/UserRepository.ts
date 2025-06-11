@@ -75,17 +75,18 @@ class usuarioRepo {
     }
   }
 
-  static async createAgente(agente: Agent) {
-    const sql = 'CALL CrearAgente(?, ?, ?, ?, ?, ?, ?)';
-    const values = [
-      agente.nombre,
-      agente.apellido,
-      agente.telefono,
-      agente.email,
-      agente.password,
-      agente.id_inmobiliaria,
-      agente.id_rol
-    ];
+ static async CreateAgent(agent: Agent) {
+  const sql = 'CALL CreateAgent(?, ?, ?, ?, ?, ?, ?)';
+  const values =   [
+    agent.first_name,
+    agent.last_name,
+    agent.phone,
+    agent.email,
+    agent.password,
+    agent.realEstateId,
+    agent.roleId
+  ]
+
     try {
       const [rows]: any = await db.execute(sql, values);
       return rows;
