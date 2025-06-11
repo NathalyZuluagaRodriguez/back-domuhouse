@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { confirmarRegistro } from '../controllers/confirmacionController';
+import { confirmRegister } from '../controllers/confirmacionController';
 
 const router = Router();
 
-router.get('/confirmar/:correo', confirmarRegistro);
+router.get('/confirmar/:correo', confirmRegister);
 
 export default router;

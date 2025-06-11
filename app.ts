@@ -3,6 +3,28 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
 
+import login from './routes/login';
+import rolesRoutes from './routes/roles';
+import searchRoutes from './routes/searchProperty';
+import agendaRoutes from './routes/Agenda';
+import iaRoute from './routes/iaRoutes';
+import adminRoutes from './routes/adminRoutes';
+import invitacionRoutes from './routes/invitacionRoutes';
+import passwordRoutes from './routes/passwordRoutes';
+import registroRoutes from './routes/confirmacionRoutes';
+// import agentRoutes from "./routes/agentRoutes";
+// import  propertyRoutes  from './routes/agentRoutes'
+// import  ventasAlquileresRoute  from './routes/agentRoutes'
+// import reporteRoutes from './routes/agentRoutes';
+import reportesRoute from './routes/reportesPropRoutes';
+import busquedaRoutes from './routes/searchProperty'; 
+import register from './routes/register';
+import propertiesRoutes  from './routes/propertiesRoutes';
+// import authRoutes from './routes/authRoutes';
+import realEstateRoutes from './routes/realEstateRoutes';
+import logout from './routes/logout';
+
+
 // 🔧 Cargar variables de entorno
 dotenv.config();
 
@@ -22,50 +44,35 @@ app.use((req, res, next) => {
   next();
 });
 
-// 📦 RUTAS IMPORTADAS
-import propertiesRoutes from './routes/propertiesRoutes';
-import authRoutes from './routes/authRoutes';
-import login from './routes/login';
-import register from './routes/register';
-import realEstateRoutes from './routes/realEstateRoutes';
-import adminRoutes from './routes/adminRoutes';
-import invitacionRoutes from './routes/invitacionRoutes';
-import passwordRoutes from './routes/passwordRoutes';
-import registroRoutes from './routes/confirmacionRoutes';
-import rolesRoutes from './routes/roles';
-import agendaRoutes from './routes/Agenda';
-import iaRoute from './routes/iaRoutes';
-import searchRoutes from './routes/searchProperty';
-import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida por si alguna usa prefijo distinto
+
+// import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida por si alguna usa prefijo distinto
 
 // ✅ Prefijo consistente para rutas API
 app.use('/api/properties', propertiesRoutes);
-app.use('/api/inmobiliarias', realEstateRoutes);
+app.use('/api/inmobiliarias', realEstateRoutes);   // ← Aquí montamos las rutas de inmobiliarias
 app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
-
-app.use('/api/auth', authRoutes);
+// app.use('/api/auth', authRoutes);
 
 // app.use("/api", agentRoutes);
 // app.use("/api", propertyRoutes); 
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);
 // app.use('/api/reportes', reportesRoute);
-app.use('/api/propiedades', propertiesRoutes)
-app.use('/auth', authRoutes);
+app.use('/register',register);
+// app.use('/auth', authRoutes);
+app.use('/logout', logout);
 
 // 🔐 Autenticación y registro
-app.use('/login', login);
-app.use('/register', register);
+app.use('/login', login); 
 
 // 🔍 Otras rutas sin prefijo
-app.use('/roles', rolesRoutes);
+// app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
-app.use('/busqueda', busquedaRoutes);
-app.use('/search', searchRoutes);
+app.use('/api/search', searchRoutes);
 
 // ✅ Ruta base de salud
 app.get('/', (_req, res) => {
@@ -113,6 +120,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📱 API Base URL: http://localhost:${PORT}`);
   console.log(`🏠 Properties Endpoint: http://localhost:${PORT}/api/properties`);
+  console.log(`🏠 Real Estate Endpoint: http://localhost:${PORT}/api/inmobiliarias`); // Confirmamos el endpoint aquí
   console.log(`🤖 IA Endpoint: http://localhost:${PORT}/ia`);
 });
 

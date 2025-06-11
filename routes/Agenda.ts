@@ -5,7 +5,7 @@ const router = Router();
 const repo = new AgendaRepository();
 
 // POST /agenda
-router.post('/', async (req, res) => {
+router.post('/createAgenda', async (req, res) => {
   const { fecha_visita, id_propiedad, id_persona } = req.body;
   if (!fecha_visita || !id_propiedad || !id_persona) {
     return res.status(400).json({ message: 'Faltan datos' });
@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /agenda/:usuarioId
-router.get('/:usuarioId', async (req, res) => {
+router.get('/agenda/:usuarioId', async (req, res) => {
   try {
     const visitas = await repo.obtenerVisitasPorUsuario(Number(req.params.usuarioId));
     res.json(visitas);
@@ -29,7 +29,7 @@ router.get('/:usuarioId', async (req, res) => {
 });
 
 // POST /agenda/:id/confirmar
-router.post('/:id/confirmar', async (req, res) => {
+router.post('/agenda/:id/confirmar', async (req, res) => {
   try {
     await repo.confirmarVisita(Number(req.params.id));
     res.json({ message: 'Visita confirmada' });
@@ -39,7 +39,7 @@ router.post('/:id/confirmar', async (req, res) => {
 });
 
 // PUT /agenda/:id
-router.put('/:id', async (req, res) => {
+router.put('/agenda/:id', async (req, res) => {
   const { fecha_visita } = req.body;
   if (!fecha_visita) return res.status(400).json({ message: 'Fecha requerida' });
 
@@ -52,7 +52,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // GET /agenda/disponibilidad?fecha=2025-04-30
-router.get('/disponibilidad', async (req, res) => {
+router.get('/agenda/disponibilidad', async (req, res) => {
   const { fecha } = req.query;
   if (!fecha) return res.status(400).json({ message: 'Fecha requerida' });
 
@@ -65,7 +65,7 @@ router.get('/disponibilidad', async (req, res) => {
 });
 
 // GET /agenda/personas
-router.get('/personas/listar', async (_req, res) => {
+router.get('/agenda/personas/listar', async (_req, res) => {
   try {
     const personas = await repo.listarPersonas();
     res.json(personas);
@@ -75,7 +75,7 @@ router.get('/personas/listar', async (_req, res) => {
 });
 
 // GET /agenda/propiedades
-router.get('/propiedades/listar', async (_req, res) => {
+router.get('/agenda/propiedades/listar', async (_req, res) => {
   try {
     const propiedades = await repo.listarPropiedades();
     res.json(propiedades);

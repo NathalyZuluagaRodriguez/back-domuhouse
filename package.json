@@ -1,10 +1,13 @@
 {
-  "name": "correo-verificacion",
+  "name": "Back",
   "version": "1.0.0",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts"
+    "dev": "ts-node-dev src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/app.js",
+    "build": "tsc -p ."
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
