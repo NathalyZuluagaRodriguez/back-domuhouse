@@ -401,6 +401,8 @@ export const getPropertiesByType = async (req: Request, res: Response) => {
   }
 };
 
+
+// ✅ Función getPropertyById CORREGIDA
 export const getPropertyById = async (req: Request, res: Response) => {
   try {
     console.log('🏠 getPropertyById - ID:', req.params.id);
@@ -427,9 +429,9 @@ export const getPropertyById = async (req: Request, res: Response) => {
       `SELECT 
         p.*,
         pt.type_name as property_type_name,
-        CONCAT(per.first_name, ' ', per.last_name) as owner_name,
-        per.email as owner_email,
-        per.phone as owner_phone
+        CONCAT(per.first_name, ' ', per.last_name) as agent_name,
+        per.email as agent_email,
+        per.phone as agent_phone
       FROM Property p
       LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
       LEFT JOIN Person per ON p.person_id = per.person_id
@@ -458,19 +460,36 @@ export const getPropertyById = async (req: Request, res: Response) => {
       });
     }
 
-    // Procesar las imágenes si están en formato JSON
+    // ✅ PROCESAR IMÁGENES CORRECTAMENTE
+    let processedImages: string[] = [];
+    
     if (property.image && typeof property.image === 'string') {
       try {
-        property.images = JSON.parse(property.image);
+        const parsedImages = JSON.parse(property.image);
+        console.log('🖼️ Imágenes parseadas:', parsedImages);
+        
+        if (Array.isArray(parsedImages)) {
+          processedImages = parsedImages.filter(url => 
+            url && 
+            url.trim() !== '' && 
+            (url.startsWith('http') || url.startsWith('/'))
+          );
+        }
       } catch (parseError) {
         console.warn('⚠️ Error parsing images JSON:', parseError);
-        property.images = [];
+        
+        // Si no se puede parsear, asumir que es una sola URL
+        if (property.image.trim() !== '') {
+          processedImages = [property.image];
+        }
       }
     }
 
+    // ✅ ESTRUCTURA DE RESPUESTA CORREGIDA
     const formattedProperty = {
-      id: property.property_id,
-      title: property.property_title,
+      property_id: property.property_id,
+      property_title: property.property_title,
+      title: property.property_title, // Para compatibilidad con frontend
       description: property.description,
       price: property.price,
       address: property.address,
@@ -487,21 +506,22 @@ export const getPropertyById = async (req: Request, res: Response) => {
       total_area: property.total_area,
       latitude: property.latitude,
       longitude: property.longitude,
-      images: property.images || [],
       status: property.status,
       approved: property.approved,
       publish_date: property.publish_date,
-      agentInfo: {
-        name: property.owner_name || 'Agente no disponible',
-        email: property.owner_email || '',
-        phone: property.owner_phone || '',
-        initials: property.owner_name ? 
-          property.owner_name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 
-          'AG'
-      }
+      
+      // ✅ CAMPOS QUE EL FRONTEND ESPERA
+      agent_name: property.agent_name || 'Agente Inmobiliario',
+      agent_email: property.agent_email || 'contacto@inmobiliaria.com',
+      agent_phone: property.agent_phone || '+57 300 000 0000',
+      
+      // ✅ IMÁGENES PROCESADAS
+      images: processedImages,
+      image_urls: processedImages // Para compatibilidad adicional
     };
 
-    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.title}`);
+    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`);
+    console.log(`🖼️ Imágenes procesadas: ${processedImages.length} URLs`);
     
     res.status(200).json({
       success: true,
@@ -526,13 +546,12 @@ export const getPropertyById = async (req: Request, res: Response) => {
   }
 };
 
-
+// ✅ Función getPropertyImages CORREGIDA
 export const getPropertyImages = async (req: Request, res: Response) => {
   try {
     console.log('🖼️ getPropertyImages - ID:', req.params.id);
     const { id } = req.params;
 
-    // Validar que el ID sea válido
     if (!id) {
       return res.status(400).json({ 
         error: 'ID de propiedad es requerido',
@@ -550,7 +569,6 @@ export const getPropertyImages = async (req: Request, res: Response) => {
 
     console.log('🔍 Buscando imágenes para propiedad ID:', propertyId);
 
-    // Consultar solo las imágenes de la propiedad
     const [result]: any = await Promisepool.execute(
       `SELECT 
         property_id,
@@ -562,12 +580,9 @@ export const getPropertyImages = async (req: Request, res: Response) => {
       [propertyId]
     );
 
-    console.log('📊 Resultado de la consulta:', result ? result.length : 'No hay resultado');
-
     if (!result || result.length === 0) {
       return res.status(404).json({ 
         error: 'Propiedad no encontrada',
-        message: 'La propiedad solicitada no existe',
         success: false,
         property_id: propertyId
       });
@@ -575,31 +590,51 @@ export const getPropertyImages = async (req: Request, res: Response) => {
 
     const property = result[0];
 
-    // Verificar que la propiedad esté aprobada
     if (!property.approved) {
       return res.status(403).json({
         error: 'Propiedad no disponible',
-        message: 'La propiedad no está aprobada para visualización pública',
         success: false
       });
     }
 
-    // Procesar las imágenes
-    let images: string[] = [];
+    // ✅ PROCESAR IMÁGENES EN FORMATO ESPERADO POR EL FRONTEND
+    let images: any[] = [];
     
     if (property.image && typeof property.image === 'string') {
       try {
         const parsedImages = JSON.parse(property.image);
+        console.log('🔍 Imágenes parseadas:', parsedImages);
+        
         if (Array.isArray(parsedImages)) {
-          images = parsedImages;
+          images = parsedImages
+            .filter(url => url && url.trim() !== '' && (url.startsWith('http') || url.startsWith('/')))
+            .map((imageUrl: string, index: number) => ({
+              id: index + 1,
+              url: imageUrl,
+              is_main: index === 0,
+              property_id: propertyId,
+              order: index + 1,
+              alt: `Imagen ${index + 1} de ${property.property_title}`
+            }));
         }
       } catch (parseError) {
         console.warn('⚠️ Error parsing images JSON:', parseError);
-        images = [];
+        
+        if (property.image.trim() !== '') {
+          images = [{
+            id: 1,
+            url: property.image,
+            is_main: true,
+            property_id: propertyId,
+            order: 1,
+            alt: `Imagen principal de ${property.property_title}`
+          }];
+        }
       }
     }
 
-    console.log(`✅ Se encontraron ${images.length} imágenes para la propiedad: ${property.property_title}`);
+    console.log(`✅ Se procesaron ${images.length} imágenes válidas`);
+    console.log('🖼️ URLs procesadas:', images.map(img => img.url));
     
     res.status(200).json({
       success: true,
@@ -607,16 +642,11 @@ export const getPropertyImages = async (req: Request, res: Response) => {
       property_title: property.property_title,
       images: images,
       images_count: images.length,
-      message: 'Imágenes obtenidas correctamente'
+      message: `${images.length} imágenes obtenidas correctamente`
     });
 
   } catch (error: any) {
-    console.error('❌ Error completo in getPropertyImages:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      sql: error.sql
-    });
+    console.error('❌ Error completo in getPropertyImages:', error);
     
     res.status(500).json({ 
       error: 'Error interno del servidor al obtener las imágenes', 
