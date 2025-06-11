@@ -18,7 +18,7 @@ router.get('/search', async (req, res) => {
       bathrooms_min,
       bathrooms_max,
       parking_spaces,
-      built_area_min,
+      built_area_min, 
       built_area_max,
       total_area_min,
       total_area_max,
