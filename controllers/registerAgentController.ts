@@ -6,25 +6,33 @@ const registerAgent = async (req: Request, res: Response) => {
     console.log("BODY recibido:", req.body);
 
     try {
-        const { name, lastname, email, phone, password, id_real_estate, id_role } = req.body;
+        const { first_name, last_name, email, phone, password, realEstateId , roleId  } = req.body;
 
-        if ([name, lastname, email, phone, password, id_real_estate, id_role].some(field => field === undefined || field === null || field === "")) {
+        if (
+            !first_name?.trim() ||
+            !last_name?.trim() ||
+            !phone?.trim() ||
+            !email?.trim() ||
+            !password?.trim() ||
+            realEstateId  === undefined ||
+            roleId  === undefined
+        ) {
             return res.status(400).json({ error: "Todos los campos son obligatorios" });
         }
 
 
-        const agente = new Agent(name, lastname, email, phone, password, id_real_estate, id_role);
+        const agente = new Agent(first_name, last_name, email, phone, password, realEstateId , roleId );
         const result = await usuarioServi.registerAgent(agente);
 
         return res.status(201).json({
             message: "Agente registrado con éxito",
             agente: {
-                name,
-                lastname,
+                first_name,
+                last_name,
                 email,
                 phone,
-                id_real_estate,
-                id_role
+                realEstateId ,
+                roleId 
             }
         });
     } catch (error: any) {
