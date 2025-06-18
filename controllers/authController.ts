@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { validateEmailFormat } from '../utils/validateEmail';
 import promisePool from '../config/config-db';
-import transporter, { MAIL_FROM } from "../config/config-mailers";
+import {transporter,  MAIL_FROM } from "../config/config-mailers";
 import generateToken from '../Helpers/generateToken';
 import generateHash from '../Helpers/generateHash';
 import usuarioRepo from '../repositories/UserRepository';
@@ -84,7 +84,7 @@ export const recoverPassword = async (req: Request, res: Response) => {
 
     const token = generateToken({ correo }, 15); // Token válido por 15 minutos
 
-    const recoveryUrl = `http://localhost:10101/auth/restablecer-contrasena?token=${token}`;
+    const recoveryUrl = `https://domuhouse-express.onrender.com/auth/restablecer-contrasena?token=${token}`;
 
     await transporter.sendMail({
       from: MAIL_FROM,
@@ -113,7 +113,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const correo = decoded.data.correo;
 
     const hashedPassword = await generateHash(nuevaContrasena);
-    await usuarioRepo.actualizarContrasena(correo, hashedPassword);
+    await usuarioRepo.updatePassword(correo, hashedPassword);
 
     return res.json({ mensaje: 'Contraseña restablecida correctamente' });
 
