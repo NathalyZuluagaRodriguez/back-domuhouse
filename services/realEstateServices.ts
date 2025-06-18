@@ -3,7 +3,7 @@ import sendEmail from "../utils/sendEmailer";
 
 //interface de inmobiliaria
 interface NewRealEstate {
-    name: string,
+    name_realestate: string,
     nit: string,
     phone: string,
     email: string,
@@ -29,7 +29,7 @@ const registerRealEstate = async (data: NewRealEstate) => {
         }
 
         // RF05.2: Validate duplicate name/email
-        const exists = await realEstateRepo.findByNameOrEmail(data.name, data.email);
+        const exists = await realEstateRepo.findByNameOrEmail(data.name_realestate, data.email);
         if (exists) {
             throw new Error("A real estate with this name or email already exists");
         }
@@ -45,7 +45,7 @@ const registerRealEstate = async (data: NewRealEstate) => {
             await sendEmail(
                 adminEmail,
                 "Successful Real Estate Registration",
-                `Hello! Your real estate "${data.name}" has been successfully registered. 
+                `Hello! Your real estate "${data.name_realestate}" has been successfully registered. 
                  You are now the main admin. You can log in to manage your properties, agents, and more.`
             );
         }

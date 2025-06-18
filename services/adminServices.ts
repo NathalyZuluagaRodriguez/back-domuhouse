@@ -18,7 +18,7 @@ export const registerAdmin = async (adminData: AdminRegisterDto) => {
   const result = await adminRepository.insertAdmin(adminConPasswordHash);
 
   // ✅ Enviar correo de notificación
-  await sendAdminRegisterMail(adminData.email, adminData.first_name);
+  await sendAdminRegisterMail(adminData.email, adminData.name_person);
   
   return result;
 };
