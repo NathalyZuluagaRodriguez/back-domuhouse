@@ -53,7 +53,6 @@ app.use('/api/inmobiliarias', realEstateRoutes);   // ← Aquí montamos las rut
 app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
-app.use('/api/registro', registroRoutes);
 // app.use('/api/auth', authRoutes);
 
 // app.use("/api", agentRoutes);
