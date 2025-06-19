@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import mysql from 'mysql2';
 
 // Cargar las variables de entorno
@@ -9,7 +11,10 @@ console.log('Variables de entorno cargadas:', {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD ? '[CONTRASEÑA CONFIGURADA]' : '[NO CONFIGURADA]',
   database: process.env.DB_NAME,
-  port: process.env.PORT
+  port: process.env.PORT || 3306,
+  ssl: {
+    ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
+  }
 });
 
 const db = mysql.createPool({
@@ -17,9 +22,10 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  connectionLimit: 10,
-  queueLimit: 0
-  
+  port: Number(process.env.PORT) || 3306,
+  ssl: {
+    ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
+  }
 });
 
 // Prueba de conexión a la base de datos

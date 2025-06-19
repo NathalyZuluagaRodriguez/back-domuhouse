@@ -54,11 +54,22 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
+// app.use('/api/auth', authRoutes);
 
-// 📊 Rutas de reportes
-app.use('/api/reportes', reportesRoute);
+// app.use("/api", agentRoutes);
+// app.use("/api", propertyRoutes); 
+// app.use("/api", ventasAlquileresRoute);
+// app.use(reporteRoutes);
+// app.use('/api/reportes', reportesRoute);
+app.use('/register',register);
+// app.use('/auth', authRoutes);
+app.use('/logout', logout);
 
-// 🤖 Rutas de servicios
+// 🔐 Autenticación y registro
+app.use('/login', login); 
+
+// 🔍 Otras rutas sin prefijo
+// app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
 
