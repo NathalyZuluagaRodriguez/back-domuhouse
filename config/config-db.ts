@@ -11,7 +11,7 @@ console.log('Variables de entorno cargadas:', {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD ? '[CONTRASEÑA CONFIGURADA]' : '[NO CONFIGURADA]',
   database: process.env.DB_NAME,
-  port: process.env.PORT || 3306,
+  port: process.env.PORT || 10101,
   ssl: {
     ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
   }
@@ -22,7 +22,7 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: Number(process.env.PORT) || 3306,
+  port: Number(process.env.PORT) || 10101,
   ssl: {
     ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
   }
