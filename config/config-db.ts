@@ -1,20 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import mysql from 'mysql2';
-
-// Cargar las variables de entorno
 require('dotenv').config();
 
-// Imprimir las variables de entorno (sin mostrar la contraseña completa)
+// Mostrar info de conexión (sin la contraseña real)
 console.log('Variables de entorno cargadas:', {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD ? '[CONTRASEÑA CONFIGURADA]' : '[NO CONFIGURADA]',
   database: process.env.DB_NAME,
-  port: process.env.PORT || 10101,
-  ssl: {
-    ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
-  }
+  port: process.env.DB_PORT || 3306,
+  ssl: '[SSL ACTIVO]'
 });
 
 const db = mysql.createPool({
@@ -22,19 +18,17 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: Number(process.env.PORT) || 10101,
+  port: Number(process.env.DB_PORT) || 3306,
   ssl: {
-    ca: fs.readFileSync(path.resolve(__dirname, '../cert/DigiCertGlobalRootCA.crt.pem'))
-  }
+    rejectUnauthorized: true, // ✅ conexión segura sin el certificado .pem
+  },
 });
 
-// Prueba de conexión a la base de datos
 const promisePool = db.promise();
 
-// Función para probar la conexión
 async function testConnection() {
   try {
-    const [result] = await promisePool.query('SELECT 1 as test');
+    const [result] = await promisePool.query('SELECT 1 AS test');
     console.log('✅ Conexión a la base de datos establecida correctamente:', result);
     return true;
   } catch (error) {
@@ -43,7 +37,5 @@ async function testConnection() {
   }
 }
 
-// Ejecutar el test al importar este módulo
 testConnection();
-
 export default promisePool;
