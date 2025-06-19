@@ -6,10 +6,10 @@ const registerAgent = async (req: Request, res: Response) => {
     console.log("BODY recibido:", req.body);
 
     try {
-        const { first_name, last_name, email, phone, password, realEstateId , roleId  } = req.body;
+        const { name_person, last_name, email, phone, password, realEstateId , roleId  } = req.body;
 
         if (
-            !first_name?.trim() ||
+            !name_person?.trim() ||
             !last_name?.trim() ||
             !phone?.trim() ||
             !email?.trim() ||
@@ -21,13 +21,13 @@ const registerAgent = async (req: Request, res: Response) => {
         }
 
 
-        const agente = new Agent(first_name, last_name, email, phone, password, realEstateId , roleId );
+        const agente = new Agent(name_person, last_name, email, phone, password, realEstateId , roleId );
         const result = await usuarioServi.registerAgent(agente);
 
         return res.status(201).json({
             message: "Agente registrado con éxito",
             agente: {
-                first_name,
+                name_person,
                 last_name,
                 email,
                 phone,

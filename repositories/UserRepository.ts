@@ -75,18 +75,18 @@ class usuarioRepo {
     }
   }
 
- static async CreateAgent(agent: Agent) {
-  const sql = 'CALL CreateAgent(?, ?, ?, ?, ?, ?, ?)';
-  const values =   [
-    agent.first_name,
-    agent.last_name,
-    agent.phone,
-    agent.email,
-    agent.password,
-    agent.realEstateId,
-    agent.roleId
-  ]
-
+  static async CreateAgent(agent: Agent) {
+    const sql = 'CALL CreateAgent(?, ?, ?, ?, ?, ?, ?)';
+    const values = [
+      agent.name_person,   // 👈 aquí cambió
+      agent.last_name,
+      agent.phone,
+      agent.email,
+      agent.password,
+      agent.realEstateId,
+      agent.roleId
+    ];
+  
     try {
       const [rows]: any = await db.execute(sql, values);
       return rows;
@@ -96,11 +96,41 @@ class usuarioRepo {
     }
   }
 
-  static async actualizarContrasena(email: string, nuevaContrasena: string) {
-    const sql = 'CALL sp_actualizar_contrasena(?, ?)';
-    const values = [email, nuevaContrasena];
+  static async Verifysingleemail(email: string): Promise<boolean> {
+    const query = 'SELECT COUNT(*) as count FROM usuario WHERE email = ?';
+    const [rows]: any = await db.execute(query, [email]);
+    const count = rows[0][0].count;
+    return count === 0; // true si no existe ese correo
+  }
+
+  static async insertSolicitud(nombre: string, apellido: string, correo: string, telefono: string, password: string, idInmobiliaria: number) {
+    const sql = 'CALL InsertarSolicitudAgente(?, ?, ?, ?, ?, ?)';
+    const values = [nombre, apellido, correo, telefono, password, idInmobiliaria];
     return db.execute(sql, values);
   }
+  
+  static async listSolicitudes() {
+    const sql = 'SELECT * FROM solicitudes_agente';
+    const [rows]: any = await db.execute(sql);
+    return rows[0];
+  }
+  
+  static async approveSolicitud(id: number) {
+    const sql = 'CALL AprobarSolicitudAgente(?)';
+    return db.execute(sql, [id]);
+  }
+  
+  static async rejectSolicitud(id: number, justificacion: string | null = null) {
+    const sql = 'CALL RechazarSolicitudAgente(?, ?)';
+    return db.execute(sql, [id, justificacion]);
+  }
+  
+  static async cancelSolicitud(id: number) {
+    const sql = 'CALL CancelarSolicitudAgente(?)';
+    return db.execute(sql, [id]);
+  }
+  
 }
+
 
 export default usuarioRepo;
