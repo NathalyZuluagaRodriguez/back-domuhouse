@@ -10,16 +10,16 @@ interface LoginResponse {
   logged: boolean;
   status: string;
   id?: number;
-  first_name?: string;
+  name_person?: string;
   email?: string;
   avatar?: string;
+  role_id?: number;
 }
 
 const login = async (req: Request, res: Response) => {
   try {
-    // ✅ AGREGAR: Validación de datos de entrada
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ 
         status: "Error", 
@@ -28,39 +28,62 @@ const login = async (req: Request, res: Response) => {
     }
 
     console.log("🔐 Intento de login para:", email);
-    
-    const login: LoginResponse = await usuarioServi.login(new Login(email, password));
 
-    console.log("📋 Resultado del login:", login);
+    const loginResult: LoginResponse = await usuarioServi.login(new Login(email, password));
 
-    if (login.logged && login.id && login.first_name) {
+    console.log("📋 Resultado completo del login:", loginResult);
+
+    // 🔧 VALIDACIÓN CORRECTA - VERIFICAR QUE logged SEA true
+    if (loginResult.logged === true) {
+      
+      // VERIFICAR QUE TODOS LOS CAMPOS NECESARIOS EXISTAN
+      if (!loginResult.id || !loginResult.name_person || loginResult.role_id === undefined) {
+        console.error("❌ DATOS FALTANTES EN EL RESULTADO:", {
+          id: loginResult.id,
+          name_person: loginResult.name_person,
+          role_id: loginResult.role_id
+        });
+        return res.status(500).json({ 
+          status: "error",
+          message: "Error del sistema: Datos de usuario incompletos" 
+        });
+      }
+
       const userData = {
-        id: login.id,
-        first_name: login.first_name,
-        email: login.email,
-        avatar: login.avatar ?? null,
+        id: loginResult.id,
+        name_person: loginResult.name_person,
+        email: loginResult.email || email,
+        avatar: loginResult.avatar || null,
+        role_id: loginResult.role_id
       };
 
-      console.log("✅ Login exitoso para usuario:", userData.first_name);
+      console.log("✅ Login exitoso - Datos del usuario:", userData);
+      console.log("🎯 Role ID para redirección:", userData.role_id);
 
       return res.status(200).json({
-        status: login.status,
+        status: "success",
         token: generateToken({
-          id: login.id,
-          first_name: login.first_name,
-          email: login.email,
+          id: userData.id,
+          name_person: userData.name_person,
+          email: userData.email,
+          role_id: userData.role_id
         }, 5),
         user: userData,
       });
     }
 
-    console.log("❌ Login fallido:", login.status);
-    return res.status(401).json({ status: login.status });
+    // 🔧 Si el login falló (logged === false)
+    console.log("❌ Login fallido - Razón:", loginResult.status);
+    return res.status(401).json({ 
+      status: "error",
+      message: loginResult.status || "Credenciales incorrectas" 
+    });
 
   } catch (error: any) {
     console.error("❌ Error en login:", error);
     return res.status(500).json({ 
-      error: "Error en el servidor",
+      status: "error",
+      message: "Error en el servidor",
       details: error.message 
     });
   }
