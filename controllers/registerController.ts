@@ -4,12 +4,16 @@ import UserService from "../services/UserServices";
 
 let register = async (req: Request, res: Response) => {
   try {
-    const { name_person, last_name, phone, email, password } = req.body;
-    console.log("📩 Datos recibidos:", name_person, last_name, phone, email, password);
+    // Aquí el mapeo correcto: usamos first_name que llega desde el frontend
+    const { first_name, last_name, phone, email, password } = req.body;
 
-    const registerUser = await UserService.register(
-      new User(name_person, last_name, email, phone, password, 3)  // ✅ email y phone en orden correcto
-    );
+    console.log("📩 Datos recibidos:", first_name, last_name, phone, email, password);
+
+    // Creamos el objeto User correctamente
+    const user = new User(first_name, last_name, email, phone, password, 3);
+
+    // Llamamos el servicio (no es necesario guardar en variable)
+    await UserService.register(user);
 
     console.log("✅ Usuario registrado con éxito");
     return res.status(201).json({ status: "register ok" });

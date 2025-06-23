@@ -9,15 +9,16 @@ class UserRepository {
 static async createUser(Person: User) {
   const sql = 'CALL CreateUser(?, ?, ?, ?, ?, ?)';
   const values = [
-    Person.name_person,  // p_name_person
+    Person.name_person,  // p_first_name
     Person.last_name,    // p_last_name
     Person.email,        // p_email
-    Person.password,     // p_password
-    Person.phone,        // p_phone
+    Person.phone,        // p_phone 👉 CORRECTO AQUÍ
+    Person.password,     // p_password 👉 AHORA AQUÍ
     Person.role_id       // p_role_id
   ];
   return db.execute(sql, values);
 }
+
  
 
   static async searchUser(login: Login) {
@@ -74,7 +75,7 @@ static async createUser(Person: User) {
         logged: true,
         status: "Successful authentication",
         id: user.person_id,
-        name_person: user.name_person.trim(), // ✅ AHORA SÍ INCLUYE name_person
+        name_person: user.name_person.trim(), 
         email: user.email,
         avatar: user.avatar || null,
         role_id: parseInt(user.role_id, 10) // ✅ AHORA SÍ INCLUYE role_id
