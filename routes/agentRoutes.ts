@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import db from '../config/config-db';
-import registerAgent from "../controllers/registerAgentController";
+import registerAgentWithToken from "../controllers/registerAgentController";
 import getPropertiesByAgent from "../controllers/propertyByController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
 import getAgentePerformanceById from "../controllers/getAlquileresVentaController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
+import { generateInvitation } from '../controllers/invitationController';
 
 const router = Router();
 
-router.post("/registro-agente", registerAgent);
+router.post("/registro-agente", registerAgentWithToken);
+router.post('/generar-token', generateInvitation);
 router.get("/propiedades-agente/:id", getPropertiesByAgent);
 router.get("/ventas-alquileres", getVentasAlquileres);
 router.get("/reporte-desempeno-agentes", getReporteDesempenoAgentes);
