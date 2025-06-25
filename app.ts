@@ -56,7 +56,7 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
 // app.use('/api/auth', authRoutes);
 
-// app.use("/api", agentRoutes);
+app.use("/api", agentRoutes);
 // app.use("/api", propertyRoutes); 
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);

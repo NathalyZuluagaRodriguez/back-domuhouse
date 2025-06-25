@@ -89,32 +89,62 @@ static async createUser(Person: User) {
       throw new Error(`Error al buscar usuario: ${error?.message || error}`);
     }
   }
+// Agente
 
-  static async createAgente(agente: Agent) {
-    const sql = 'CALL CrearAgente(?, ?, ?, ?, ?, ?, ?)';
-    const values = [
-      agente.nombre,
-      agente.apellido,
-      agente.telefono,
-      agente.email,
-      agente.password,
-      agente.id_inmobiliaria,
-      agente.id_rol
-    ];
-    try {
-      const [rows]: any = await db.execute(sql, values);
-      return rows;
-    } catch (error) {
-      console.error("❌ Error ejecutando procedimiento CrearAgente:", error);
-      throw error;
-    }
+static async verifySingleEmail(email: string): Promise<boolean> {
+  const sql  = 'SELECT COUNT(*) AS count FROM person WHERE email = ?';
+  const [rows]: any = await db.execute(sql, [email]);
+
+  console.log('🟡 rows:', JSON.stringify(rows, null, 2));
+
+  // 1. rows==[]  → treat as "email not found"
+  if (!Array.isArray(rows) || rows.length === 0) return true;
+
+  // 2. CALL shape → rows[0] is the first result-set
+  if (Array.isArray(rows[0])) {
+    return (rows[0][0]?.count ?? 0) === 0;
   }
 
-  static async actualizarContrasena(email: string, nuevaContrasena: string) {
-    const sql = 'CALL sp_actualizar_contrasena(?, ?)';
-    const values = [email, nuevaContrasena];
-    return db.execute(sql, values);
-  }
+  // 3. Plain SELECT shape
+  return (rows[0]?.count ?? 0) === 0;
 }
+
+
+static async insertAgentJoinRequest(
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string,
+  password: string,
+  realEstateId: number
+) {
+  const sql = 'CALL InsertAgentJoinRequest(?, ?, ?, ?, ?, ?)';
+  const values = [firstName, lastName, email, phone, password, realEstateId];
+  return db.execute(sql, values);
+}
+
+static async listAgentJoinRequests() {
+  const sql = 'SELECT * FROM agent_join_requests';
+  const [rows]: any = await db.execute(sql);
+  return rows[0];
+}
+
+static async approveAgentJoinRequest(id: number) {
+  const sql = 'CALL ApproveAgentJoinRequest(?)';
+  return db.execute(sql, [id]);
+}
+
+static async rejectAgentJoinRequest(id: number, justification: string | null = null) {
+  const sql = 'CALL RejectAgentJoinRequest(?, ?)';
+  return db.execute(sql, [id, justification]);
+}
+
+static async cancelAgentJoinRequest(id: number) {
+  const sql = 'CALL CancelAgentJoinRequest(?)';
+  return db.execute(sql, [id]);
+}
+
+}
+
 
 export default UserRepository;
