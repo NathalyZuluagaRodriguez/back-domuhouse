@@ -7,7 +7,7 @@
     "dev": "ts-node-dev src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/app.js",
-    "build": "tsc -p . && xcopy cert dist\\cert /E /I /Y"
+    "build": "tsc -p ."
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
