@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import multer from 'multer';
 
+// 📁 Importar todas las rutas
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
 import searchRoutes from './routes/searchProperty';
@@ -12,20 +12,12 @@ import adminRoutes from './routes/adminRoutes';
 import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
-import agentRoutes from "./routes/agentRoutes";
-// import  propertyRoutes  from './routes/agentRoutes'
-// import  ventasAlquileresRoute  from './routes/agentRoutes'
-// import reporteRoutes from './routes/agentRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
-import busquedaRoutes from './routes/searchProperty'; 
 import register from './routes/register';
-import propertiesRoutes  from './routes/propertiesRoutes';
-// import authRoutes from './routes/authRoutes';
+import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
 
-
-// 🔧 Cargar variables de entorno
 dotenv.config();
 
 const app = express();
@@ -44,15 +36,24 @@ app.use((req, res, next) => {
   next();
 });
 
-
-// import busquedaRoutes from './routes/searchProperty'; // Repetida pero mantenida por si alguna usa prefijo distinto
-
-// ✅ Prefijo consistente para rutas API
+// ✅ RUTAS API CON PREFIJOS ORGANIZADOS
+// 🏠 Rutas de propiedades
 app.use('/api/properties', propertiesRoutes);
-app.use('/api/inmobiliarias', realEstateRoutes);   // ← Aquí montamos las rutas de inmobiliarias
+app.use('/api/inmobiliarias', realEstateRoutes);
+
+// 🔍 CORREGIR LAS RUTAS DE BÚSQUEDA
+app.use('/api/search', searchRoutes);  // Cambiar a /api/search
+
+// 🔐 Rutas de autenticación
+app.use('/login', login);
+app.use('/register', register);
+app.use('/logout', logout);
+
+// 👥 Rutas de administración
 app.use('/api/admin', adminRoutes);
 app.use('/api/invitacion', invitacionRoutes);
 app.use('/api/password', passwordRoutes);
+app.use('/api/registro', registroRoutes);
 // app.use('/api/auth', authRoutes);
 
 app.use("/api", agentRoutes);
@@ -71,7 +72,6 @@ app.use('/login', login);
 // app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
-app.use('/api/search', searchRoutes);
 
 // ✅ Ruta base de salud
 app.get('/', (_req, res) => {
@@ -80,12 +80,29 @@ app.get('/', (_req, res) => {
     timestamp: new Date().toISOString(),
     status: 'online',
     iaIntegration: process.env.GEMINI_API_KEY ? 'configured' : 'missing',
+    endpoints: {
+      properties: '/api/properties',
+      realEstate: '/api/inmobiliarias',
+      search: '/api/search/search',
+      filterByOperation: '/api/search/filter/{Venta|Arriendo}',
+      quickFilter: '/api/search/quick-filter',
+      allByOperation: '/api/search/all-by-operation'
+    }
   });
 });
 
 // 🔍 Ruta de prueba
 app.get('/test', (_req, res) => {
-  res.json({ message: 'Server is working!' });
+  res.json({ 
+    message: 'Server is working!',
+    availableEndpoints: [
+      'GET /api/search/search - Búsqueda completa con filtros',
+      'GET /api/search/filter/Venta - Filtrar solo propiedades en venta',
+      'GET /api/search/filter/Arriendo - Filtrar solo propiedades en arriendo',
+      'POST /api/search/quick-filter - Filtrado rápido por operación',
+      'GET /api/search/all-by-operation - Todas las propiedades separadas por operación'
+    ]
+  });
 });
 
 // ⚠️ Verificación de claves importantes
@@ -100,6 +117,13 @@ app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Ruta no encontrada',
     message: `La ruta ${req.method} ${req.originalUrl} no existe`,
+    availableRoutes: [
+      '/api/search/search',
+      '/api/search/filter/Venta',
+      '/api/search/filter/Arriendo',
+      '/api/search/quick-filter',
+      '/api/search/all-by-operation'
+    ]
   });
 });
 
@@ -119,7 +143,10 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📱 API Base URL: http://localhost:${PORT}`);
   console.log(`🏠 Properties Endpoint: http://localhost:${PORT}/api/properties`);
-  console.log(`🏠 Real Estate Endpoint: http://localhost:${PORT}/api/inmobiliarias`); // Confirmamos el endpoint aquí
+  console.log(`🏠 Real Estate Endpoint: http://localhost:${PORT}/api/inmobiliarias`);
+  console.log(`🔍 Search Endpoint: http://localhost:${PORT}/api/search/search`);
+  console.log(`🔍 Filter Venta: http://localhost:${PORT}/api/search/filter/Venta`);
+  console.log(`🔍 Filter Arriendo: http://localhost:${PORT}/api/search/filter/Arriendo`);
   console.log(`🤖 IA Endpoint: http://localhost:${PORT}/ia`);
 });
 

@@ -4,13 +4,22 @@ import User from '../Dto/UserDto';
 import Login from '../Dto/loginDto';
 import Agent from '../Dto/AgentsDto';
 
-class usuarioRepo {
+class UserRepository {
 
-  static async createUser(Person: User) {
-    const sql = 'CALL CreateUser(?, ?, ?, ?, ?, ?)';
-    const values = [Person.first_name, Person.last_name, Person.phone, Person.email, Person.password, 3];
-    return db.execute(sql, values);
-  }
+static async createUser(Person: User) {
+  const sql = 'CALL CreateUser(?, ?, ?, ?, ?, ?)';
+  const values = [
+    Person.name_person,  // p_first_name
+    Person.last_name,    // p_last_name
+    Person.email,        // p_email
+    Person.phone,        // p_phone 👉 CORRECTO AQUÍ
+    Person.password,     // p_password 👉 AHORA AQUÍ
+    Person.role_id       // p_role_id
+  ];
+  return db.execute(sql, values);
+}
+
+ 
 
   static async searchUser(login: Login) {
     try {
@@ -20,54 +29,60 @@ class usuarioRepo {
       const values = [login.email];
       const [rows]: any = await db.execute(sql, values);
 
-      console.log("📊 Filas devueltas por la base de datos:", rows);
+      console.log("📊 Filas devueltas por la base de datos:", JSON.stringify(rows, null, 2));
 
-      // ✅ PROBLEMA POTENCIAL: Verificar estructura de respuesta del procedimiento
-      let user;
+      // EXTRAER EL USUARIO CORRECTAMENTE
+      let user = null;
+      
       if (Array.isArray(rows) && rows.length > 0) {
-        // Si el procedimiento devuelve un array de arrays
-        if (Array.isArray(rows[0]) && rows[0].length > 0) {
-          user = rows[0][0];
-        } else {
-          // Si el procedimiento devuelve directamente un array de objetos
-          user = rows[0];
+        const resultSet = rows[0];
+        if (Array.isArray(resultSet) && resultSet.length > 0) {
+          user = resultSet[0];
         }
       }
+
+      console.log("👤 USUARIO RAW EXTRAÍDO:", user);
 
       if (!user) {
         console.log("❌ Usuario no encontrado");
         return { logged: false, status: "Usuario no encontrado" };
       }
 
-      console.log("🔍 Usuario encontrado:", {
-        id: user.person_id,
-        email: user.email,
-        first_name: user.first_name,
-        hasPassword: !!user.password
-      });
-
-      if (!user.password) {
-        console.error("❌ El usuario no tiene contraseña almacenada");
-        return { logged: false, status: "Error en la configuración del usuario" };
+      // VERIFICAR CAMPOS OBLIGATORIOS ANTES DE CONTINUAR
+      if (!user.person_id || !user.email || !user.name_person || !user.password || user.role_id === undefined) {
+        console.error("❌ DATOS INCOMPLETOS DEL USUARIO:", {
+          person_id: user.person_id,
+          email: user.email,
+          name_person: user.name_person,
+          password: !!user.password,
+          role_id: user.role_id
+        });
+        return { logged: false, status: "Error en los datos del usuario" };
       }
 
       console.log("🔐 Verificando contraseña...");
       const isPasswordValid = await bcrypt.compare(login.password, user.password);
 
-      if (isPasswordValid) {
-        console.log("✅ Contraseña válida");
-        return {
-          logged: true,
-          status: "Successful authentication",
-          id: user.person_id,
-          first_name: user.first_name,
-          email: user.email,
-          avatar: user.avatar || null
-        };
+      if (!isPasswordValid) {
+        console.log("❌ Contraseña inválida");
+        return { logged: false, status: "Contraseña incorrecta" };
       }
 
-      console.log("❌ Contraseña inválida");
-      return { logged: false, status: "Contraseña incorrecta" };
+      console.log("✅ Contraseña válida");
+      
+      // 🔧 CONSTRUIR RESPUESTA CORRECTA - ESTA ES LA SOLUCIÓN
+      const resultado = {
+        logged: true,
+        status: "Successful authentication",
+        id: user.person_id,
+        name_person: user.name_person.trim(), 
+        email: user.email,
+        avatar: user.avatar || null,
+        role_id: parseInt(user.role_id, 10) // ✅ AHORA SÍ INCLUYE role_id
+      };
+
+      console.log("📤 RESULTADO FINAL A DEVOLVER:", resultado);
+      return resultado;
 
     } catch (error: any) {
       console.error("❌ Error en searchUser:", error);
@@ -132,4 +147,4 @@ static async cancelAgentJoinRequest(id: number) {
 }
 
 
-export default usuarioRepo;
+export default UserRepository;
