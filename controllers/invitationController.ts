@@ -1,11 +1,11 @@
 // controllers/invitationController.ts
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { saveInvitationToken } from '../repositories/invitacionRepository';
+import { saveInvitationToken, getAllInvitationTokens }  from '../repositories/invitacionRepository';
 import { sendInvitationEmail } from '../utils/sendEmailer';
 
 export const generateInvitation = async (req: Request, res: Response) => {
-  const { recipient_email, realEstateId  } = req.body;
+  const { recipient_email, realEstateId } = req.body;
 
   try {
     const token = jwt.sign({ recipient_email }, process.env.JWT_SECRET as string, {
@@ -26,4 +26,19 @@ export const generateInvitation = async (req: Request, res: Response) => {
       error: (error as Error).message,
     });
   }
-};
+
+  
+  };
+
+/* NUEVA FUNCION OBTENER LOS TOKENS */
+  export const getInvitationTokens = async (_req: Request, res: Response) => {
+    try {
+      const tokens = await getAllInvitationTokens()
+      return res.status(200).json(tokens)      
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Error fetching tokens',
+        error: (error as Error).message
+      })
+    }
+  }
