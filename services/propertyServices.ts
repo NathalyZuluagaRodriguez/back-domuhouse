@@ -1,83 +1,90 @@
-import db from "../config/config-db"; // Asegúrate de que este sea tu conector a MySQL
+import db from "../config/config-db";
 
 class PropertyService {
-  static async getPropertiesByAgentId(id_persona: number) {
+  // ---------- 1. Properties owned by the agent ----------
+  static async getPropertiesByAgentId(agentId: number) {
     const sql = `
-  SELECT 
-    p.id_propiedad,
-    p.direccion,
-    p.descripcion,
-    p.precio,
-    p.estado,
-    t.nombre_tipo_propiedad,
-    per.id_persona,
-    per.nombre AS nombre_agente,
-    per.apellido AS apellido_agente,
-    per.correo AS correo_agente,
-    per.telefono AS telefono_agente
-  FROM Propiedad p
-  LEFT JOIN Tipo_Propiedad t ON p.id_tipo_propiedad = t.id_tipo_propiedad
-  JOIN Persona per ON p.id_persona = per.id_persona
-  WHERE p.id_persona = ?
-`;
+      SELECT
+        property.property_id          AS propertyId,
+        property.address              AS address,
+        property.description          AS description,
+        property.price                AS price,
+        property.status               AS status,
+        propertytype.type_name        AS propertyType,
+        person.person_id             AS agentId,
+        person.name_person           AS agentFirstName,
+        person.last_name             AS agentLastName,
+        person.email                 AS agentEmail,
+        person.phone                 AS agentPhone
+      FROM property
+      LEFT JOIN propertytype
+        ON property.property_type_id = propertytype.property_type_id
+      JOIN person
+        ON property.person_id = person.person_id
+      WHERE property.person_id = ?
+    `;
 
-    const [rows]: any = await db.execute(sql, [id_persona]);
+    const [rows]: any = await db.execute(sql, [agentId]);
     return rows;
   }
 
+  // ---------- 2. Sold / Rented properties (agent filter optional) ----------
+  static async getAgentSalesAndRentals(agentId?: number) {
+    let sql = `
+      SELECT
+        property.property_id          AS propertyId,
+        property.address              AS address,
+        property.description          AS description,
+        property.price                AS price,
+        property.status               AS status,
+        propertytype.type_name        AS propertyType,
+        person.person_id             AS agentId,
+        person.name_person           AS agentFirstName,
+        person.last_name             AS agentLastName,
+        person.email                 AS agentEmail,
+        person.phone                 AS agentPhone
+      FROM property
+      LEFT JOIN propertytype
+        ON property.property_type_id = propertytype.property_type_id
+      JOIN person
+        ON property.person_id = person.person_id
+      WHERE property.status IN ('sold', 'rented')
+    `;
 
-  
-}
-export const getVentasAlquileresAgente = async (id_agente?: number) => {
-  let sql = `
-    SELECT 
-      p.id_propiedad,
-      p.direccion,
-      p.descripcion,
-      p.precio,
-      p.estado,
-      t.nombre_tipo_propiedad,
-      per.id_persona AS id_agente,
-      per.nombre AS nombre_agente,
-      per.apellido AS apellido_agente,
-      per.correo AS correo_agente,
-      per.telefono AS telefono_agente
-    FROM Propiedad p
-    LEFT JOIN Tipo_Propiedad t ON p.id_tipo_propiedad = t.id_tipo_propiedad
-    JOIN Persona per ON p.id_persona = per.id_persona
-    WHERE p.estado IN ('Vendida', 'Alquilada')
-  `;
+    const params: any[] = [];
+    if (agentId) {
+      sql += " AND person.person_id = ?";
+      params.push(agentId);
+    }
 
-  const params: any[] = [];
-
-  if (id_agente) {
-    sql += " AND per.id_persona = ?";
-    params.push(id_agente);
+    const [rows]: any = await db.execute(sql, params);
+    return rows;
   }
 
-  const [rows]: any = await db.execute(sql, params);
-  return rows;
-};
+  // ---------- 3. Performance report ----------
+  static async getAgentPerformanceReportById(agentId: number) {
+    const sql = `
+      SELECT
+        person.person_id                                 AS agentId,
+        person.name_person                               AS firstName,
+        person.last_name                                 AS lastName,
+        COUNT(DISTINCT property.property_id)             AS totalProperties,
+        SUM(CASE WHEN property.status = 'sold' THEN 1 ELSE 0 END)     AS totalSold,
+        SUM(CASE WHEN property.status = 'rented' THEN 1 ELSE 0 END)   AS totalRented,
+        COUNT(DISTINCT visit.visit_id)                   AS totalVisits
+      FROM person
+      LEFT JOIN property
+        ON person.person_id = property.person_id
+      LEFT JOIN visit
+        ON visit.property_id = property.property_id
+      WHERE person.role_id = 2
+        AND person.person_id = ?
+      GROUP BY person.person_id
+    `;
 
+    const [rows]: any = await db.execute(sql, [agentId]);
+    return rows[0]; // Return single report row
+  }
+}
 
-export const getAgentePerformanceReportById = async (idAgente: number) => {
-  const sql = `
-    SELECT
-      per.id_persona AS id_agente,
-      per.nombre,
-      per.apellido,
-      COUNT(DISTINCT prop.id_propiedad) AS total_propiedades,
-      SUM(CASE WHEN prop.estado = 'Vendida' THEN 1 ELSE 0 END) AS total_vendidas,
-      SUM(CASE WHEN prop.estado = 'Alquilada' THEN 1 ELSE 0 END) AS total_alquiladas,
-      COUNT(DISTINCT vis.id_visita) AS total_visitas
-    FROM Persona per
-    LEFT JOIN Propiedad prop ON per.id_persona = prop.id_persona
-    LEFT JOIN Visita vis ON vis.id_propiedad = prop.id_propiedad
-    WHERE per.id_rol = 2 AND per.id_persona = ?
-    GROUP BY per.id_persona;
-  `;
-
-  const [rows]: any = await db.execute(sql, [idAgente]);
-  return rows;
-};
 export default PropertyService;
