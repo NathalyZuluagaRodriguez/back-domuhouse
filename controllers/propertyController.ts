@@ -429,7 +429,7 @@ export const getPropertyById = async (req: Request, res: Response) => {
       `SELECT 
         p.*,
         pt.type_name as property_type_name,
-        CONCAT(per.first_name, ' ', per.last_name) as agent_name,
+        CONCAT(per.name_person, ' ', per.last_name) as agent_name,
         per.email as agent_email,
         per.phone as agent_phone
       FROM Property p
