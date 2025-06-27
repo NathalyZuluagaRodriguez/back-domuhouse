@@ -12,6 +12,8 @@ import {
   getPropertyById,
   getPropertyImages 
 } from '../controllers/propertyController';
+import { getUserProperties } from '../controllers/userPropertyController';
+import { verifyToken } from '../middleware/VerifyToken';
 
 const router = express.Router();
 
@@ -43,5 +45,7 @@ router.get('/type/:property_type_id', getPropertiesByType);
 
 // ✅ Obtener propiedad por ID (debe ir al final para evitar conflictos)
 router.get('/details/:id', getPropertyById);                  // GET /api/properties/details/:id
+
+router.get('/mis-propiedades', verifyToken, getUserProperties);
 
 export default router;
