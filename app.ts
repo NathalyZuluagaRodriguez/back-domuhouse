@@ -13,6 +13,7 @@ import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
+import agentRoutes from "./routes/agentRoutes";
 import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
@@ -57,6 +58,7 @@ app.use('/api/registro', registroRoutes);
 // app.use('/api/auth', authRoutes);
 
 app.use("/api", agentRoutes);
+app.use('/api/invitacion', invitacionRoutes);
 // app.use("/api", propertyRoutes); 
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);
