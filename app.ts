@@ -18,6 +18,8 @@ import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
+import agentRoutes from './routes/agentRoutes'
+
 
 dotenv.config();
 
