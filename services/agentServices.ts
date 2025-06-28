@@ -1,7 +1,7 @@
+import bcrypt from 'bcryptjs';  
+import Agent from '../Dto/AgentsDto';
 import AgentTokenRepository from '../repositories/agentTokenRepository';
 import UserRepository from '../repositories/UserRepository';
-import bcrypt from 'bcryptjs';
-import Agent from '../Dto/AgentsDto';
 
 export default class AgentService {
   // RF03.1: Register agent using invitation token
@@ -10,43 +10,42 @@ export default class AgentService {
     last_name: string;
     email: string;
     phone: string;
-    password: string;
+    password: string;   // viene en texto plano
     token: string;
   }) {
     try {
-      // Check if the email is unique
+      // 1️⃣ Valida que el email no exista
       const emailAvailable = await UserRepository.verifySingleEmail(data.email);
-      if (!emailAvailable) {
-        throw new Error('Email is already registered');
-      }
+      if (!emailAvailable) throw new Error('Email is already registered');
 
-      // Validate the token and get the real estate ID
+      // 2️⃣ Valida token y obtiene realEstateId
       const realEstateId = await AgentTokenRepository.validateToken(data.token);
-      if (!realEstateId) {
-        throw new Error('Invalid or expired token');
-      }
+      if (!realEstateId) throw new Error('Invalid or expired token');
 
-      // Create agent instance
+      // 3️⃣ 🔒 **Hashea la contraseña aquí**
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+
+      // 4️⃣ Crea la instancia del agente **con la contraseña hasheada**
       const agent = new Agent(
         data.name_person,
         data.last_name,
         data.email,
         data.phone,
-        data.password,
+        hashedPassword,   // ← usa el hash, no el texto plano
         realEstateId
       );
 
-      // Save agent to database
+      // 5️⃣ Persiste en la BD
       await AgentTokenRepository.createAgentWithToken(
         agent.name_person,
         agent.last_name,
         agent.email,
         agent.phone,
-        agent.password,
+        agent.password,   // ← ya es hash
         agent.realEstateId
       );
 
-      // Mark token as used
+      // 6️⃣ Marca el token como usado
       await AgentTokenRepository.markTokenUsed(data.token);
 
       return {
@@ -63,6 +62,7 @@ export default class AgentService {
       throw error;
     }
   }
+
 
   // RF03.2: Agent requests to join manually
   static async requestJoin(data: {

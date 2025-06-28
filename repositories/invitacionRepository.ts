@@ -7,9 +7,9 @@ export const saveInvitationToken = async (
   realEstateId: number
 ) => {
   const sql = `
-    INSERT INTO invitationtoken
-      (token, recipient_email, id_real_estate, used, expires_at)
-    VALUES (?, ?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY));
+   INSERT INTO invitationtoken
+      (token, recipient_email, id_real_estate)   
+    VALUES (?, ?, ?);
   `
   await db.execute(sql, [token, recipient_email, realEstateId])
 }
