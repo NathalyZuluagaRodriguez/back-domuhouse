@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // 📁 Importar todas las rutas
+import "express-session";
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
 import searchRoutes from './routes/searchProperty';
@@ -18,7 +19,6 @@ import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
-import agentRoutes from './routes/agentRoutes'
 
 
 dotenv.config();

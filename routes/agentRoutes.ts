@@ -6,6 +6,8 @@ import getVentasAlquileres from "../controllers/getAlquileresVentaController";
 // import getAgentePerformanceById from "../controllers/AgentPerformanceController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 import { generateInvitation } from '../controllers/invitationController';
+import { getAgentsByCompany } from "../controllers/agentController"; // 🆕
+import { validateToken } from "../middleware/authMiddleware";  
 
 import {
   listPropertiesByAgent,
@@ -14,6 +16,7 @@ import {
 } from "../controllers/propertyByAgentController";
 
 const router = Router();
+router.get("/agentes", validateToken, getAgentsByCompany);
 
 router.post("/registro-agente", registerAgentWithToken);
 router.post('/generar-token', generateInvitation);
