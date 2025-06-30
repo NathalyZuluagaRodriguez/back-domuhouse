@@ -1,25 +1,40 @@
+// src/middlewares/verifyToken.ts
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from "express";
-import dotenv from "dotenv";
-dotenv.config();
 
-const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization')?.split(" ")[1];
+interface DecodedToken {
+  id: number;
+  id_rol: number;
+}
 
-    if (!token) {
-        return res.status(401).json({ error: 'Token no proporcionado' });
-    }
+export const verifyToken = (req: Request & { user?: DecodedToken }, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
 
-    try {
-        const decoded = jwt.verify(token, process.env.KEY_TOKEN!) as { data: { id: number } };
-       // Nuevo
-        (req as any).user = decoded.data;
-        console.log("Token decodificado:", decoded.data);
-        
-        next();
-    } catch (error) {
-        return res.status(403).json({ error: 'Token inválido o expirado' });
-    }
+  if (!authHeader) {
+    return res.status(401).json({
+      success: false,
+      message: 'Acceso denegado. Token no proporcionado'
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Formato de token inválido'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key') as DecodedToken;
+
+    req.user = decoded; // Asignamos el usuario al request
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token inválido o expirado'
+    });
+  }
 };
-
-export default verifyToken;

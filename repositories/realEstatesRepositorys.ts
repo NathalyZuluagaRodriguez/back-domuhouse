@@ -13,7 +13,7 @@ export const checkRealEstateExists = async (realEstateId: number): Promise<boole
 };
 
 interface NewRealEstate {
-  name: string;
+  name_realestate: string;
   nit: string;
   phone: string;
   email: string;
@@ -25,17 +25,17 @@ interface NewRealEstate {
   person_id: number;
 }
 
-const findByNameOrEmail = async (name: string, email: string): Promise<boolean> => {
+const findByNameOrEmail = async (name_realestate: string, email: string): Promise<boolean> => {
   const [rows] = await db.query<RowDataPacket[]>(
-    'SELECT * FROM RealEstate WHERE name = ? OR email = ?',
-    [name, email]
+    'SELECT * FROM RealEstate WHERE name_realestate = ? OR email = ?',
+    [name_realestate, email]
   );
   return rows.length > 0;
 };
 
 const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
   const {
-    name,
+    name_realestate,
     nit,
     phone,
     department,
@@ -48,9 +48,9 @@ const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
   } = data;
 
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO RealEstate (name, nit, phone, email, num_properties, description, department, city, adress, person_id)
+    `INSERT INTO RealEstate (name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, nit, phone, email, num_properties, description, department, city, adress, person_id]
+    [name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id]
   );
 
   return result.affectedRows === 1;
