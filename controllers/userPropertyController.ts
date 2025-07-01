@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import Promisepool from '../config/config-db';
 
-export const getUserProperties = async (req: Request & { user?: { id: number } }, res: Response) => {
+export const getUserProperties = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.person_id;
 
     console.log(`📋 getUserProperties - Propiedades del usuario ${userId}`);
 

@@ -41,21 +41,21 @@ class AgentTokenRepository {
    * Crea al agente mediante el
    * procedimiento almacenado.
    * Espera 6 argumentos en este orden:
-   * firstName, lastName, email,
+   * namePerson, lastName, email,
    * phone, password, realEstateId
    * ─────────────────────────────── */
   static async createAgentWithToken(
-    firstName: string,
+    namePerson: string,
     lastName: string,
-    email: string,
     phone: string,
+    email: string,
     password: string,
     realEstateId: number
   ): Promise<void> {
     try {
       await db.execute(
         'CALL CreateAgentWithToken(?, ?, ?, ?, ?, ?)',
-        [firstName, lastName, email, phone, password, realEstateId]
+        [namePerson, lastName, phone, email, password, realEstateId]
       );
     } catch (err: any) {
       console.error('MySQL error:', err.sqlMessage || err.message);
