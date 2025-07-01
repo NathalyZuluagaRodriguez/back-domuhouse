@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 interface DecodedToken {
-  id: number;
-  id_rol: number;
+  person_id: number;
+  role_id: number;
 }
 
 export const verifyToken = (req: Request & { user?: DecodedToken }, res: Response, next: NextFunction) => {
