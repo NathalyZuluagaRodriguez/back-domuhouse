@@ -1,28 +1,37 @@
 import { Router } from 'express';
 import db from '../config/config-db';
 import registerAgentWithToken from "../controllers/registerAgentController";
-// import getPropertiesByAgent from "../controllers/propertyByAgentController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
-// import getAgentePerformanceById from "../controllers/AgentPerformanceController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 import { generateInvitation } from '../controllers/invitationController';
-
-import {
-  listPropertiesByAgent,
-  listSalesAndRentals,
-  getAgentPerformanceReport,
-} from "../controllers/propertyByAgentController";
-
+import {listPropertiesByAgent,listSalesAndRentals,getAgentPerformanceReport,getProperty,updateProperty,deleteProperty,} from "../controllers/propertyByAgentController";
+import { listVisitsByAgent, scheduleVisit, changeVisitStatus, updateVisit, deleteVisit } from "../controllers/visitByAgentController";
 const router = Router();
 
+/* Registro */
 router.post("/registro-agente", registerAgentWithToken);
 router.post('/generar-token', generateInvitation);
-// router.get("/propiedades-agente/:id", getPropertiesByAgent);
 
 // Rutas basadas en ID de agente
 router.get("/agents/:agentId/properties", listPropertiesByAgent);
 router.get("/:agentId/sales-rentals", listSalesAndRentals);
-router.get("/:agentId/performance", getAgentPerformanceReport);
+
+/* CRUD puntual */
+router.get("/agents/:agentId/properties/:propertyId", getProperty);
+router.put("/agents/:agentId/properties/:propertyId", updateProperty);
+router.delete("/agents/:agentId/properties/:propertyId", deleteProperty);
+
+/* Visitas Agendadas*/
+router.get("/agents/:agentId/visits", listVisitsByAgent);
+router.patch("/visits/:id/status", changeVisitStatus) // confirmar / cancelar
+router.put   ("/visits/:id",        updateVisit)      // editar
+router.delete("/visits/:id",        deleteVisit)      // eliminar
+
+/* Programar nueva visita */
+router.post("/agents/:agentId/visits/schedule", scheduleVisit);
+
+/* Reporte */
+router.get("/agents/:agentId/performance", getAgentPerformanceReport);
 
 
 router.get("/ventas-alquileres", getVentasAlquileres);

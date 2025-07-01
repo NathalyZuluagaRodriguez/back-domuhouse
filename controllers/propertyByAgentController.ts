@@ -54,6 +54,43 @@ export async function getAgentPerformanceReport(req: Request, res: Response) {
   }
 }
 
+
+/* Ver detalle de propiedad */
+export async function getProperty(req: Request, res: Response) {
+  const { agentId, propertyId } = req.params;
+  const property = await PropertyService.getPropertyById(
+    Number(propertyId),
+    Number(agentId)
+  );
+  if (!property) return res.status(404).json({ error: "Not found" });
+  res.json({ property });
+}
+
+/* Actualizar propiedad */
+export async function updateProperty(req: Request, res: Response) {
+  const { agentId, propertyId } = req.params;
+  const affected = await PropertyService.updatePropertyById(
+    Number(propertyId),
+    Number(agentId),
+    req.body
+  );
+  if (!affected) return res.status(404).json({ error: "Not found" });
+  res.json({ message: "Updated" });
+}
+
+/* Eliminar propiedad */
+export async function deleteProperty(req: Request, res: Response) {
+  const { agentId, propertyId } = req.params;
+  const affected = await PropertyService.deletePropertyById(
+    Number(propertyId),
+    Number(agentId)
+  );
+  if (!affected) return res.status(404).json({ error: "Not found" });
+  res.json({ message: "Deleted" });
+}
+
+
+
 /*-----------------------------------------------------------
   Optional default export if you prefer to import everything at once
 -----------------------------------------------------------*/
@@ -61,4 +98,7 @@ export default {
   listPropertiesByAgent,
   listSalesAndRentals,
   getAgentPerformanceReport,
+  getProperty,
+  updateProperty,
+  deleteProperty
 };
