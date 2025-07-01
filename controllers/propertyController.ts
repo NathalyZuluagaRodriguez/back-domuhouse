@@ -656,3 +656,38 @@ export const getPropertyImages = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getPropertiesForAdmin = async (req: Request, res: Response) => {
+  try {
+    const adminId = (req as any).user.id;
+
+    const {
+      estado = null,
+      tipo = null,
+      agente = null,
+      busqueda = null
+    } = req.query;
+
+    const [result]: any = await Promisepool.query(
+      'CALL sp_filter_properties_by_real_estate(?, ?, ?, ?, ?)',
+      [adminId, estado, tipo, agente, busqueda]
+    );
+
+    const properties = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : [];
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
+  } catch (error: any) {
+    console.error('❌ Error al obtener propiedades del administrador:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener propiedades',
+      error: error.message
+    });
+  }
+};
+

@@ -10,7 +10,7 @@ import {
   getApprovedProperties,
   getPropertiesByType,
   getPropertyById,
-  getPropertyImages 
+  getPropertyImages,
 } from '../controllers/propertyController';
 import { getUserProperties } from '../controllers/userPropertyController';
 import { verifyToken } from '../middleware/VerifyToken';
