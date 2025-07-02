@@ -8,6 +8,7 @@ COPY package*.json ./
 
 
 RUN npm install
+RUN npm install express-session
 
 COPY . .
 
@@ -24,7 +25,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 
-RUN npm install --only=production
+RUN npm install && npm install express-session --only=production
 
 COPY --from=builder /usr/src/app/dist ./dist
 
