@@ -1,8 +1,7 @@
-import type { Request, Response } from "express"
+import type { Request, Response, Express } from "express"
 import Promisepool from "../config/config-db"
 import cloudinary from "../config/cloudinary"
 import fs from "fs"
-import type { Express } from "express"
 
 export const createProperty = async (req: Request, res: Response) => {
   try {
@@ -30,6 +29,11 @@ export const createProperty = async (req: Request, res: Response) => {
       latitude,
       longitude,
     } = req.body
+
+    // ✅ Inicializar variables de imágenes
+    const esfericas: string[] = []
+    let imageUrls: string[] = []
+    let imagesJson = "{}"
 
     // ✅ Validar archivos
     const files = req.files as Express.Multer.File[]
@@ -63,96 +67,157 @@ export const createProperty = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ VALIDACIÓN Y CONVERSIÓN CORREGIDA
-    interface NumericField {
-      value: any
-      required: boolean
-      defaultValue: number | null
+    // ✅ Validar tipos numéricos
+    const numericValidation = {
+      price: { value: price, required: true },
+      person_id: { value: person_id, required: true },
+      property_type_id: { value: property_type_id, required: true },
+      bedrooms: { value: bedrooms, required: false },
+      bathrooms: { value: bathrooms, required: false },
+      parking_spaces: { value: parking_spaces, required: false },
+      built_area: { value: built_area, required: false },
+      total_area: { value: total_area, required: false },
     }
-
-    const numericValidation: Record<string, NumericField> = {
-      price: { value: price, required: true, defaultValue: null },
-      person_id: { value: person_id, required: true, defaultValue: null },
-      property_type_id: { value: property_type_id, required: true, defaultValue: null },
-      bedrooms: { value: bedrooms, required: false, defaultValue: 1 },
-      bathrooms: { value: bathrooms, required: false, defaultValue: 1 },
-      parking_spaces: { value: parking_spaces, required: false, defaultValue: 0 },
-      built_area: { value: built_area, required: false, defaultValue: 50 },
-      total_area: { value: total_area, required: false, defaultValue: null },
-    }
-
-    // ✅ Procesar valores numéricos correctamente
-    const processedValues: Record<string, number | null> = {}
 
     for (const [key, config] of Object.entries(numericValidation)) {
-      let finalValue = config.value
-
-      // Si el valor está vacío, undefined, null o es string vacío
-      if (finalValue === undefined || finalValue === null || finalValue === "" || finalValue === "undefined") {
-        if (config.required) {
-          return res.status(400).json({
-            error: `El campo ${key} es requerido`,
-            received: finalValue,
-          })
-        }
-        // Usar valor por defecto si no es requerido
-        finalValue = config.defaultValue
-      }
-
-      // Convertir a número si no es null
-      if (finalValue !== null) {
-        const numValue = Number(finalValue)
+      if (config.value !== undefined && config.value !== null && config.value !== "") {
+        const numValue = Number(config.value)
         if (isNaN(numValue) || numValue < 0) {
           return res.status(400).json({
             error: `El campo ${key} debe ser un número válido mayor o igual a 0`,
-            received: finalValue,
+            received: config.value,
           })
         }
-        processedValues[key] = numValue
-      } else {
-        processedValues[key] = null
+      } else if (config.required) {
+        return res.status(400).json({
+          error: `El campo ${key} es requerido`,
+          received: config.value,
+        })
       }
     }
 
-    console.log("✅ Valores procesados:", processedValues)
-
-    // ✅ Subir imágenes a Cloudinary (si existen)
-    let imageUrls: string[] = []
-    let imagesJson = "[]"
-
+    // ✅ CONFIGURACIÓN OPTIMIZADA PARA IMÁGENES 360°
     if (files && files.length > 0) {
       console.log(`📤 Subiendo ${files.length} imágenes a Cloudinary...`)
 
-      const uploadPromises = files.map(async (file, index) => {
-        try {
-          console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname}`)
-          const result = await cloudinary.uploader.upload(file.path, {
-            folder: "properties",
-            public_id: `property_${Date.now()}_${index}`,
-            transformation: [{ width: 1200, height: 800, crop: "limit" }, { quality: "auto" }],
-          })
-
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path)
-          }
-
-          console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`)
-          return result.secure_url
-        } catch (error) {
-          console.error(`❌ Error subiendo imagen ${file.originalname}:`, error)
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path)
-          }
-          throw new Error(`Error subiendo imagen ${file.originalname}: ${error}`)
-        }
-      })
-
       try {
+        const uploadPromises = files.map(async (file, index) => {
+          try {
+            // ✅ Detectar imágenes 360° de manera más robusta
+            const fileName = file.originalname.toLowerCase()
+            const is360 =
+              fileName.includes("360") ||
+              fileName.includes("_360") ||
+              fileName.includes("esferica") ||
+              fileName.includes("pano") ||
+              fileName.includes("sphere")
+
+            console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname} (360°: ${is360})`)
+
+            // ✅ CONFIGURACIÓN OPTIMIZADA PARA MÁXIMA CALIDAD
+// Solo reemplaza la sección de configuración de Cloudinary (líneas ~140-180)
+
+const uploadOptions = {
+  folder: "properties/360",
+  public_id: `property_${Date.now()}_${index}`,
+  resource_type: "image" as const,
+  transformation: is360
+    ? [
+        {
+          // ✅ CONFIGURACIÓN PARA MÁXIMA CALIDAD 360°
+          width: 8192,
+          height: 4096,
+          crop: "limit" as const,
+          quality: 'auto:best', // ✅ Calidad máxima (era 95)
+          format: "png" as const, // ✅ PNG para mejor calidad (era jpg)
+          flags:  [
+                "layer_apply",
+                "no_overflow", 
+                "preserve_transparency",
+                "splices:keep_iptc"
+                  ],
+          dpr: "auto",
+          fetch_format: "auto",
+          effect: "improve:90"
+          // ✅ Sin sharpening para evitar artefactos
+          // effect: "sharpen:50", // REMOVIDO
+        },
+      ]
+    : [
+        {
+          width: 2560,
+          height: 1440,
+          crop: "fill" as const,
+          gravity: "auto" as const,
+          quality: 95, // ✅ Alta calidad para normales
+          format: "jpg" as const,
+          flags: ["progressive"] as const,
+          fetch_format: "auto" as const,
+        },
+      ],
+}
+
+            const result = await cloudinary.uploader.upload(file.path, uploadOptions)
+
+            // ✅ Limpiar archivo temporal
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+
+            console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`)
+            console.log(`📊 Dimensiones: ${result.width}x${result.height}, Formato: ${result.format}`)
+
+            // ✅ Clasificar imágenes 360°
+            if (is360) {
+              esfericas.push(result.secure_url)
+            }
+
+            return result.secure_url
+          } catch (uploadError) {
+            console.error(`❌ Error subiendo imagen ${file.originalname}:`, uploadError)
+
+            // Limpiar archivo en caso de error
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+
+            throw new Error(
+              `Error subiendo ${file.originalname}: ${uploadError instanceof Error ? uploadError.message : "Error desconocido"}`,
+            )
+          }
+        })
+
+        // ✅ Esperar a que todas las imágenes se suban
         imageUrls = await Promise.all(uploadPromises)
-        imagesJson = JSON.stringify(imageUrls)
-        console.log(`✅ Todas las imágenes subidas exitosamente: ${imageUrls.length} imágenes`)
+
+        // ✅ Crear JSON de imágenes con estructura correcta
+        imagesJson = JSON.stringify({
+          esfericas: esfericas,
+          normales: imageUrls.filter((url) => !esfericas.includes(url)),
+          total: imageUrls.length,
+          // ✅ Metadatos adicionales para calidad
+          metadata: {
+            uploadedAt: new Date().toISOString(),
+            highQuality: true,
+            optimizedFor360: true,
+          },
+        })
+
+        console.log(`✅ Todas las imágenes subidas exitosamente:`)
+        console.log(`   - Total: ${imageUrls.length} imágenes`)
+        console.log(`   - 360°: ${esfericas.length} imágenes`)
+        console.log(`   - Normales: ${imageUrls.length - esfericas.length} imágenes`)
       } catch (uploadError) {
         console.error("❌ Error en la subida de imágenes:", uploadError)
+
+        // Limpiar archivos temporales en caso de error
+        if (files) {
+          files.forEach((file) => {
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+          })
+        }
         return res.status(500).json({
           error: "Error subiendo las imágenes",
           detail: uploadError instanceof Error ? uploadError.message : "Error desconocido",
@@ -160,35 +225,35 @@ export const createProperty = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ Preparar datos para el stored procedure - VALORES CORREGIDOS
+    // ✅ Preparar datos para el stored procedure
     const propertyData = [
       address,
       property_title,
       description,
       imagesJson,
-      processedValues.price,
+      Number.parseFloat(price),
       status || "Disponible",
-      processedValues.person_id,
-      processedValues.property_type_id,
+      Number.parseInt(person_id),
+      Number.parseInt(property_type_id),
       Number.parseInt(socioeconomic_stratum) || 3,
       city,
       neighborhood,
       operation_type,
-      processedValues.bedrooms || 1, // ✅ Valor por defecto 1 en lugar de 0
-      processedValues.bathrooms || 1, // ✅ Valor por defecto 1 en lugar de 0
-      processedValues.parking_spaces || 0, // ✅ 0 está bien para parqueaderos
-      processedValues.built_area || 50, // ✅ Valor por defecto 50 m²
-      processedValues.total_area || processedValues.built_area || 50, // ✅ Usar built_area si total_area no está
+      Number.parseInt(bedrooms) || 0,
+      Number.parseInt(bathrooms) || 0,
+      Number.parseInt(parking_spaces) || 0,
+      Number.parseFloat(built_area) || 0,
+      Number.parseFloat(total_area) || Number.parseFloat(built_area) || 0,
       Number.parseFloat(latitude) || 0,
       Number.parseFloat(longitude) || 0,
     ]
 
-    console.log("💾 Datos para stored procedure (CORREGIDOS):", propertyData)
+    console.log("💾 Datos para stored procedure:", propertyData)
 
-    // ✅ Guardar en la base de datos usando tu procedimiento
+    // ✅ Guardar en la base de datos
     try {
       const [result]: any = await Promisepool.query(
-        "CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         propertyData,
       )
 
@@ -201,34 +266,36 @@ export const createProperty = async (req: Request, res: Response) => {
         property: {
           title: property_title,
           address: address,
-          price: processedValues.price,
+          price: Number.parseFloat(price),
           city: city,
           neighborhood: neighborhood,
           operation_type: operation_type,
-          bedrooms: processedValues.bedrooms || 1,
-          bathrooms: processedValues.bathrooms || 1,
-          parking_spaces: processedValues.parking_spaces || 0,
-          built_area: processedValues.built_area || 50,
           images: imageUrls,
           imagesCount: imageUrls.length,
+          images360Count: esfericas.length,
+          imageQuality: "high",
         },
       })
     } catch (dbError: any) {
       console.error("❌ Error en la base de datos:", dbError)
 
-      // Limpiar imágenes de Cloudinary en caso de error
+      // ✅ Limpiar imágenes de Cloudinary en caso de error de BD
       if (imageUrls.length > 0) {
         console.log("🧹 Limpiando imágenes de Cloudinary debido a error en BD...")
-        imageUrls.forEach(async (url) => {
+
+        const cleanupPromises = imageUrls.map(async (url) => {
           try {
             const publicId = url.split("/").pop()?.split(".")[0]
             if (publicId) {
-              await cloudinary.uploader.destroy(`properties/${publicId}`)
+              await cloudinary.uploader.destroy(`properties/360/${publicId}`)
+              console.log(`🗑️ Imagen limpiada: ${publicId}`)
             }
           } catch (cleanupError) {
             console.error("⚠️ Error limpiando imagen:", cleanupError)
           }
         })
+
+        await Promise.allSettled(cleanupPromises)
       }
 
       return res.status(500).json({
@@ -241,12 +308,16 @@ export const createProperty = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("❌ Error general en createProperty:", error)
 
-    // Limpiar archivos temporales en caso de error general
+    // ✅ Limpiar archivos temporales en caso de error general
     if (req.files) {
       const files = req.files as Express.Multer.File[]
       files.forEach((file) => {
         if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path)
+          try {
+            fs.unlinkSync(file.path)
+          } catch (unlinkError) {
+            console.error("⚠️ Error eliminando archivo temporal:", unlinkError)
+          }
         }
       })
     }
@@ -258,7 +329,6 @@ export const createProperty = async (req: Request, res: Response) => {
     })
   }
 }
-
 export const editProperty = async (req: Request, res: Response) => {
   try {
     console.log("✏️ editProperty - ID:", req.params.id)
