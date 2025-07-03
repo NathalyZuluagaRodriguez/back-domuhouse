@@ -1,6 +1,5 @@
 import realEstateRepo from "../repositories/realEstatesRepositorys";
 import sendEmail from "../utils/sendEmailer"; 
-import pool from '../config/config-db';
 
 //interface de inmobiliaria
 interface NewRealEstate {
@@ -65,97 +64,8 @@ export const getRealEstateStatistics = async () => {
     return await realEstateRepo.getRealEstateStats();
 };
 
-/**
- * Obtener una inmobiliaria específica por ID
- */
-const getRealEstateById = async (id: number) => {
-  const query = `
-    SELECT 
-      re.id_realestate,
-      re.name_realestate,
-      re.nit,
-      re.phone,
-      re.email,
-      re.department,
-      re.city,
-      re.adress,
-      re.description,
-      re.num_properties,
-      p.name as responsable_name,
-      p.last_name as responsable_lastname
-    FROM real_estate re
-    LEFT JOIN person p ON re.person_id = p.id_person
-    WHERE re.id_realestate = ?
-  `;
-  
-  try {
-    const [rows] = await pool.execute(query, [id]);
-    return (rows as any[]).length > 0 ? (rows as any[])[0] : null;
-  } catch (error) {
-    console.error('Error fetching real estate by ID:', error);
-    throw error;
-  }
-};
-
-/**
- * Obtener todos los agentes de una inmobiliaria
- */
-const getRealEstateAgents = async (realEstateId: number) => {
-  const query = `
-    SELECT 
-      a.id_agent,
-      p.name,
-      p.last_name,
-      p.email,
-      p.phone,
-      a.specialization,
-      a.status,
-      COUNT(pr.id_property) as num_properties,
-      COALESCE(AVG(r.rating), 0) as avg_rating
-    FROM agent a
-    INNER JOIN person p ON a.person_id = p.id_person
-    LEFT JOIN property pr ON a.id_agent = pr.agent_id
-    LEFT JOIN review r ON a.id_agent = r.agent_id
-    WHERE a.realestate_id = ? AND a.status = 'Activo'
-    GROUP BY a.id_agent, p.name, p.last_name, p.email, p.phone, a.specialization, a.status
-    ORDER BY p.name
-  `;
-  
-  try {
-    const [rows] = await pool.execute(query, [realEstateId]);
-    return rows as any[];
-  } catch (error) {
-    console.error('Error fetching real estate agents:', error);
-    throw error;
-  }
-};
-
-/**
- * Obtener datos completos de una inmobiliaria (información + agentes)
- */
-const getRealEstateComplete = async (id: number) => {
-  // Primero obtenemos la información general
-  const realEstate = await getRealEstateById(id);
-  
-  if (!realEstate) {
-    return null;
-  }
-  
-  // Luego obtenemos los agentes
-  const agents = await getRealEstateAgents(id);
-  
-  return {
-    ...realEstate,
-    agents: agents
-  };
-};
-
-// ========== EXPORTACIÓN ==========
 export default {
-  registerRealEstate,
-  fetchAllRealEstates,
-  getRealEstateStatistics,
-  getRealEstateById,
-  getRealEstateAgents,  // ← IMPORTANTE: Asegúrate de exportar este método
-  getRealEstateComplete
+    registerRealEstate,
+    fetchAllRealEstates,
+    getRealEstateStatistics
 };
