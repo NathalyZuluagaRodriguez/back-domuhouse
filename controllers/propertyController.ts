@@ -9,6 +9,9 @@ export const createProperty = async (req: Request, res: Response) => {
     console.log("🏠 createProperty - Iniciando...")
     console.log("📋 Body recibido:", req.body)
     console.log("📷 Files recibidos:", req.files)
+    console.log("🏠 createProperty - Iniciando...")
+    console.log("📋 Body recibido:", req.body)
+    console.log("📷 Files recibidos:", req.files)
 
     const {
       address,
@@ -16,6 +19,7 @@ export const createProperty = async (req: Request, res: Response) => {
       description,
       price,
       status,
+      person_id,
       person_id,
       property_type_id,
       socioeconomic_stratum,
@@ -33,6 +37,7 @@ export const createProperty = async (req: Request, res: Response) => {
 
     // ✅ Validar archivos
     const files = req.files as Express.Multer.File[]
+    const files = req.files as Express.Multer.File[]
     if (files && files.length > 10) {
       return res.status(400).json({ error: "Máximo 10 imágenes permitidas" })
     }
@@ -44,20 +49,29 @@ export const createProperty = async (req: Request, res: Response) => {
       description,
       price,
       person_id,
+      person_id,
       property_type_id,
       city,
       neighborhood,
       operation_type,
     }
+      operation_type,
+    }
 
+    console.log("🔍 Validando campos requeridos:", requiredFields)
     console.log("🔍 Validando campos requeridos:", requiredFields)
 
     for (const [key, value] of Object.entries(requiredFields)) {
       if (!value || value === "" || value === "undefined") {
         console.error(`❌ Campo faltante: ${key} = ${value}`)
         return res.status(400).json({
+      if (!value || value === "" || value === "undefined") {
+        console.error(`❌ Campo faltante: ${key} = ${value}`)
+        return res.status(400).json({
           error: `El campo ${key} es requerido`,
           received: value,
+          allFields: req.body,
+        })
           allFields: req.body,
         })
       }
@@ -85,6 +99,8 @@ export const createProperty = async (req: Request, res: Response) => {
     const processedValues: Record<string, number | null> = {}
 
     for (const [key, config] of Object.entries(numericValidation)) {
+      if (config.value !== undefined && config.value !== null && config.value !== "") {
+        const numValue = Number(config.value)
       let finalValue = config.value
 
       // Si el valor está vacío, undefined, null o es string vacío
@@ -104,18 +120,22 @@ export const createProperty = async (req: Request, res: Response) => {
         const numValue = Number(finalValue)
         if (isNaN(numValue) || numValue < 0) {
           return res.status(400).json({
+          return res.status(400).json({
             error: `El campo ${key} debe ser un número válido mayor o igual a 0`,
             received: finalValue,
           })
         }
-        processedValues[key] = numValue
-      } else {
-        processedValues[key] = null
+      } else if (config.required) {
+        return res.status(400).json({
+          error: `El campo ${key} es requerido`,
+          received: config.value,
+        })
       }
     }
 
     console.log("✅ Valores procesados:", processedValues)
 
+    // ✅ CONFIGURACIÓN OPTIMIZADA PARA IMÁGENES 360°
     // ✅ Subir imágenes a Cloudinary (si existen)
     let imageUrls: string[] = []
     let imagesJson = "[]"
@@ -123,36 +143,124 @@ export const createProperty = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(`📤 Subiendo ${files.length} imágenes a Cloudinary...`)
 
-      const uploadPromises = files.map(async (file, index) => {
-        try {
-          console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname}`)
-          const result = await cloudinary.uploader.upload(file.path, {
-            folder: "properties",
-            public_id: `property_${Date.now()}_${index}`,
-            transformation: [{ width: 1200, height: 800, crop: "limit" }, { quality: "auto" }],
-          })
-
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path)
-          }
-
-          console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`)
-          return result.secure_url
-        } catch (error) {
-          console.error(`❌ Error subiendo imagen ${file.originalname}:`, error)
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path)
-          }
-          throw new Error(`Error subiendo imagen ${file.originalname}: ${error}`)
-        }
-      })
-
       try {
+        const uploadPromises = files.map(async (file, index) => {
+          try {
+            // ✅ Detectar imágenes 360° de manera más robusta
+            const fileName = file.originalname.toLowerCase()
+            const is360 =
+              fileName.includes("360") ||
+              fileName.includes("_360") ||
+              fileName.includes("esferica") ||
+              fileName.includes("pano") ||
+              fileName.includes("sphere")
+
+            console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname} (360°: ${is360})`)
+
+            // ✅ CONFIGURACIÓN OPTIMIZADA PARA MÁXIMA CALIDAD
+// Solo reemplaza la sección de configuración de Cloudinary (líneas ~140-180)
+
+const uploadOptions = {
+  folder: "properties/360",
+  public_id: `property_${Date.now()}_${index}`,
+  resource_type: "image" as const,
+  transformation: is360
+    ? [
+        {
+          // ✅ CONFIGURACIÓN PARA MÁXIMA CALIDAD 360°
+          width: 8192,
+          height: 4096,
+          crop: "limit" as const,
+          quality: 'auto:best', // ✅ Calidad máxima (era 95)
+          format: "png" as const, // ✅ PNG para mejor calidad (era jpg)
+          flags:  [
+                "layer_apply",
+                "no_overflow", 
+                "preserve_transparency",
+                "splices:keep_iptc"
+                  ],
+          dpr: "auto",
+          fetch_format: "auto",
+          effect: "improve:90"
+          // ✅ Sin sharpening para evitar artefactos
+          // effect: "sharpen:50", // REMOVIDO
+        },
+      ]
+    : [
+        {
+          width: 2560,
+          height: 1440,
+          crop: "fill" as const,
+          gravity: "auto" as const,
+          quality: 95, // ✅ Alta calidad para normales
+          format: "jpg" as const,
+          flags: ["progressive"] as const,
+          fetch_format: "auto" as const,
+        },
+      ],
+}
+
+            const result = await cloudinary.uploader.upload(file.path, uploadOptions)
+
+            // ✅ Limpiar archivo temporal
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+
+            console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`)
+            console.log(`📊 Dimensiones: ${result.width}x${result.height}, Formato: ${result.format}`)
+
+            // ✅ Clasificar imágenes 360°
+            if (is360) {
+              esfericas.push(result.secure_url)
+            }
+
+            return result.secure_url
+          } catch (uploadError) {
+            console.error(`❌ Error subiendo imagen ${file.originalname}:`, uploadError)
+
+            // Limpiar archivo en caso de error
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+
+            throw new Error(
+              `Error subiendo ${file.originalname}: ${uploadError instanceof Error ? uploadError.message : "Error desconocido"}`,
+            )
+          }
+        })
+
+        // ✅ Esperar a que todas las imágenes se suban
         imageUrls = await Promise.all(uploadPromises)
-        imagesJson = JSON.stringify(imageUrls)
-        console.log(`✅ Todas las imágenes subidas exitosamente: ${imageUrls.length} imágenes`)
+
+        // ✅ Crear JSON de imágenes con estructura correcta
+        imagesJson = JSON.stringify({
+          esfericas: esfericas,
+          normales: imageUrls.filter((url) => !esfericas.includes(url)),
+          total: imageUrls.length,
+          // ✅ Metadatos adicionales para calidad
+          metadata: {
+            uploadedAt: new Date().toISOString(),
+            highQuality: true,
+            optimizedFor360: true,
+          },
+        })
+
+        console.log(`✅ Todas las imágenes subidas exitosamente:`)
+        console.log(`   - Total: ${imageUrls.length} imágenes`)
+        console.log(`   - 360°: ${esfericas.length} imágenes`)
+        console.log(`   - Normales: ${imageUrls.length - esfericas.length} imágenes`)
       } catch (uploadError) {
         console.error("❌ Error en la subida de imágenes:", uploadError)
+
+        // Limpiar archivos temporales en caso de error
+        if (files) {
+          files.forEach((file) => {
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path)
+            }
+          })
+        }
         return res.status(500).json({
           error: "Error subiendo las imágenes",
           detail: uploadError instanceof Error ? uploadError.message : "Error desconocido",
@@ -160,35 +268,35 @@ export const createProperty = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ Preparar datos para el stored procedure - VALORES CORREGIDOS
+    // ✅ Preparar datos para el stored procedure
     const propertyData = [
       address,
       property_title,
       description,
       imagesJson,
-      processedValues.price,
+      Number.parseFloat(price),
       status || "Disponible",
-      processedValues.person_id,
-      processedValues.property_type_id,
+      Number.parseInt(person_id),
+      Number.parseInt(property_type_id),
       Number.parseInt(socioeconomic_stratum) || 3,
       city,
       neighborhood,
       operation_type,
-      processedValues.bedrooms || 1, // ✅ Valor por defecto 1 en lugar de 0
-      processedValues.bathrooms || 1, // ✅ Valor por defecto 1 en lugar de 0
-      processedValues.parking_spaces || 0, // ✅ 0 está bien para parqueaderos
-      processedValues.built_area || 50, // ✅ Valor por defecto 50 m²
-      processedValues.total_area || processedValues.built_area || 50, // ✅ Usar built_area si total_area no está
+      Number.parseInt(bedrooms) || 0,
+      Number.parseInt(bathrooms) || 0,
+      Number.parseInt(parking_spaces) || 0,
+      Number.parseFloat(built_area) || 0,
+      Number.parseFloat(total_area) || Number.parseFloat(built_area) || 0,
       Number.parseFloat(latitude) || 0,
       Number.parseFloat(longitude) || 0,
     ]
 
-    console.log("💾 Datos para stored procedure (CORREGIDOS):", propertyData)
+    console.log("💾 Datos para stored procedure:", propertyData)
 
-    // ✅ Guardar en la base de datos usando tu procedimiento
+    // ✅ Guardar en la base de datos
     try {
       const [result]: any = await Promisepool.query(
-        "CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         propertyData,
       )
 
@@ -201,7 +309,7 @@ export const createProperty = async (req: Request, res: Response) => {
         property: {
           title: property_title,
           address: address,
-          price: processedValues.price,
+          price: Number.parseFloat(price),
           city: city,
           neighborhood: neighborhood,
           operation_type: operation_type,
@@ -211,24 +319,30 @@ export const createProperty = async (req: Request, res: Response) => {
           built_area: processedValues.built_area || 50,
           images: imageUrls,
           imagesCount: imageUrls.length,
+          images360Count: esfericas.length,
+          imageQuality: "high",
         },
       })
     } catch (dbError: any) {
       console.error("❌ Error en la base de datos:", dbError)
 
-      // Limpiar imágenes de Cloudinary en caso de error
+      // ✅ Limpiar imágenes de Cloudinary en caso de error de BD
       if (imageUrls.length > 0) {
         console.log("🧹 Limpiando imágenes de Cloudinary debido a error en BD...")
-        imageUrls.forEach(async (url) => {
+
+        const cleanupPromises = imageUrls.map(async (url) => {
           try {
             const publicId = url.split("/").pop()?.split(".")[0]
             if (publicId) {
-              await cloudinary.uploader.destroy(`properties/${publicId}`)
+              await cloudinary.uploader.destroy(`properties/360/${publicId}`)
+              console.log(`🗑️ Imagen limpiada: ${publicId}`)
             }
           } catch (cleanupError) {
             console.error("⚠️ Error limpiando imagen:", cleanupError)
           }
         })
+
+        await Promise.allSettled(cleanupPromises)
       }
 
       return res.status(500).json({
@@ -241,12 +355,16 @@ export const createProperty = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("❌ Error general en createProperty:", error)
 
-    // Limpiar archivos temporales en caso de error general
+    // ✅ Limpiar archivos temporales en caso de error general
     if (req.files) {
       const files = req.files as Express.Multer.File[]
       files.forEach((file) => {
         if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path)
+          try {
+            fs.unlinkSync(file.path)
+          } catch (unlinkError) {
+            console.error("⚠️ Error eliminando archivo temporal:", unlinkError)
+          }
         }
       })
     }
@@ -259,6 +377,7 @@ export const createProperty = async (req: Request, res: Response) => {
   }
 }
 
+// ✅ Resto de funciones sin cambios (editProperty, deleteProperty, etc.)
 export const editProperty = async (req: Request, res: Response) => {
   try {
     console.log("✏️ editProperty - ID:", req.params.id)
@@ -282,28 +401,25 @@ export const editProperty = async (req: Request, res: Response) => {
       longitude,
     } = req.body
 
-    const [result] = await Promisepool.query(
-      "CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        id,
-        property_title,
-        adress,
-        description,
-        price,
-        status,
-        socioeconomic_stratum,
-        city,
-        neighborhood,
-        operation_type,
-        bedrooms,
-        bathrooms,
-        parking_spaces,
-        built_area,
-        total_area,
-        latitude,
-        longitude,
-      ],
-    )
+    const [result] = await Promisepool.query("CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+      id,
+      property_title,
+      adress,
+      description,
+      price,
+      status,
+      socioeconomic_stratum,
+      city,
+      neighborhood,
+      operation_type,
+      bedrooms,
+      bathrooms,
+      parking_spaces,
+      built_area,
+      total_area,
+      latitude,
+      longitude,
+    ])
 
     console.log("✅ Property updated successfully")
     res.json({
@@ -368,6 +484,11 @@ export const approveProperty = async (req: Request, res: Response) => {
 
 export const getProperties = async (req: Request, res: Response) => {
   try {
+    console.log("📋 getProperties - Obteniendo todas las propiedades...")
+    const [result] = await Promisepool.query("CALL sp_list_approved_properties()")
+    const properties = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : []
+
+    console.log(`✅ Se encontraron ${properties.length} propiedades`)
     console.log("📋 getProperties - Obteniendo todas las propiedades...")
     
     const [result]: any = await Promisepool.query(`
@@ -435,99 +556,23 @@ export const getProperties = async (req: Request, res: Response) => {
 export const getApprovedProperties = async (req: Request, res: Response) => {
   try {
     console.log("✅ getApprovedProperties - Obteniendo propiedades aprobadas...")
-    
-    // Consulta SQL exacta que funciona en tu base de datos
-    const sqlQuery = `
-      SELECT 
-        p.property_id,
-        p.property_title,
-        p.address,
-        p.description,
-        p.image,
-        p.price,
-        p.status,
-        p.socioeconomic_stratum,
-        p.city,
-        p.neighborhood,
-        p.operation_type,
-        p.bedrooms,
-        p.bathrooms,
-        p.parking_spaces,
-        p.built_area,
-        p.total_area,
-        p.publish_date,
-        p.latitude,
-        p.longitude,
-        p.approved,
-        p.person_id,
-        p.property_type_id,
-        per.name_person,
-        per.last_name,
-        per.phone AS agent_phone,
-        per.email AS agent_email,
-        CONCAT(COALESCE(per.name_person, ''), ' ', COALESCE(per.last_name, '')) AS agent_name,
-        r.role_name,
-        pt.type_name AS property_type_name
-      FROM Property p
-      LEFT JOIN Person per ON p.person_id = per.person_id
-      LEFT JOIN Role r ON per.role_id = r.role_id
-      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
-      WHERE p.approved = TRUE
-      ORDER BY p.publish_date DESC
-    `
-    
-    console.log("🔍 Ejecutando consulta SQL...")
-    const [rows]: any = await Promisepool.query(sqlQuery)
-    
-    console.log("📊 Resultado crudo de la consulta:", {
-      totalRows: rows?.length || 0,
-      firstRow: rows?.[0] || null
-    })
-    
-    const properties = Array.isArray(rows) ? rows : []
-    
-    // Debug detallado del primer registro
-    if (properties.length > 0) {
-      const firstProperty = properties[0]
-      console.log("🔍 Análisis del primer registro:", {
-        property_id: firstProperty.property_id,
-        property_title: firstProperty.property_title,
-        person_id: firstProperty.person_id,
-        name_person: firstProperty.name_person,
-        last_name: firstProperty.last_name,
-        agent_name: firstProperty.agent_name,
-        agent_phone: firstProperty.agent_phone,
-        agent_email: firstProperty.agent_email,
-        role_name: firstProperty.role_name,
-        property_type_name: firstProperty.property_type_name
-      })
-    }
-    
-    console.log(`✅ Se encontraron ${properties.length} propiedades aprobadas`)
+    const [rows]: any = await Promisepool.query("CALL sp_list_approved_properties()")
+    const properties = Array.isArray(rows) && Array.isArray(rows[0]) ? rows[0] : []
 
+    console.log(`✅ Se encontraron ${properties.length} propiedades aprobadas`)
     res.json({
       success: true,
       count: properties.length,
       properties,
     })
-    
   } catch (error: any) {
-    console.error("❌ Error completo en getApprovedProperties:", {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      sqlMessage: error.sqlMessage
-    })
-    
+    console.error("❌ Error in getApprovedProperties:", error)
     res.status(500).json({
-      error: "Error al obtener propiedades aprobadas",
+      error: "Error retrieving approved properties",
       detail: error.message,
-      sqlError: error.sqlMessage || null
     })
   }
 }
-
-
 
 export const getPropertiesByType = async (req: Request, res: Response) => {
   try {
@@ -540,48 +585,9 @@ export const getPropertiesByType = async (req: Request, res: Response) => {
       })
     }
 
-    // ✅ CONSULTA ACTUALIZADA CON JOIN PARA OBTENER INFO DEL AGENTE
-    const [result]: any = await Promisepool.query(
-      `
-      SELECT 
-        p.property_id,
-        p.property_title,
-        p.address,
-        p.description,
-        p.image,
-        p.price,
-        p.status,
-        p.socioeconomic_stratum,
-        p.city,
-        p.neighborhood,
-        p.operation_type,
-        p.bedrooms,
-        p.bathrooms,
-        p.parking_spaces,
-        p.built_area,
-        p.total_area,
-        p.publish_date,
-        p.latitude,
-        p.longitude,
-        p.approved,
-        p.person_id,
-        p.property_type_id,
-        -- Información del agente
-        person.name_person,
-        person.last_name,
-        person.phone as agent_phone,
-        person.email as agent_email,
-        CONCAT(person.name_person, ' ', person.last_name) as agent_name,
-        -- Información del tipo de propiedad
-        pt.type_name as property_type_name
-      FROM Property p
-      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
-      LEFT JOIN Person person ON p.person_id = person.person_id
-      WHERE p.property_type_id = ? AND p.approved = TRUE
-      ORDER BY p.publish_date DESC
-    `,
-      [property_type_id],
-    )
+    const [result] = await Promisepool.query("SELECT * FROM Property WHERE property_type_id = ? AND approved = TRUE", [
+      property_type_id,
+    ])
 
     if (Array.isArray(result) && result.length === 0) {
       return res.status(404).json({
@@ -608,7 +614,6 @@ export const getPropertiesByType = async (req: Request, res: Response) => {
   }
 }
 
-// ✅ Función getPropertyById CORREGIDA
 export const getPropertyById = async (req: Request, res: Response) => {
   try {
     console.log("🏠 getPropertyById - ID:", req.params.id)
@@ -643,9 +648,8 @@ export const getPropertyById = async (req: Request, res: Response) => {
         CONCAT(person.name_person, ' ', person.last_name) as agent_name
       FROM Property p
       LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
-      LEFT JOIN Person person ON p.person_id = person.person_id
-      WHERE p.property_id = ?
-    `,
+      LEFT JOIN Person per ON p.person_id = per.person_id
+      WHERE p.property_id = ?`,
       [propertyId],
     )
 
@@ -697,7 +701,7 @@ export const getPropertyById = async (req: Request, res: Response) => {
     const formattedProperty = {
       property_id: property.property_id,
       property_title: property.property_title,
-      title: property.property_title, // Para compatibilidad con frontend
+      title: property.property_title,
       description: property.description,
       price: property.price,
       address: property.address,
@@ -718,22 +722,17 @@ export const getPropertyById = async (req: Request, res: Response) => {
       approved: property.approved,
       publish_date: property.publish_date,
 
-      // ✅ CAMPOS QUE EL FRONTEND ESPERA
       agent_name: property.agent_name || "Agente Inmobiliario",
-      name_person: property.name_person,
-      last_name: property.last_name,
       agent_email: property.agent_email || "contacto@inmobiliaria.com",
       agent_phone: property.agent_phone || "+57 300 000 0000",
 
-      // ✅ IMÁGENES PROCESADAS
       images: processedImages,
-      image_urls: processedImages, // Para compatibilidad adicional
-    }
+      image_urls: processedImages // Para compatibilidad adicional
+    };
 
-    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`)
-    console.log(`👤 Agente: ${formattedProperty.agent_name}`)
-    console.log(`🖼️ Imágenes procesadas: ${processedImages.length} URLs`)
-
+    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`);
+    console.log(`🖼️ Imágenes procesadas: ${processedImages.length} URLs`);
+    
     res.status(200).json({
       success: true,
       property: formattedProperty,
@@ -756,7 +755,6 @@ export const getPropertyById = async (req: Request, res: Response) => {
   }
 }
 
-// ✅ Función getPropertyImages CORREGIDA
 export const getPropertyImages = async (req: Request, res: Response) => {
   try {
     console.log("🖼️ getPropertyImages - ID:", req.params.id)
@@ -787,8 +785,7 @@ export const getPropertyImages = async (req: Request, res: Response) => {
         image,
         approved
       FROM Property 
-      WHERE property_id = ?
-    `,
+      WHERE property_id = ?`,
       [propertyId],
     )
 
@@ -814,24 +811,27 @@ export const getPropertyImages = async (req: Request, res: Response) => {
 
     if (property.image && typeof property.image === "string") {
       try {
-        const parsedImages = JSON.parse(property.image)
+        const parsedImages = JSON.parse(property.image) as { esfericas?: string[] }
         console.log("🔍 Imágenes parseadas:", parsedImages)
 
-        if (Array.isArray(parsedImages)) {
-          images = parsedImages
-            .filter((url) => url && url.trim() !== "" && (url.startsWith("http") || url.startsWith("/")))
+        // Extraer las URLs de 'esfericas' con tipo explícito
+        if (parsedImages.esfericas && Array.isArray(parsedImages.esfericas)) {
+          images = parsedImages.esfericas
+            .filter((url: string) => url && url.trim() !== "" && url.startsWith("http"))
             .map((imageUrl: string, index: number) => ({
               id: index + 1,
               url: imageUrl,
               is_main: index === 0,
               property_id: propertyId,
               order: index + 1,
-              alt: `Imagen ${index + 1} de ${property.property_title}`,
+              alt: `Imagen 360° ${index + 1} de ${property.property_title}`,
+              is360: true,
             }))
+        } else {
+          console.warn('⚠️ No se encontraron imágenes en "esfericas"')
         }
       } catch (parseError) {
         console.warn("⚠️ Error parsing images JSON:", parseError)
-
         if (property.image.trim() !== "") {
           images = [
             {
@@ -841,10 +841,13 @@ export const getPropertyImages = async (req: Request, res: Response) => {
               property_id: propertyId,
               order: 1,
               alt: `Imagen principal de ${property.property_title}`,
+              is360: false,
             },
           ]
         }
       }
+    } else {
+      console.warn("⚠️ property.image es nulo o no es string")
     }
 
     console.log(`✅ Se procesaron ${images.length} imágenes válidas`)
@@ -863,7 +866,6 @@ export const getPropertyImages = async (req: Request, res: Response) => {
     })
   } catch (error: any) {
     console.error("❌ Error completo in getPropertyImages:", error)
-
     res.status(500).json({
       error: "Error interno del servidor al obtener las imágenes",
       detail: error.message,
@@ -871,4 +873,5 @@ export const getPropertyImages = async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     })
   }
+}
 }
