@@ -11,6 +11,8 @@ import {
   getPropertiesByType,
   getPropertyById,
   getPropertyImages,
+  getPropertiesWithMainImages,
+  getPropertyMainImage
 } from '../controllers/propertyController';
 import { getUserProperties } from '../controllers/userPropertyController';
 import { verifyToken } from '../middleware/VerifyToken';
@@ -18,7 +20,7 @@ import { verifyToken } from '../middleware/VerifyToken';
 const router = express.Router();
 
 // 🏠 RUTAS PÚBLICAS (sin autenticación)
-
+// f
 // ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
 router.post('/create', upload.array('images', 10), createProperty);
 
@@ -47,5 +49,11 @@ router.get('/type/:property_type_id', getPropertiesByType);
 router.get('/details/:id', getPropertyById);                  // GET /api/properties/details/:id
 
 router.get('/mis-propiedades', verifyToken, getUserProperties);
+
+router.get("/properties/approved", getApprovedProperties)
+
+// ✅ Nuevas rutas para imágenes
+router.get("/properties/with-images", getPropertiesWithMainImages)
+router.get("/properties/:id/main-image", getPropertyMainImage)
 
 export default router;

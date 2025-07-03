@@ -941,39 +941,182 @@ export const getPropertyImages = async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     })
   }
-};
+}
 
 
-export const getPropertiesForAdmin = async (req: Request, res: Response) => {
+// ✅ Nueva ruta para obtener la imagen principal de una propiedad
+export const getPropertyMainImage = async (req: Request, res: Response) => {
   try {
-    const adminId = (req as any).user.id;
+    const { id } = req.params
 
-    const {
-      estado = null,
-      tipo = null,
-      agente = null,
-      busqueda = null
-    } = req.query;
+    if (!id) {
+      return res.status(400).json({
+        error: "ID de propiedad es requerido",
+        success: false,
+      })
+    }
 
-    const [result]: any = await Promisepool.query(
-      'CALL sp_filter_properties_by_real_estate(?, ?, ?, ?, ?)',
-      [adminId, estado, tipo, agente, busqueda]
-    );
+    const propertyId = Number.parseInt(id)
+    if (isNaN(propertyId) || propertyId <= 0) {
+      return res.status(400).json({
+        error: "ID de propiedad debe ser un número válido",
+        success: false,
+      })
+    }
 
-    const properties = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : [];
+    const [result]: any = await Promisepool.execute(
+      `SELECT property_id, property_title, image, approved FROM Property WHERE property_id = ?`,
+      [propertyId],
+    )
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({
+        error: "Propiedad no encontrada",
+        success: false,
+      })
+    }
+
+    const property = result[0]
+
+    // ✅ Procesar imagen principal
+    let mainImageUrl = null
+    if (property.image && typeof property.image === "string") {
+      try {
+        const parsedImages = JSON.parse(property.image)
+
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          // Tomar la primera imagen como principal
+          mainImageUrl = parsedImages[0]
+        } else if (typeof parsedImages === "object" && parsedImages.normales && parsedImages.normales.length > 0) {
+          // Si tiene estructura con normales/esféricas
+          mainImageUrl = parsedImages.normales[0]
+        }
+      } catch (parseError) {
+        // Si no se puede parsear, asumir que es una URL directa
+        if (property.image.trim() !== "") {
+          mainImageUrl = property.image
+        }
+      }
+    }
 
     res.status(200).json({
       success: true,
-      count: properties.length,
-      properties
-    });
+      property_id: propertyId,
+      property_title: property.property_title,
+      main_image: mainImageUrl,
+      has_image: !!mainImageUrl,
+    })
   } catch (error: any) {
-    console.error('❌ Error al obtener propiedades del administrador:', error);
+    console.error("❌ Error in getPropertyMainImage:", error)
     res.status(500).json({
+      error: "Error obteniendo imagen principal",
+      detail: error.message,
       success: false,
-      message: 'Error al obtener propiedades',
-      error: error.message
-    });
+    })
   }
-};
+}
 
+// ✅ Ruta para obtener todas las imágenes con información adicional
+export const getPropertiesWithMainImages = async (req: Request, res: Response) => {
+  try {
+    console.log("🖼️ getPropertiesWithMainImages - Obteniendo propiedades con imágenes principales...")
+
+    const [result]: any = await Promisepool.query(`
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.socioeconomic_stratum,
+        p.city,
+        p.neighborhood,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.parking_spaces,
+        p.built_area,
+        p.total_area,
+        p.publish_date,
+        p.latitude,
+        p.longitude,
+        p.approved,
+        p.person_id,
+        p.property_type_id,
+        
+        -- Información del agente
+        per.name_person,
+        per.last_name,
+        per.phone AS agent_phone,
+        per.email AS agent_email,
+        CONCAT(COALESCE(per.name_person, ''), ' ', COALESCE(per.last_name, '')) AS agent_name,
+        
+        -- Información del tipo de propiedad
+        pt.type_name AS property_type_name
+        
+      FROM Property p
+      LEFT JOIN Person per ON p.person_id = per.person_id
+      LEFT JOIN Role r ON per.role_id = r.role_id
+      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
+      WHERE p.approved = TRUE
+      ORDER BY p.publish_date DESC
+    `)
+
+    const properties = Array.isArray(result) ? result : []
+
+    // ✅ Procesar cada propiedad para extraer la imagen principal
+    const propertiesWithImages = properties.map((property) => {
+      let mainImageUrl = null
+      let imageCount = 0
+
+      if (property.image && typeof property.image === "string") {
+        try {
+          const parsedImages = JSON.parse(property.image)
+
+          if (Array.isArray(parsedImages)) {
+            imageCount = parsedImages.length
+            mainImageUrl = parsedImages.length > 0 ? parsedImages[0] : null
+          } else if (typeof parsedImages === "object") {
+            // Estructura con normales/esféricas
+            const normales = parsedImages.normales || []
+            const esfericas = parsedImages.esfericas || []
+            imageCount = normales.length + esfericas.length
+            mainImageUrl = normales.length > 0 ? normales[0] : esfericas.length > 0 ? esfericas[0] : null
+          }
+        } catch (parseError) {
+          // Si no se puede parsear, asumir que es una URL directa
+          if (property.image.trim() !== "") {
+            mainImageUrl = property.image
+            imageCount = 1
+          }
+        }
+      }
+
+      return {
+        ...property,
+        main_image_url: mainImageUrl,
+        image_count: imageCount,
+        has_images: !!mainImageUrl,
+        // ✅ Mantener compatibilidad con el frontend existente
+        image_url: mainImageUrl, // Para el frontend
+      }
+    })
+
+    console.log(`✅ Se procesaron ${propertiesWithImages.length} propiedades con imágenes`)
+
+    res.json({
+      success: true,
+      count: propertiesWithImages.length,
+      properties: propertiesWithImages,
+    })
+  } catch (error: any) {
+    console.error("❌ Error in getPropertiesWithMainImages:", error)
+    res.status(500).json({
+      error: "Error obteniendo propiedades con imágenes",
+      detail: error.message,
+      success: false,
+    })
+  }
+}
