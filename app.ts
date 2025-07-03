@@ -19,6 +19,9 @@ import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
+import userRoutes from './routes/userRoutes' // ajusta la ruta si está en otra carpeta
+import summaryRoutes from './routes/summaryRoutes';
+import realEstateAdminRoutes from './routes/realEstateAdmin';
 
 
 dotenv.config();
@@ -40,6 +43,11 @@ app.use((req, res, next) => {
 });
 
 // ✅ RUTAS API CON PREFIJOS ORGANIZADOS
+app.use('/api', summaryRoutes);
+app.use('/api', realEstateAdminRoutes);
+
+app.use('/api', userRoutes)
+
 // 🏠 Rutas de propiedades
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);

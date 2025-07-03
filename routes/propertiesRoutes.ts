@@ -10,7 +10,9 @@ import {
   getApprovedProperties,
   getPropertiesByType,
   getPropertyById,
-  getPropertyImages 
+  getPropertyImages,
+  getPropertiesWithMainImages,
+  getPropertyMainImage
 } from '../controllers/propertyController';
 import { getUserProperties } from '../controllers/userPropertyController';
 import { verifyToken } from '../middleware/VerifyToken';
@@ -47,5 +49,11 @@ router.get('/type/:property_type_id', getPropertiesByType);
 router.get('/details/:id', getPropertyById);                  // GET /api/properties/details/:id
 
 router.get('/mis-propiedades', verifyToken, getUserProperties);
+
+router.get("/properties/approved", getApprovedProperties)
+
+// ✅ Nuevas rutas para imágenes
+router.get("/properties/with-images", getPropertiesWithMainImages)
+router.get("/properties/:id/main-image", getPropertyMainImage)
 
 export default router;
