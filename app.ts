@@ -19,10 +19,7 @@ import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
-import userRoutes from './routes/userRoutes' // ajusta la ruta si está en otra carpeta
-import summaryRoutes from './routes/summaryRoutes';
-import realEstateAdminRoutes from './routes/realEstateAdmin';
-import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
+import agentRoutes from './routes/agentRoutes'
 
 
 dotenv.config();
@@ -70,8 +67,9 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/registro', registroRoutes);
 // app.use('/api/auth', authRoutes);
 
+
+// Rutas de Agente
 app.use("/api", agentRoutes);
-app.use('/api/invitacion', invitacionRoutes);
 // app.use("/api", propertyRoutes); 
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);
