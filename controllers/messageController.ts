@@ -51,3 +51,21 @@ export const saveMessage = async (req: Request, res: Response) => {
     res.status(500).json({ error: "No se pudo guardar el mensaje" })
   }
 }
+
+/**Obtener los mensajes */
+export const getMessagesByAgent = async (req: Request, res: Response) => {
+  const agentPersonId = Number(req.params.agentId)   // ahora ES el person_id
+  const limit = req.query.limit ? Number(req.query.limit) : 20
+
+  if (!agentPersonId || Number.isNaN(agentPersonId)) {
+    return res.status(400).json({ error: "agentId inválido o faltante" })
+  }
+
+  try {
+    const messages = await MessageService.getMessagesByAgent(agentPersonId, limit)
+    return res.status(200).json(messages)
+  } catch (error) {
+    console.error("Error getMessagesByAgent:", error)
+    return res.status(500).json({ error: "No se pudieron obtener los mensajes" })
+  }
+}
