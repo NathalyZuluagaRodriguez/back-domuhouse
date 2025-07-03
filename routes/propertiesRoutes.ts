@@ -18,7 +18,7 @@ import { verifyToken } from '../middleware/VerifyToken';
 const router = express.Router();
 
 // 🏠 RUTAS PÚBLICAS (sin autenticación)
-
+// f
 // ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
 router.post('/create', upload.array('images', 10), createProperty);
 
