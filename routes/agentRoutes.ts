@@ -1,21 +1,37 @@
 import { Router } from 'express';
 import db from '../config/config-db';
+import multer from "multer";
+
+
 import registerAgentWithToken from "../controllers/registerAgentController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 import { generateInvitation } from '../controllers/invitationController';
-import {listPropertiesByAgent,listSalesAndRentals,getAgentPerformanceReport,getProperty,updateProperty,deleteProperty,} from "../controllers/propertyByAgentController";
+import { createProperty, listPropertiesByAgent,listSalesAndRentals,getAgentPerformanceReport,getProperty,updateProperty,deleteProperty,} from "../controllers/propertyByAgentController";
 import { listVisitsByAgent, scheduleVisit, changeVisitStatus, updateVisit, deleteVisit } from "../controllers/visitByAgentController";
+import { getMessagesByAgent } from '../controllers/messageController';
 import { validateToken } from '../middleware/authMiddleware';
 import {getAgentsByCompany} from '../controllers/agentController'
+
+
+
 const router = Router();
 router.get("/agentes", validateToken, getAgentsByCompany);
+
+const upload = multer({ dest: "uploads/" });           // tmp folder; Cloudinary se encarga después
+
 
 /* Registro */
 router.post("/registro-agente", registerAgentWithToken);
 router.post('/generar-token', generateInvitation);
 
 // Rutas basadas en ID de agente
+// 0. Crear propiedad (con imágenes)
+router.post(
+  "/agents/:agentId/properties",
+  upload.array("images", 10),     // <‑‑ aquí se procesan los archivos
+  createProperty
+);
 router.get("/agents/:agentId/properties", listPropertiesByAgent);
 router.get("/:agentId/sales-rentals", listSalesAndRentals);
 
@@ -35,6 +51,11 @@ router.post("/agents/:agentId/visits/schedule", scheduleVisit);
 
 /* Reporte */
 router.get("/agents/:agentId/performance", getAgentPerformanceReport);
+
+
+/*Obtener mensajes por agente */
+router.get("/agents/:agentId/messages", getMessagesByAgent)
+
 
 
 router.get("/ventas-alquileres", getVentasAlquileres);
