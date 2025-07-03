@@ -81,12 +81,7 @@ const getPersonEmail = async (person_id: number): Promise<string | null> => {
 };
 
 export const getAllRealEstates = async (): Promise<RowDataPacket[]> => {
-const query = `
-  SELECT 
-    (SELECT COUNT(*) FROM property) AS total_properties,
-    (SELECT COUNT(*) FROM realestate) AS total_real_estates,
-    (SELECT COALESCE(AVG(num_properties), 0)) AS avg_properties_per_real_estate
-`;
+  const query = 'SELECT * FROM RealEstate';
   const [rows] = await db.query<RowDataPacket[]>(query);
   return rows;
 };
