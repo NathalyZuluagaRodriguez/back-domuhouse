@@ -369,8 +369,7 @@ export const approveProperty = async (req: Request, res: Response) => {
 export const getProperties = async (req: Request, res: Response) => {
   try {
     console.log("📋 getProperties - Obteniendo todas las propiedades...")
-
-    // ✅ CONSULTA ACTUALIZADA CON JOIN PARA OBTENER INFO DEL AGENTE
+    
     const [result]: any = await Promisepool.query(`
       SELECT 
         p.property_id,
@@ -395,23 +394,30 @@ export const getProperties = async (req: Request, res: Response) => {
         p.approved,
         p.person_id,
         p.property_type_id,
-        -- Información del agente
+        
+        -- Información del agente (CAMPOS CORRECTOS)
         person.name_person,
         person.last_name,
         person.phone as agent_phone,
         person.email as agent_email,
-        CONCAT(person.name_person, ' ', person.last_name) as agent_name,
+        CONCAT(COALESCE(person.name_person, ''), ' ', COALESCE(person.last_name, '')) as agent_name,
+        
+        -- Información del rol
+        r.role_name,
+        
         -- Información del tipo de propiedad
         pt.type_name as property_type_name
+        
       FROM Property p
       LEFT JOIN Person person ON p.person_id = person.person_id
+      LEFT JOIN Role r ON person.role_id = r.role_id
       LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
       ORDER BY p.publish_date DESC
     `)
 
     const properties = Array.isArray(result) ? result : []
-
     console.log(`✅ Se encontraron ${properties.length} propiedades`)
+
     res.json({
       success: true,
       count: properties.length,
@@ -429,9 +435,9 @@ export const getProperties = async (req: Request, res: Response) => {
 export const getApprovedProperties = async (req: Request, res: Response) => {
   try {
     console.log("✅ getApprovedProperties - Obteniendo propiedades aprobadas...")
-
-    // ✅ CONSULTA ACTUALIZADA CON JOIN PARA OBTENER INFO DEL AGENTE
-    const [result]: any = await Promisepool.query(`
+    
+    // Consulta SQL exacta que funciona en tu base de datos
+    const sqlQuery = `
       SELECT 
         p.property_id,
         p.property_title,
@@ -455,49 +461,73 @@ export const getApprovedProperties = async (req: Request, res: Response) => {
         p.approved,
         p.person_id,
         p.property_type_id,
-        -- Información del agente
-        person.name_person,
-        person.last_name,
-        person.phone as agent_phone,
-        person.email as agent_email,
-        CONCAT(person.name_person, ' ', person.last_name) as agent_name,
-        -- Información del tipo de propiedad
-        pt.type_name as property_type_name
+        per.name_person,
+        per.last_name,
+        per.phone AS agent_phone,
+        per.email AS agent_email,
+        CONCAT(COALESCE(per.name_person, ''), ' ', COALESCE(per.last_name, '')) AS agent_name,
+        r.role_name,
+        pt.type_name AS property_type_name
       FROM Property p
-      LEFT JOIN Person person ON p.person_id = person.person_id
+      LEFT JOIN Person per ON p.person_id = per.person_id
+      LEFT JOIN Role r ON per.role_id = r.role_id
       LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
       WHERE p.approved = TRUE
       ORDER BY p.publish_date DESC
-    `)
-
-    const properties = Array.isArray(result) ? result : []
-
+    `
+    
+    console.log("🔍 Ejecutando consulta SQL...")
+    const [rows]: any = await Promisepool.query(sqlQuery)
+    
+    console.log("📊 Resultado crudo de la consulta:", {
+      totalRows: rows?.length || 0,
+      firstRow: rows?.[0] || null
+    })
+    
+    const properties = Array.isArray(rows) ? rows : []
+    
+    // Debug detallado del primer registro
+    if (properties.length > 0) {
+      const firstProperty = properties[0]
+      console.log("🔍 Análisis del primer registro:", {
+        property_id: firstProperty.property_id,
+        property_title: firstProperty.property_title,
+        person_id: firstProperty.person_id,
+        name_person: firstProperty.name_person,
+        last_name: firstProperty.last_name,
+        agent_name: firstProperty.agent_name,
+        agent_phone: firstProperty.agent_phone,
+        agent_email: firstProperty.agent_email,
+        role_name: firstProperty.role_name,
+        property_type_name: firstProperty.property_type_name
+      })
+    }
+    
     console.log(`✅ Se encontraron ${properties.length} propiedades aprobadas`)
-    console.log(
-      "📊 Ejemplo de propiedad con agente:",
-      properties[0]
-        ? {
-            title: properties[0].property_title,
-            agent_name: properties[0].agent_name,
-            bedrooms: properties[0].bedrooms,
-            bathrooms: properties[0].bathrooms,
-          }
-        : "No hay propiedades",
-    )
 
     res.json({
       success: true,
       count: properties.length,
       properties,
     })
+    
   } catch (error: any) {
-    console.error("❌ Error in getApprovedProperties:", error)
+    console.error("❌ Error completo en getApprovedProperties:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      sqlMessage: error.sqlMessage
+    })
+    
     res.status(500).json({
-      error: "Error retrieving approved properties",
+      error: "Error al obtener propiedades aprobadas",
       detail: error.message,
+      sqlError: error.sqlMessage || null
     })
   }
 }
+
+
 
 export const getPropertiesByType = async (req: Request, res: Response) => {
   try {
