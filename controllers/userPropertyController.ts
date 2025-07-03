@@ -12,7 +12,7 @@ export const getUserProperties = async (req: Request & { user?: { id: number } }
 
     res.status(200).json({
       success: true,
-      count: properties.length,
+      count: properties.length, 
       properties
     });
   } catch (error: any) {
