@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // 📁 Importar todas las rutas
+import './types/express/index'; // 👈 Importa tu definición personalizada
 import "express-session";
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
@@ -25,6 +26,8 @@ import realEstateAdminRoutes from './routes/realEstateAdmin';
 import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
 import clientRoutes from "./routes/clientRoutes";
 import interestRoutes from "./routes/interestRoutes"
+import visitRoutes from './routes/visits.js';
+
 
 
 dotenv.config();
@@ -49,10 +52,11 @@ app.use((req, res, next) => {
 app.use('/api', summaryRoutes);
 app.use('/api', realEstateAdminRoutes);
 app.use('/api', propertiesAdminRoutes); // Las rutas estarán disponibles bajo /api/...
+app.use('/api', visitRoutes);
 
 
 app.use('/api', userRoutes)
-
+  
 // 🏠 Rutas de propiedades
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);
