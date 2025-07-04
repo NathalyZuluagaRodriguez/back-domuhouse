@@ -81,7 +81,7 @@ const getPersonEmail = async (person_id: number): Promise<string | null> => {
 };
 
 export const getAllRealEstates = async (): Promise<RowDataPacket[]> => {
-  const query = 'SELECT * FROM RealEstate';
+  const query = 'SELECT re.*, p.name_person as admin_name, p.last_name as admin_lastname FROM realestate re JOIN person p ON re.person_id = p.person_id';
   const [rows] = await db.query<RowDataPacket[]>(query);
   return rows;
 };

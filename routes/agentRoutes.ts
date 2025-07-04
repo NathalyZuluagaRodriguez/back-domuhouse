@@ -14,7 +14,6 @@ import { validateToken } from '../middleware/authMiddleware';
 import {getAgentsByCompany} from '../controllers/agentController'
 
 
-
 const router = Router();
 router.get("/agentes", validateToken, getAgentsByCompany);
 
