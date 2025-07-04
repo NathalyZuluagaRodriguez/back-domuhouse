@@ -19,7 +19,12 @@ import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
-import agentRoutes from './routes/agentRoutes'
+import userRoutes from './routes/userRoutes' // ajusta la ruta si está en otra carpeta
+import summaryRoutes from './routes/summaryRoutes';
+import realEstateAdminRoutes from './routes/realEstateAdmin';
+import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
+import clientRoutes from "./routes/clientRoutes";
+import interestRoutes from "./routes/interestRoutes"
 
 
 dotenv.config();
@@ -70,10 +75,19 @@ app.use('/api/registro', registroRoutes);
 
 // Rutas de Agente
 app.use("/api", agentRoutes);
+app.use('/api/invitacion', invitacionRoutes);
 // app.use("/api", propertyRoutes); 
 // app.use("/api", ventasAlquileresRoute);
 // app.use(reporteRoutes);
 // app.use('/api/reportes', reportesRoute);
+
+// Rutas Cliente
+app.use("/api", clientRoutes);
+
+// Rutas Interes
+app.use("/api", interestRoutes)
+
+
 app.use('/register',register);
 // app.use('/auth', authRoutes);
 app.use('/logout', logout);
