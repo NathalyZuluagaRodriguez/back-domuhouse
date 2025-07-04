@@ -5,9 +5,9 @@ import fs from "fs"
 
 export const createProperty = async (req: Request, res: Response) => {
   try {
-    console.log("🏠 createProperty - Iniciando...")
-    console.log("📋 Body recibido:", req.body)
-    console.log("📷 Files recibidos:", req.files)
+    console.log('🏠 createProperty - Iniciando...');
+    console.log('📋 Body recibido:', req.body);
+    console.log('📷 Files recibidos:', req.files);
 
     const {
       address,
@@ -15,7 +15,7 @@ export const createProperty = async (req: Request, res: Response) => {
       description,
       price,
       status,
-      person_id,
+      person_id, // ✅ Ahora debe enviarse en el body
       property_type_id,
       socioeconomic_stratum,
       city,
@@ -27,18 +27,13 @@ export const createProperty = async (req: Request, res: Response) => {
       built_area,
       total_area,
       latitude,
-      longitude,
-    } = req.body
-
-    // ✅ Inicializar variables de imágenes
-    const esfericas: string[] = []
-    let imageUrls: string[] = []
-    let imagesJson = "{}"
+      longitude
+    } = req.body;
 
     // ✅ Validar archivos
-    const files = req.files as Express.Multer.File[]
+    const files = req.files as Express.Multer.File[];
     if (files && files.length > 10) {
-      return res.status(400).json({ error: "Máximo 10 imágenes permitidas" })
+      return res.status(400).json({ error: 'Máximo 10 imágenes permitidas' });
     }
 
     // ✅ Validar campos requeridos básicos
@@ -47,23 +42,23 @@ export const createProperty = async (req: Request, res: Response) => {
       property_title,
       description,
       price,
-      person_id,
+      person_id, // ✅ Ahora requerido en el body
       property_type_id,
       city,
       neighborhood,
-      operation_type,
-    }
+      operation_type
+    };
 
-    console.log("🔍 Validando campos requeridos:", requiredFields)
+    console.log('🔍 Validando campos requeridos:', requiredFields);
 
     for (const [key, value] of Object.entries(requiredFields)) {
-      if (!value || value === "" || value === "undefined") {
-        console.error(`❌ Campo faltante: ${key} = ${value}`)
-        return res.status(400).json({
+      if (!value || value === '' || value === 'undefined') {
+        console.error(`❌ Campo faltante: ${key} = ${value}`);
+        return res.status(400).json({ 
           error: `El campo ${key} es requerido`,
           received: value,
-          allFields: req.body,
-        })
+          allFields: req.body
+        });
       }
     }
 
@@ -76,259 +71,171 @@ export const createProperty = async (req: Request, res: Response) => {
       bathrooms: { value: bathrooms, required: false },
       parking_spaces: { value: parking_spaces, required: false },
       built_area: { value: built_area, required: false },
-      total_area: { value: total_area, required: false },
-    }
+      total_area: { value: total_area, required: false }
+    };
 
     for (const [key, config] of Object.entries(numericValidation)) {
-      if (config.value !== undefined && config.value !== null && config.value !== "") {
-        const numValue = Number(config.value)
+      if (config.value !== undefined && config.value !== null && config.value !== '') {
+        const numValue = Number(config.value);
         if (isNaN(numValue) || numValue < 0) {
-          return res.status(400).json({
+          return res.status(400).json({ 
             error: `El campo ${key} debe ser un número válido mayor o igual a 0`,
-            received: config.value,
-          })
+            received: config.value
+          });
         }
       } else if (config.required) {
-        return res.status(400).json({
+        return res.status(400).json({ 
           error: `El campo ${key} es requerido`,
-          received: config.value,
-        })
+          received: config.value
+        });
       }
     }
 
-    // ✅ CONFIGURACIÓN OPTIMIZADA PARA IMÁGENES 360°
+    // ✅ Subir imágenes a Cloudinary (si existen)
+    let imageUrls: string[] = [];
+    let imagesJson = '[]';
+
     if (files && files.length > 0) {
-      console.log(`📤 Subiendo ${files.length} imágenes a Cloudinary...`)
+      console.log(`📤 Subiendo ${files.length} imágenes a Cloudinary...`);
+      
+      const uploadPromises = files.map(async (file, index) => {
+        try {
+          console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname}`);
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: 'properties',
+            public_id: `property_${Date.now()}_${index}`,
+            transformation: [
+              { width: 1200, height: 800, crop: 'limit' },
+              { quality: 'auto' }
+            ]
+          });
+          
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+          
+          console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`);
+          return result.secure_url;
+        } catch (error) {
+          console.error(`❌ Error subiendo imagen ${file.originalname}:`, error);
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+          throw new Error(`Error subiendo imagen ${file.originalname}: ${error}`);
+        }
+      });
 
       try {
-        const uploadPromises = files.map(async (file, index) => {
-          try {
-            // ✅ Detectar imágenes 360° de manera más robusta
-            const fileName = file.originalname.toLowerCase()
-            const is360 =
-              fileName.includes("360") ||
-              fileName.includes("_360") ||
-              fileName.includes("esferica") ||
-              fileName.includes("pano") ||
-              fileName.includes("sphere")
-
-            console.log(`📷 Subiendo imagen ${index + 1}: ${file.originalname} (360°: ${is360})`)
-
-            // ✅ CONFIGURACIÓN OPTIMIZADA PARA MÁXIMA CALIDAD
-// Solo reemplaza la sección de configuración de Cloudinary (líneas ~140-180)
-
-const uploadOptions = {
-  folder: "properties/360",
-  public_id: `property_${Date.now()}_${index}`,
-  resource_type: "image" as const,
-  transformation: is360
-    ? [
-        {
-          // ✅ CONFIGURACIÓN PARA MÁXIMA CALIDAD 360°
-          width: 8192,
-          height: 4096,
-          crop: "limit" as const,
-          quality: 'auto:best', // ✅ Calidad máxima (era 95)
-          format: "png" as const, // ✅ PNG para mejor calidad (era jpg)
-          flags:  [
-                "layer_apply",
-                "no_overflow", 
-                "preserve_transparency",
-                "splices:keep_iptc"
-                  ],
-          dpr: "auto",
-          fetch_format: "auto",
-          effect: "improve:90"
-          // ✅ Sin sharpening para evitar artefactos
-          // effect: "sharpen:50", // REMOVIDO
-        },
-      ]
-    : [
-        {
-          width: 2560,
-          height: 1440,
-          crop: "fill" as const,
-          gravity: "auto" as const,
-          quality: 95, // ✅ Alta calidad para normales
-          format: "jpg" as const,
-          flags: ["progressive"] as const,
-          fetch_format: "auto" as const,
-        },
-      ],
-}
-
-            const result = await cloudinary.uploader.upload(file.path, uploadOptions)
-
-            // ✅ Limpiar archivo temporal
-            if (fs.existsSync(file.path)) {
-              fs.unlinkSync(file.path)
-            }
-
-            console.log(`✅ Imagen ${index + 1} subida: ${result.secure_url}`)
-            console.log(`📊 Dimensiones: ${result.width}x${result.height}, Formato: ${result.format}`)
-
-            // ✅ Clasificar imágenes 360°
-            if (is360) {
-              esfericas.push(result.secure_url)
-            }
-
-            return result.secure_url
-          } catch (uploadError) {
-            console.error(`❌ Error subiendo imagen ${file.originalname}:`, uploadError)
-
-            // Limpiar archivo en caso de error
-            if (fs.existsSync(file.path)) {
-              fs.unlinkSync(file.path)
-            }
-
-            throw new Error(
-              `Error subiendo ${file.originalname}: ${uploadError instanceof Error ? uploadError.message : "Error desconocido"}`,
-            )
-          }
-        })
-
-        // ✅ Esperar a que todas las imágenes se suban
-        imageUrls = await Promise.all(uploadPromises)
-
-        // ✅ Crear JSON de imágenes con estructura correcta
-        imagesJson = JSON.stringify({
-          esfericas: esfericas,
-          normales: imageUrls.filter((url) => !esfericas.includes(url)),
-          total: imageUrls.length,
-          // ✅ Metadatos adicionales para calidad
-          metadata: {
-            uploadedAt: new Date().toISOString(),
-            highQuality: true,
-            optimizedFor360: true,
-          },
-        })
-
-        console.log(`✅ Todas las imágenes subidas exitosamente:`)
-        console.log(`   - Total: ${imageUrls.length} imágenes`)
-        console.log(`   - 360°: ${esfericas.length} imágenes`)
-        console.log(`   - Normales: ${imageUrls.length - esfericas.length} imágenes`)
+        imageUrls = await Promise.all(uploadPromises);
+        imagesJson = JSON.stringify(imageUrls);
+        console.log(`✅ Todas las imágenes subidas exitosamente: ${imageUrls.length} imágenes`);
       } catch (uploadError) {
-        console.error("❌ Error en la subida de imágenes:", uploadError)
-
-        // Limpiar archivos temporales en caso de error
-        if (files) {
-          files.forEach((file) => {
-            if (fs.existsSync(file.path)) {
-              fs.unlinkSync(file.path)
-            }
-          })
-        }
-        return res.status(500).json({
-          error: "Error subiendo las imágenes",
-          detail: uploadError instanceof Error ? uploadError.message : "Error desconocido",
-        })
+        console.error('❌ Error en la subida de imágenes:', uploadError);
+        return res.status(500).json({ 
+          error: 'Error subiendo las imágenes',
+          detail: uploadError instanceof Error ? uploadError.message : 'Error desconocido'
+        });
       }
     }
 
-    // ✅ Preparar datos para el stored procedure
+    // ✅ Preparar datos para el stored procedure (según tu BD)
     const propertyData = [
       address,
       property_title,
       description,
       imagesJson,
-      Number.parseFloat(price),
-      status || "Disponible",
-      Number.parseInt(person_id),
-      Number.parseInt(property_type_id),
-      Number.parseInt(socioeconomic_stratum) || 3,
+      parseFloat(price),
+      status || 'Disponible',
+      parseInt(person_id),
+      parseInt(property_type_id),
+      parseInt(socioeconomic_stratum) || 3,
       city,
       neighborhood,
       operation_type,
-      Number.parseInt(bedrooms) || 0,
-      Number.parseInt(bathrooms) || 0,
-      Number.parseInt(parking_spaces) || 0,
-      Number.parseFloat(built_area) || 0,
-      Number.parseFloat(total_area) || Number.parseFloat(built_area) || 0,
-      Number.parseFloat(latitude) || 0,
-      Number.parseFloat(longitude) || 0,
-    ]
+      parseInt(bedrooms) || 0,
+      parseInt(bathrooms) || 0,
+      parseInt(parking_spaces) || 0,
+      parseFloat(built_area) || 0,
+      parseFloat(total_area) || parseFloat(built_area) || 0,
+      parseFloat(latitude) || 0,
+      parseFloat(longitude) || 0
+    ];
 
-    console.log("💾 Datos para stored procedure:", propertyData)
+    console.log('💾 Datos para stored procedure:', propertyData);
 
-    // ✅ Guardar en la base de datos
+    // ✅ Guardar en la base de datos usando tu procedimiento
     try {
       const [result]: any = await Promisepool.query(
-        "CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        propertyData,
-      )
+        'CALL sp_create_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        propertyData
+      );
 
-      console.log("✅ Resultado del stored procedure:", result)
-      console.log("✅ Propiedad creada exitosamente")
-
+      console.log('✅ Resultado del stored procedure:', result);
+      
+      // ✅ La propiedad se crea con approved = TRUE según tu procedimiento
+      console.log('✅ Propiedad creada exitosamente');
+      
       res.status(201).json({
         success: true,
-        message: "Propiedad creada exitosamente",
+        message: 'Propiedad creada exitosamente',
         property: {
           title: property_title,
           address: address,
-          price: Number.parseFloat(price),
+          price: parseFloat(price),
           city: city,
           neighborhood: neighborhood,
           operation_type: operation_type,
           images: imageUrls,
-          imagesCount: imageUrls.length,
-          images360Count: esfericas.length,
-          imageQuality: "high",
-        },
-      })
+          imagesCount: imageUrls.length
+        }
+      });
+
     } catch (dbError: any) {
-      console.error("❌ Error en la base de datos:", dbError)
-
-      // ✅ Limpiar imágenes de Cloudinary en caso de error de BD
+      console.error('❌ Error en la base de datos:', dbError);
+      
+      // Limpiar imágenes de Cloudinary en caso de error
       if (imageUrls.length > 0) {
-        console.log("🧹 Limpiando imágenes de Cloudinary debido a error en BD...")
-
-        const cleanupPromises = imageUrls.map(async (url) => {
+        console.log('🧹 Limpiando imágenes de Cloudinary debido a error en BD...');
+        imageUrls.forEach(async (url) => {
           try {
-            const publicId = url.split("/").pop()?.split(".")[0]
+            const publicId = url.split('/').pop()?.split('.')[0];
             if (publicId) {
-              await cloudinary.uploader.destroy(`properties/360/${publicId}`)
-              console.log(`🗑️ Imagen limpiada: ${publicId}`)
+              await cloudinary.uploader.destroy(`properties/${publicId}`);
             }
           } catch (cleanupError) {
-            console.error("⚠️ Error limpiando imagen:", cleanupError)
+            console.error('⚠️ Error limpiando imagen:', cleanupError);
           }
-        })
-
-        await Promise.allSettled(cleanupPromises)
+        });
       }
 
-      return res.status(500).json({
-        error: "Error al guardar en la base de datos",
+      return res.status(500).json({ 
+        error: 'Error al guardar en la base de datos', 
         detail: dbError.message,
         sqlMessage: dbError.sqlMessage,
-        code: dbError.code,
-      })
+        code: dbError.code
+      });
     }
+
   } catch (error: any) {
-    console.error("❌ Error general en createProperty:", error)
-
-    // ✅ Limpiar archivos temporales en caso de error general
+    console.error('❌ Error general en createProperty:', error);
+    
+    // Limpiar archivos temporales en caso de error general
     if (req.files) {
-      const files = req.files as Express.Multer.File[]
-      files.forEach((file) => {
+      const files = req.files as Express.Multer.File[];
+      files.forEach(file => {
         if (fs.existsSync(file.path)) {
-          try {
-            fs.unlinkSync(file.path)
-          } catch (unlinkError) {
-            console.error("⚠️ Error eliminando archivo temporal:", unlinkError)
-          }
+          fs.unlinkSync(file.path);
         }
-      })
+      });
     }
 
-    res.status(500).json({
-      error: "Error interno del servidor al crear la propiedad",
+    res.status(500).json({ 
+      error: 'Error interno del servidor al crear la propiedad', 
       detail: error.message,
-      timestamp: new Date().toISOString(),
-    })
+      timestamp: new Date().toISOString()
+    });
   }
-}
+};
 export const editProperty = async (req: Request, res: Response) => {
   try {
     console.log("✏️ editProperty - ID:", req.params.id)

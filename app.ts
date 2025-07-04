@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // 📁 Importar todas las rutas
-import './types/express/index'; // 👈 Importa tu definición personalizada
 import "express-session";
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
