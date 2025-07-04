@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import './types/express/index'; // 👈 Importa tu definición personalizada
 import "express-session";
 import login from './routes/login';
-import rolesRoutes from './routes/roles';
+//import rolesRoutes from './routes/roles';
 import searchRoutes from './routes/searchProperty';
 import agendaRoutes from './routes/Agenda';
 import iaRoute from './routes/iaRoutes';
@@ -14,7 +14,7 @@ import adminRoutes from './routes/adminRoutes';
 import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
-import reportesRoute from './routes/reportesPropRoutes';
+//import reportesRoute from './routes/reportesPropRoutes';
 import agentRoutes from "./routes/agentRoutes";
 import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
@@ -24,7 +24,7 @@ import userRoutes from './routes/userRoutes' // ajusta la ruta si está en otra 
 import summaryRoutes from './routes/summaryRoutes';
 import realEstateAdminRoutes from './routes/realEstateAdmin';
 import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
-import clientRoutes from "./routes/clientRoutes";
+//import clientRoutes from "./routes/clientRoutes";
 import interestRoutes from "./routes/interestRoutes"
 import visitRoutes from './routes/visits.js';
 
