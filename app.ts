@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 // 📁 Importar todas las rutas
+import "express-session";
 import login from './routes/login';
 import rolesRoutes from './routes/roles';
 import searchRoutes from './routes/searchProperty';
@@ -13,13 +14,19 @@ import invitacionRoutes from './routes/invitacionRoutes';
 import passwordRoutes from './routes/passwordRoutes';
 import registroRoutes from './routes/confirmacionRoutes';
 import reportesRoute from './routes/reportesPropRoutes';
+import agentRoutes from "./routes/agentRoutes";
 import register from './routes/register';
 import propertiesRoutes from './routes/propertiesRoutes';
 import realEstateRoutes from './routes/realEstateRoutes';
 import logout from './routes/logout';
-import agentRoutes from './routes/agentRoutes'
+import userRoutes from './routes/userRoutes' // ajusta la ruta si está en otra carpeta
+import summaryRoutes from './routes/summaryRoutes';
+import realEstateAdminRoutes from './routes/realEstateAdmin';
+import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
 import clientRoutes from "./routes/clientRoutes";
 import interestRoutes from "./routes/interestRoutes"
+import visitRoutes from './routes/visits.js';
+
 
 
 dotenv.config();
@@ -41,6 +48,14 @@ app.use((req, res, next) => {
 });
 
 // ✅ RUTAS API CON PREFIJOS ORGANIZADOS
+app.use('/api', summaryRoutes);
+app.use('/api', realEstateAdminRoutes);
+app.use('/api', propertiesAdminRoutes); // Las rutas estarán disponibles bajo /api/...
+app.use('/api', visitRoutes);
+
+
+app.use('/api', userRoutes)
+  
 // 🏠 Rutas de propiedades
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/inmobiliarias', realEstateRoutes);
@@ -63,6 +78,11 @@ app.use('/api/registro', registroRoutes);
 
 // Rutas de Agente
 app.use("/api", agentRoutes);
+app.use('/api/invitacion', invitacionRoutes);
+// app.use("/api", propertyRoutes); 
+// app.use("/api", ventasAlquileresRoute);
+// app.use(reporteRoutes);
+// app.use('/api/reportes', reportesRoute);
 
 // Rutas Cliente
 app.use("/api", clientRoutes);

@@ -1,8 +1,7 @@
-// controllers/propertyController.ts
-import { Request, Response } from 'express';
-import Promisepool from '../config/config-db';
-import cloudinary from '../config/cloudinary';
-import fs from 'fs';
+import type { Request, Response, Express } from "express"
+import Promisepool from "../config/config-db"
+import cloudinary from "../config/cloudinary"
+import fs from "fs"
 
 export const createProperty = async (req: Request, res: Response) => {
   try {
@@ -237,250 +236,436 @@ export const createProperty = async (req: Request, res: Response) => {
     });
   }
 };
-
 export const editProperty = async (req: Request, res: Response) => {
   try {
-    console.log('✏️ editProperty - ID:', req.params.id);
-    const { id } = req.params;
+    console.log("✏️ editProperty - ID:", req.params.id)
+    const { id } = req.params
     const {
-      property_title, adress, description, price, status, socioeconomic_stratum,
-      city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
-      built_area, total_area, latitude, longitude
-    } = req.body;
+      property_title,
+      adress,
+      description,
+      price,
+      status,
+      socioeconomic_stratum,
+      city,
+      neighborhood,
+      operation_type,
+      bedrooms,
+      bathrooms,
+      parking_spaces,
+      built_area,
+      total_area,
+      latitude,
+      longitude,
+    } = req.body
 
     const [result] = await Promisepool.query(
-      'CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      "CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
-        id, property_title, adress, description, price, status, socioeconomic_stratum,
-        city, neighborhood, operation_type, bedrooms, bathrooms, parking_spaces,
-        built_area, total_area, latitude, longitude
-      ]
-    );
+        id,
+        property_title,
+        adress,
+        description,
+        price,
+        status,
+        socioeconomic_stratum,
+        city,
+        neighborhood,
+        operation_type,
+        bedrooms,
+        bathrooms,
+        parking_spaces,
+        built_area,
+        total_area,
+        latitude,
+        longitude,
+      ],
+    )
 
-    console.log('✅ Property updated successfully');
-    res.json({ 
+    console.log("✅ Property updated successfully")
+    res.json({
       success: true,
-      message: 'Property updated successfully', 
-      result 
-    });
+      message: "Property updated successfully",
+      result,
+    })
   } catch (error: any) {
-    console.error('❌ Error in editProperty:', error);
-    res.status(500).json({ 
-      error: 'Error updating property', 
-      detail: error.message 
-    });
+    console.error("❌ Error in editProperty:", error)
+    res.status(500).json({
+      error: "Error updating property",
+      detail: error.message,
+    })
   }
-};
+}
 
 export const deleteProperty = async (req: Request, res: Response) => {
   try {
-    console.log('🗑️ deleteProperty - ID:', req.params.id);
-    const { id } = req.params;
-    
-    await Promisepool.query('CALL sp_delete_property(?)', [id]);
-    
-    console.log('✅ Property deleted successfully');
-    res.json({ 
+    console.log("🗑️ deleteProperty - ID:", req.params.id)
+    const { id } = req.params
+
+    await Promisepool.query("CALL sp_delete_property(?)", [id])
+
+    console.log("✅ Property deleted successfully")
+    res.json({
       success: true,
-      message: 'Property deleted successfully' 
-    });
+      message: "Property deleted successfully",
+    })
   } catch (error: any) {
-    console.error('❌ Error in deleteProperty:', error);
-    res.status(500).json({ 
-      error: 'Error deleting property', 
-      detail: error.message 
-    });
+    console.error("❌ Error in deleteProperty:", error)
+    res.status(500).json({
+      error: "Error deleting property",
+      detail: error.message,
+    })
   }
-};
+}
 
 export const approveProperty = async (req: Request, res: Response) => {
   try {
-    console.log('✅ approveProperty - Iniciando...');
-    const { id } = req.params;
+    console.log("✅ approveProperty - Iniciando...")
+    const { id } = req.params
 
     if (!id) {
-      return res.status(400).json({ error: 'Property ID is required' });
+      return res.status(400).json({ error: "Property ID is required" })
     }
 
-    await Promisepool.query('CALL sp_approve_property(?)', [id]);
+    await Promisepool.query("CALL sp_approve_property(?)", [id])
 
-    console.log(`🏠 Propiedad con ID ${id} aprobada correctamente`);
-    res.status(200).json({ 
+    console.log(`🏠 Propiedad con ID ${id} aprobada correctamente`)
+    res.status(200).json({
       success: true,
-      message: 'Property approved successfully' 
-    });
+      message: "Property approved successfully",
+    })
   } catch (error: any) {
-    console.error('❌ Error en approveProperty:', error);
-    res.status(500).json({ 
-      error: 'Error approving property', 
-      detail: error.message 
-    });
+    console.error("❌ Error en approveProperty:", error)
+    res.status(500).json({
+      error: "Error approving property",
+      detail: error.message,
+    })
   }
-};
+}
 
 export const getProperties = async (req: Request, res: Response) => {
   try {
-    console.log('📋 getProperties - Obteniendo todas las propiedades...');
-    const [result] = await Promisepool.query('CALL sp_list_approved_properties()');
-    const properties = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : [];
+    console.log("📋 getProperties - Obteniendo todas las propiedades...")
     
-    console.log(`✅ Se encontraron ${properties.length} propiedades`);
+    const [result]: any = await Promisepool.query(`
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.socioeconomic_stratum,
+        p.city,
+        p.neighborhood,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.parking_spaces,
+        p.built_area,
+        p.total_area,
+        p.publish_date,
+        p.latitude,
+        p.longitude,
+        p.approved,
+        p.person_id,
+        p.property_type_id,
+        
+        -- Información del agente (CAMPOS CORRECTOS)
+        person.name_person,
+        person.last_name,
+        person.phone as agent_phone,
+        person.email as agent_email,
+        CONCAT(COALESCE(person.name_person, ''), ' ', COALESCE(person.last_name, '')) as agent_name,
+        
+        -- Información del rol
+        r.role_name,
+        
+        -- Información del tipo de propiedad
+        pt.type_name as property_type_name
+        
+      FROM Property p
+      LEFT JOIN Person person ON p.person_id = person.person_id
+      LEFT JOIN Role r ON person.role_id = r.role_id
+      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
+      ORDER BY p.publish_date DESC
+    `)
+
+    const properties = Array.isArray(result) ? result : []
+    console.log(`✅ Se encontraron ${properties.length} propiedades`)
+
     res.json({
       success: true,
       count: properties.length,
-      properties
-    });
+      properties,
+    })
   } catch (error: any) {
-    console.error('❌ Error in getProperties:', error);
-    res.status(500).json({ 
-      error: 'Error retrieving properties', 
-      detail: error.message 
-    });
+    console.error("❌ Error in getProperties:", error)
+    res.status(500).json({
+      error: "Error retrieving properties",
+      detail: error.message,
+    })
   }
-};
-
-
+}
 
 export const getApprovedProperties = async (req: Request, res: Response) => {
   try {
-    console.log('✅ getApprovedProperties - Obteniendo propiedades aprobadas...');
-    const [rows]: any = await Promisepool.query('CALL sp_list_approved_properties()');
-    const properties = Array.isArray(rows) && Array.isArray(rows[0]) ? rows[0] : [];
+    console.log("✅ getApprovedProperties - Obteniendo propiedades aprobadas...")
     
-    console.log(`✅ Se encontraron ${properties.length} propiedades aprobadas`);
+    // Consulta SQL exacta que funciona en tu base de datos
+    const sqlQuery = `
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.socioeconomic_stratum,
+        p.city,
+        p.neighborhood,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.parking_spaces,
+        p.built_area,
+        p.total_area,
+        p.publish_date,
+        p.latitude,
+        p.longitude,
+        p.approved,
+        p.person_id,
+        p.property_type_id,
+        per.name_person,
+        per.last_name,
+        per.phone AS agent_phone,
+        per.email AS agent_email,
+        CONCAT(COALESCE(per.name_person, ''), ' ', COALESCE(per.last_name, '')) AS agent_name,
+        r.role_name,
+        pt.type_name AS property_type_name
+      FROM Property p
+      LEFT JOIN Person per ON p.person_id = per.person_id
+      LEFT JOIN Role r ON per.role_id = r.role_id
+      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
+      WHERE p.approved = TRUE
+      ORDER BY p.publish_date DESC
+    `
+    
+    console.log("🔍 Ejecutando consulta SQL...")
+    const [rows]: any = await Promisepool.query(sqlQuery)
+    
+    console.log("📊 Resultado crudo de la consulta:", {
+      totalRows: rows?.length || 0,
+      firstRow: rows?.[0] || null
+    })
+    
+    const properties = Array.isArray(rows) ? rows : []
+    
+    // Debug detallado del primer registro
+    if (properties.length > 0) {
+      const firstProperty = properties[0]
+      console.log("🔍 Análisis del primer registro:", {
+        property_id: firstProperty.property_id,
+        property_title: firstProperty.property_title,
+        person_id: firstProperty.person_id,
+        name_person: firstProperty.name_person,
+        last_name: firstProperty.last_name,
+        agent_name: firstProperty.agent_name,
+        agent_phone: firstProperty.agent_phone,
+        agent_email: firstProperty.agent_email,
+        role_name: firstProperty.role_name,
+        property_type_name: firstProperty.property_type_name
+      })
+    }
+    
+    console.log(`✅ Se encontraron ${properties.length} propiedades aprobadas`)
+
     res.json({
       success: true,
       count: properties.length,
-      properties
-    });
+      properties,
+    })
+    
   } catch (error: any) {
-    console.error('❌ Error in getApprovedProperties:', error);
-    res.status(500).json({ 
-      error: 'Error retrieving approved properties', 
-      detail: error.message 
-    });
+    console.error("❌ Error completo en getApprovedProperties:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      sqlMessage: error.sqlMessage
+    })
+    
+    res.status(500).json({
+      error: "Error al obtener propiedades aprobadas",
+      detail: error.message,
+      sqlError: error.sqlMessage || null
+    })
   }
-};
+}
+
+
 
 export const getPropertiesByType = async (req: Request, res: Response) => {
   try {
-    console.log('🏠 getPropertiesByType - Tipo:', req.params.property_type_id);
-    const { property_type_id } = req.params;
+    console.log("🏠 getPropertiesByType - Tipo:", req.params.property_type_id)
+    const { property_type_id } = req.params
 
     if (isNaN(Number(property_type_id))) {
-      return res.status(400).json({ 
-        error: 'El ID de tipo de propiedad debe ser un número válido' 
-      });
+      return res.status(400).json({
+        error: "El ID de tipo de propiedad debe ser un número válido",
+      })
     }
 
-    const [result] = await Promisepool.query(
-      'SELECT * FROM Property WHERE property_type_id = ? AND approved = TRUE',
-      [property_type_id]
-    );
+    // ✅ CONSULTA ACTUALIZADA CON JOIN PARA OBTENER INFO DEL AGENTE
+    const [result]: any = await Promisepool.query(
+      `
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.socioeconomic_stratum,
+        p.city,
+        p.neighborhood,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.parking_spaces,
+        p.built_area,
+        p.total_area,
+        p.publish_date,
+        p.latitude,
+        p.longitude,
+        p.approved,
+        p.person_id,
+        p.property_type_id,
+        -- Información del agente
+        person.name_person,
+        person.last_name,
+        person.phone as agent_phone,
+        person.email as agent_email,
+        CONCAT(person.name_person, ' ', person.last_name) as agent_name,
+        -- Información del tipo de propiedad
+        pt.type_name as property_type_name
+      FROM Property p
+      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
+      LEFT JOIN Person person ON p.person_id = person.person_id
+      WHERE p.property_type_id = ? AND p.approved = TRUE
+      ORDER BY p.publish_date DESC
+    `,
+      [property_type_id],
+    )
 
     if (Array.isArray(result) && result.length === 0) {
-      return res.status(404).json({ 
-        mensaje: 'No se encontraron propiedades para este tipo',
-        property_type_id: property_type_id
-      });
+      return res.status(404).json({
+        mensaje: "No se encontraron propiedades para este tipo",
+        property_type_id: property_type_id,
+      })
     }
 
-    console.log(`✅ Se encontraron ${Array.isArray(result) ? result.length : 0} propiedades del tipo ${property_type_id}`);
-    res.json({ 
+    console.log(
+      `✅ Se encontraron ${Array.isArray(result) ? result.length : 0} propiedades del tipo ${property_type_id}`,
+    )
+    res.json({
       success: true,
       count: Array.isArray(result) ? result.length : 0,
       property_type_id: property_type_id,
-      properties: result 
-    });
+      properties: result,
+    })
   } catch (error: any) {
-    console.error('❌ Error al obtener propiedades por tipo:', error);
-    res.status(500).json({ 
-      error: error.sqlMessage || 'Error interno', 
-      detail: error.message 
-    });
+    console.error("❌ Error al obtener propiedades por tipo:", error)
+    res.status(500).json({
+      error: error.sqlMessage || "Error interno",
+      detail: error.message,
+    })
   }
-};
-
+}
 
 // ✅ Función getPropertyById CORREGIDA
 export const getPropertyById = async (req: Request, res: Response) => {
   try {
-    console.log('🏠 getPropertyById - ID:', req.params.id);
-    const { id } = req.params;
+    console.log("🏠 getPropertyById - ID:", req.params.id)
+    const { id } = req.params
 
     if (!id) {
-      return res.status(400).json({ 
-        error: 'ID de propiedad es requerido',
-        success: false 
-      });
+      return res.status(400).json({
+        error: "ID de propiedad es requerido",
+        success: false,
+      })
     }
 
-    const propertyId = parseInt(id);
+    const propertyId = Number.parseInt(id)
     if (isNaN(propertyId) || propertyId <= 0) {
-      return res.status(400).json({ 
-        error: 'ID de propiedad debe ser un número válido mayor a 0',
-        success: false 
-      });
+      return res.status(400).json({
+        error: "ID de propiedad debe ser un número válido mayor a 0",
+        success: false,
+      })
     }
 
-    console.log('🔍 Buscando propiedad con ID válido:', propertyId);
+    console.log("🔍 Buscando propiedad con ID válido:", propertyId)
 
     const [result]: any = await Promisepool.execute(
-      `SELECT 
+      `
+      SELECT 
         p.*,
         pt.type_name as property_type_name,
-        CONCAT(per.name_person, ' ', per.last_name) as agent_name,
-        per.email as agent_email,
-        per.phone as agent_phone
+        person.name_person,
+        person.last_name,
+        person.email as agent_email,
+        person.phone as agent_phone,
+        CONCAT(person.name_person, ' ', person.last_name) as agent_name
       FROM Property p
       LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
-      LEFT JOIN Person per ON p.person_id = per.person_id
-      WHERE p.property_id = ?`,
-      [propertyId]
-    );
+      LEFT JOIN Person person ON p.person_id = person.person_id
+      WHERE p.property_id = ?
+    `,
+      [propertyId],
+    )
 
-    console.log('📊 Resultado de la consulta:', result ? result.length : 'No hay resultado');
+    console.log("📊 Resultado de la consulta:", result ? result.length : "No hay resultado")
 
     if (!result || result.length === 0) {
-      return res.status(404).json({ 
-        error: 'Propiedad no encontrada',
-        message: 'La propiedad solicitada no existe',
+      return res.status(404).json({
+        error: "Propiedad no encontrada",
+        message: "La propiedad solicitada no existe",
         success: false,
-        property_id: propertyId
-      });
+        property_id: propertyId,
+      })
     }
 
-    const property = result[0];
+    const property = result[0]
 
     if (!property.approved) {
       return res.status(403).json({
-        error: 'Propiedad no disponible',
-        message: 'La propiedad no está aprobada para visualización pública',
-        success: false
-      });
+        error: "Propiedad no disponible",
+        message: "La propiedad no está aprobada para visualización pública",
+        success: false,
+      })
     }
 
     // ✅ PROCESAR IMÁGENES CORRECTAMENTE
-    let processedImages: string[] = [];
-    
-    if (property.image && typeof property.image === 'string') {
+    let processedImages: string[] = []
+
+    if (property.image && typeof property.image === "string") {
       try {
-        const parsedImages = JSON.parse(property.image);
-        console.log('🖼️ Imágenes parseadas:', parsedImages);
-        
+        const parsedImages = JSON.parse(property.image)
+        console.log("🖼️ Imágenes parseadas:", parsedImages)
+
         if (Array.isArray(parsedImages)) {
-          processedImages = parsedImages.filter(url => 
-            url && 
-            url.trim() !== '' && 
-            (url.startsWith('http') || url.startsWith('/'))
-          );
+          processedImages = parsedImages.filter(
+            (url) => url && url.trim() !== "" && (url.startsWith("http") || url.startsWith("/")),
+          )
         }
       } catch (parseError) {
-        console.warn('⚠️ Error parsing images JSON:', parseError);
-        
+        console.warn("⚠️ Error parsing images JSON:", parseError)
+
         // Si no se puede parsear, asumir que es una sola URL
-        if (property.image.trim() !== '') {
-          processedImages = [property.image];
+        if (property.image.trim() !== "") {
+          processedImages = [property.image]
         }
       }
     }
@@ -509,150 +694,336 @@ export const getPropertyById = async (req: Request, res: Response) => {
       status: property.status,
       approved: property.approved,
       publish_date: property.publish_date,
-      
+
       // ✅ CAMPOS QUE EL FRONTEND ESPERA
-      agent_name: property.agent_name || 'Agente Inmobiliario',
-      agent_email: property.agent_email || 'contacto@inmobiliaria.com',
-      agent_phone: property.agent_phone || '+57 300 000 0000',
-      
+      agent_name: property.agent_name || "Agente Inmobiliario",
+      name_person: property.name_person,
+      last_name: property.last_name,
+      agent_email: property.agent_email || "contacto@inmobiliaria.com",
+      agent_phone: property.agent_phone || "+57 300 000 0000",
+
       // ✅ IMÁGENES PROCESADAS
       images: processedImages,
-      image_urls: processedImages // Para compatibilidad adicional
-    };
+      image_urls: processedImages, // Para compatibilidad adicional
+    }
 
-    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`);
-    console.log(`🖼️ Imágenes procesadas: ${processedImages.length} URLs`);
-    
+    console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`)
+    console.log(`👤 Agente: ${formattedProperty.agent_name}`)
+    console.log(`🖼️ Imágenes procesadas: ${processedImages.length} URLs`)
+
     res.status(200).json({
       success: true,
       property: formattedProperty,
-      message: 'Propiedad obtenida correctamente'
-    });
-
+      message: "Propiedad obtenida correctamente",
+    })
   } catch (error: any) {
-    console.error('❌ Error completo in getPropertyById:', {
+    console.error("❌ Error completo in getPropertyById:", {
       message: error.message,
       stack: error.stack,
       code: error.code,
-      sql: error.sql
-    });
-    
-    res.status(500).json({ 
-      error: 'Error interno del servidor al obtener la propiedad', 
+      sql: error.sql,
+    })
+
+    res.status(500).json({
+      error: "Error interno del servidor al obtener la propiedad",
       detail: error.message,
       success: false,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: new Date().toISOString(),
+    })
   }
-};
+}
 
 // ✅ Función getPropertyImages CORREGIDA
 export const getPropertyImages = async (req: Request, res: Response) => {
   try {
-    console.log('🖼️ getPropertyImages - ID:', req.params.id);
-    const { id } = req.params;
+    console.log("🖼️ getPropertyImages - ID:", req.params.id)
+    const { id } = req.params
 
     if (!id) {
-      return res.status(400).json({ 
-        error: 'ID de propiedad es requerido',
-        success: false 
-      });
+      return res.status(400).json({
+        error: "ID de propiedad es requerido",
+        success: false,
+      })
     }
 
-    const propertyId = parseInt(id);
+    const propertyId = Number.parseInt(id)
     if (isNaN(propertyId) || propertyId <= 0) {
-      return res.status(400).json({ 
-        error: 'ID de propiedad debe ser un número válido mayor a 0',
-        success: false 
-      });
+      return res.status(400).json({
+        error: "ID de propiedad debe ser un número válido mayor a 0",
+        success: false,
+      })
     }
 
-    console.log('🔍 Buscando imágenes para propiedad ID:', propertyId);
+    console.log("🔍 Buscando imágenes para propiedad ID:", propertyId)
 
     const [result]: any = await Promisepool.execute(
-      `SELECT 
+      `
+      SELECT 
         property_id,
         property_title,
         image,
         approved
       FROM Property 
-      WHERE property_id = ?`,
-      [propertyId]
-    );
+      WHERE property_id = ?
+    `,
+      [propertyId],
+    )
 
     if (!result || result.length === 0) {
-      return res.status(404).json({ 
-        error: 'Propiedad no encontrada',
+      return res.status(404).json({
+        error: "Propiedad no encontrada",
         success: false,
-        property_id: propertyId
-      });
+        property_id: propertyId,
+      })
     }
 
-    const property = result[0];
+    const property = result[0]
 
     if (!property.approved) {
       return res.status(403).json({
-        error: 'Propiedad no disponible',
-        success: false
-      });
+        error: "Propiedad no disponible",
+        success: false,
+      })
     }
 
     // ✅ PROCESAR IMÁGENES EN FORMATO ESPERADO POR EL FRONTEND
-    let images: any[] = [];
-    
-    if (property.image && typeof property.image === 'string') {
+    let images: any[] = []
+
+    if (property.image && typeof property.image === "string") {
       try {
-        const parsedImages = JSON.parse(property.image);
-        console.log('🔍 Imágenes parseadas:', parsedImages);
-        
+        const parsedImages = JSON.parse(property.image)
+        console.log("🔍 Imágenes parseadas:", parsedImages)
+
         if (Array.isArray(parsedImages)) {
           images = parsedImages
-            .filter(url => url && url.trim() !== '' && (url.startsWith('http') || url.startsWith('/')))
+            .filter((url) => url && url.trim() !== "" && (url.startsWith("http") || url.startsWith("/")))
             .map((imageUrl: string, index: number) => ({
               id: index + 1,
               url: imageUrl,
               is_main: index === 0,
               property_id: propertyId,
               order: index + 1,
-              alt: `Imagen ${index + 1} de ${property.property_title}`
-            }));
+              alt: `Imagen ${index + 1} de ${property.property_title}`,
+            }))
         }
       } catch (parseError) {
-        console.warn('⚠️ Error parsing images JSON:', parseError);
-        
-        if (property.image.trim() !== '') {
-          images = [{
-            id: 1,
-            url: property.image,
-            is_main: true,
-            property_id: propertyId,
-            order: 1,
-            alt: `Imagen principal de ${property.property_title}`
-          }];
+        console.warn("⚠️ Error parsing images JSON:", parseError)
+
+        if (property.image.trim() !== "") {
+          images = [
+            {
+              id: 1,
+              url: property.image,
+              is_main: true,
+              property_id: propertyId,
+              order: 1,
+              alt: `Imagen principal de ${property.property_title}`,
+            },
+          ]
         }
       }
     }
 
-    console.log(`✅ Se procesaron ${images.length} imágenes válidas`);
-    console.log('🖼️ URLs procesadas:', images.map(img => img.url));
-    
+    console.log(`✅ Se procesaron ${images.length} imágenes válidas`)
+    console.log(
+      "🖼️ URLs procesadas:",
+      images.map((img) => img.url),
+    )
+
     res.status(200).json({
       success: true,
       property_id: propertyId,
       property_title: property.property_title,
       images: images,
       images_count: images.length,
-      message: `${images.length} imágenes obtenidas correctamente`
-    });
-
+      message: `${images.length} imágenes obtenidas correctamente`,
+    })
   } catch (error: any) {
-    console.error('❌ Error completo in getPropertyImages:', error);
-    
-    res.status(500).json({ 
-      error: 'Error interno del servidor al obtener las imágenes', 
+    console.error("❌ Error completo in getPropertyImages:", error)
+
+    res.status(500).json({
+      error: "Error interno del servidor al obtener las imágenes",
       detail: error.message,
       success: false,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: new Date().toISOString(),
+    })
   }
-};
+}
+
+
+// ✅ Nueva ruta para obtener la imagen principal de una propiedad
+export const getPropertyMainImage = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+
+    if (!id) {
+      return res.status(400).json({
+        error: "ID de propiedad es requerido",
+        success: false,
+      })
+    }
+
+    const propertyId = Number.parseInt(id)
+    if (isNaN(propertyId) || propertyId <= 0) {
+      return res.status(400).json({
+        error: "ID de propiedad debe ser un número válido",
+        success: false,
+      })
+    }
+
+    const [result]: any = await Promisepool.execute(
+      `SELECT property_id, property_title, image, approved FROM Property WHERE property_id = ?`,
+      [propertyId],
+    )
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({
+        error: "Propiedad no encontrada",
+        success: false,
+      })
+    }
+
+    const property = result[0]
+
+    // ✅ Procesar imagen principal
+    let mainImageUrl = null
+    if (property.image && typeof property.image === "string") {
+      try {
+        const parsedImages = JSON.parse(property.image)
+
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          // Tomar la primera imagen como principal
+          mainImageUrl = parsedImages[0]
+        } else if (typeof parsedImages === "object" && parsedImages.normales && parsedImages.normales.length > 0) {
+          // Si tiene estructura con normales/esféricas
+          mainImageUrl = parsedImages.normales[0]
+        }
+      } catch (parseError) {
+        // Si no se puede parsear, asumir que es una URL directa
+        if (property.image.trim() !== "") {
+          mainImageUrl = property.image
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      property_id: propertyId,
+      property_title: property.property_title,
+      main_image: mainImageUrl,
+      has_image: !!mainImageUrl,
+    })
+  } catch (error: any) {
+    console.error("❌ Error in getPropertyMainImage:", error)
+    res.status(500).json({
+      error: "Error obteniendo imagen principal",
+      detail: error.message,
+      success: false,
+    })
+  }
+}
+
+// ✅ Ruta para obtener todas las imágenes con información adicional
+export const getPropertiesWithMainImages = async (req: Request, res: Response) => {
+  try {
+    console.log("🖼️ getPropertiesWithMainImages - Obteniendo propiedades con imágenes principales...")
+
+    const [result]: any = await Promisepool.query(`
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.socioeconomic_stratum,
+        p.city,
+        p.neighborhood,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.parking_spaces,
+        p.built_area,
+        p.total_area,
+        p.publish_date,
+        p.latitude,
+        p.longitude,
+        p.approved,
+        p.person_id,
+        p.property_type_id,
+        
+        -- Información del agente
+        per.name_person,
+        per.last_name,
+        per.phone AS agent_phone,
+        per.email AS agent_email,
+        CONCAT(COALESCE(per.name_person, ''), ' ', COALESCE(per.last_name, '')) AS agent_name,
+        
+        -- Información del tipo de propiedad
+        pt.type_name AS property_type_name
+        
+      FROM Property p
+      LEFT JOIN Person per ON p.person_id = per.person_id
+      LEFT JOIN Role r ON per.role_id = r.role_id
+      LEFT JOIN PropertyType pt ON p.property_type_id = pt.property_type_id
+      WHERE p.approved = TRUE
+      ORDER BY p.publish_date DESC
+    `)
+
+    const properties = Array.isArray(result) ? result : []
+
+    // ✅ Procesar cada propiedad para extraer la imagen principal
+    const propertiesWithImages = properties.map((property) => {
+      let mainImageUrl = null
+      let imageCount = 0
+
+      if (property.image && typeof property.image === "string") {
+        try {
+          const parsedImages = JSON.parse(property.image)
+
+          if (Array.isArray(parsedImages)) {
+            imageCount = parsedImages.length
+            mainImageUrl = parsedImages.length > 0 ? parsedImages[0] : null
+          } else if (typeof parsedImages === "object") {
+            // Estructura con normales/esféricas
+            const normales = parsedImages.normales || []
+            const esfericas = parsedImages.esfericas || []
+            imageCount = normales.length + esfericas.length
+            mainImageUrl = normales.length > 0 ? normales[0] : esfericas.length > 0 ? esfericas[0] : null
+          }
+        } catch (parseError) {
+          // Si no se puede parsear, asumir que es una URL directa
+          if (property.image.trim() !== "") {
+            mainImageUrl = property.image
+            imageCount = 1
+          }
+        }
+      }
+
+      return {
+        ...property,
+        main_image_url: mainImageUrl,
+        image_count: imageCount,
+        has_images: !!mainImageUrl,
+        // ✅ Mantener compatibilidad con el frontend existente
+        image_url: mainImageUrl, // Para el frontend
+      }
+    })
+
+    console.log(`✅ Se procesaron ${propertiesWithImages.length} propiedades con imágenes`)
+
+    res.json({
+      success: true,
+      count: propertiesWithImages.length,
+      properties: propertiesWithImages,
+    })
+  } catch (error: any) {
+    console.error("❌ Error in getPropertiesWithMainImages:", error)
+    res.status(500).json({
+      error: "Error obteniendo propiedades con imágenes",
+      detail: error.message,
+      success: false,
+    })
+  }
+}

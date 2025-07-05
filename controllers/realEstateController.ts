@@ -9,7 +9,7 @@ const registerRealEstate = async (req: Request, res: Response) => {
     const data = req.body;
 
     const fields = [
-      "name",
+      "name_realestate",
       "nit",
       "phone",
       "email",
