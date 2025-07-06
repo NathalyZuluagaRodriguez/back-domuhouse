@@ -1,5 +1,6 @@
-import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
 
+// Función para enviar invitación con plantilla estilizada
 export const sendInvitationEmail = async (to: string, token: string) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -7,7 +8,7 @@ export const sendInvitationEmail = async (to: string, token: string) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     }
-  })
+  });
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; background-color: #f9fbfc; padding: 20px;">
@@ -20,20 +21,19 @@ export const sendInvitationEmail = async (to: string, token: string) => {
             <p style="color: #4b5563; font-size: 15px; margin-top: 10px;">
               Para completar tu registro como agente en DomuHouse, utiliza el siguiente token:
             </p>
-            <div style="background: #e0f7fb; border-left: 5px solid #267a95; margin: 20px 0; padding: 15px; border-radius: 6px; color: #0c4a6e; font-weight: bold; font-size: 15px; word-break: break-all;">
+            <div style="background: #e0f7fb; border-left: 5px solid #267a95; margin: 20px 0; padding: 15px; border-radius: 6px; color: #0c4a6e; font-weight: bold; font-size: 15px; word-break: break-word;">
               ${token}
             </div>
             <p style="color: #6b7280; font-size: 14px;">
               Este token es válido por <strong>7 días</strong>. No lo compartas con nadie.
             </p>
-            
           </td>
         </tr>
         <tr>
           <td style="padding-top: 30px;">
             <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px;">
               <h4 style="margin: 0 0 10px 0; color: #111827;">¿Qué puedes hacer como agente?</h4>
-              <ul style="padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7;">
+              <ul style="padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7; text-align: left;">
                 <li>🏡 Publicar propiedades fácilmente</li>
                 <li>📈 Recibir solicitudes de visitas</li>
                 <li>📬 Contactar directamente con clientes</li>
@@ -49,7 +49,7 @@ export const sendInvitationEmail = async (to: string, token: string) => {
         </tr>
       </table>
     </div>
-  `
+  `;
 
   const info = await transporter.sendMail({
     from: `"DomuHouse" <${process.env.EMAIL_USER}>`,
@@ -57,7 +57,27 @@ export const sendInvitationEmail = async (to: string, token: string) => {
     subject: 'Invitación para registrarte como Agente Inmobiliario',
     html: htmlContent,
     text: `Has sido invitado a DomuHouse como agente. Tu token es: ${token} (válido por 7 días)`
-  })
+  });
 
-  console.log('Correo de invitación enviado:', info.messageId)
-}
+  console.log('Correo de invitación enviado:', info.messageId);
+};
+
+// Función genérica (texto plano)
+const sendEmailer = async (to: string, subject: string, text: string) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    text
+  });
+};
+
+export default sendEmailer;
