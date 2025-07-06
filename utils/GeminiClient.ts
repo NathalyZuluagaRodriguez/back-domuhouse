@@ -21,10 +21,14 @@ class GeminiClient {
 
   async extraerCaracteristicas(descripcion: string): Promise<ICaracteristicaInmueble> {
     try {
-      const prompt = `Eres un asistente especializado en análisis de inmuebles. Si el texto no describe una propiedad, responde con:
+      const prompt = `Eres un asistente especializado en análisis de inmuebles. 
+Solo debes responder descripciones relacionadas con propiedades inmobiliarias reales.
+Si el texto es irrelevante (como preguntas matemáticas, chistes, saludos, etc), responde estrictamente:
+
 { "error": "Solo respondo análisis de propiedades. Por favor, proporciona una descripción válida." }
 
-Responde SOLO con un JSON:
+Responde SOLO con un JSON válido:
+
 {
   "tipoPropiedad": string,
   "habitaciones": number,
@@ -39,6 +43,7 @@ Responde SOLO con un JSON:
 }
 
 Descripción: ${descripcion}`;
+
 
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
@@ -76,10 +81,13 @@ Descripción: ${descripcion}`;
 
   async estimarPrecio(caracteristicas: ICaracteristicaInmueble, datosMercado: any): Promise<IEstimacionPrecio> {
     try {
-      const prompt = `Eres un experto en valoración inmobiliaria. Si se pregunta algo fuera del contexto de propiedades, responde:
+      const prompt = `Eres un experto en valoración inmobiliaria. 
+Si se te consulta algo fuera del contexto de propiedades (como matemáticas, recetas, etc), responde SOLO:
+
 { "error": "Solo respondo temas relacionados con propiedades inmobiliarias." }
 
-Responde SOLO con un JSON:
+Responde SOLO con un JSON válido:
+
 {
   "precioEstimado": number,
   "rangoMinimo": number,
@@ -95,6 +103,7 @@ Responde SOLO con un JSON:
 
 Características: ${JSON.stringify(caracteristicas)}
 Datos del mercado: ${JSON.stringify(datosMercado)}`;
+
 
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
@@ -135,13 +144,16 @@ Datos del mercado: ${JSON.stringify(datosMercado)}`;
 
   async generarRecomendaciones(caracteristicas: ICaracteristicaInmueble, estimacion: IEstimacionPrecio): Promise<string[]> {
     try {
-      const prompt = `Eres un asesor inmobiliario. Genera recomendaciones sobre cómo aumentar el valor de una propiedad. Si se pregunta algo fuera de tema, responde:
+      const prompt = `Eres un asesor inmobiliario profesional. 
+Si te preguntan cosas que no tengan relación directa con propiedades, mejoras o valor inmobiliario, responde SOLO:
+
 ["Solo respondo temas relacionados con propiedades."]
 
-Responde SOLO con un array JSON de strings.
+Devuelve SOLO un array JSON de strings con recomendaciones para aumentar el valor de la propiedad.
 
 Características: ${JSON.stringify(caracteristicas)}
 Estimación: ${JSON.stringify(estimacion)}`;
+
 
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
@@ -157,10 +169,14 @@ Estimación: ${JSON.stringify(estimacion)}`;
 
   async analizarTendenciaMercado(ubicacion: string, tipoPropiedad: string, datosMercado: any): Promise<ITendenciaMercado> {
     try {
-      const prompt = `Eres un analista del mercado inmobiliario. Si el texto es irrelevante, responde:
+      const prompt = `Eres un analista del mercado inmobiliario. 
+No debes responder nada que no esté relacionado con análisis de mercado de propiedades.
+Si el texto es irrelevante, responde estrictamente:
+
 { "error": "Solo analizo tendencias del mercado inmobiliario." }
 
-Responde SOLO con un JSON:
+Responde SOLO con un JSON válido:
+
 {
   "tendencia": string,
   "demanda": string,
@@ -172,6 +188,7 @@ Responde SOLO con un JSON:
 Ubicación: ${ubicacion}
 Tipo propiedad: ${tipoPropiedad}
 Datos de mercado: ${JSON.stringify(datosMercado)}`;
+
 
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
