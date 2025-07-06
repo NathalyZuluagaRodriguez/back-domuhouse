@@ -24,4 +24,6 @@ router.get('/admin/:id/real-estate', async (req, res) => {
   }
 });
 
+
+
 export default router;
