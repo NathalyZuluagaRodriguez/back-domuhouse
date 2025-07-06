@@ -236,6 +236,7 @@ export const createProperty = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const editProperty = async (req: Request, res: Response) => {
   try {
     console.log("✏️ editProperty - ID:", req.params.id)

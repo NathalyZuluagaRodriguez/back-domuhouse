@@ -1,10 +1,10 @@
 // routes/userRoutes.ts
-import { Router, Request, Response } from 'express'
-import { validateToken } from '../middleware/authMiddleware'
-import db from '../config/config-db' // tu promisePool
+import { Router, Request, Response } from 'express';
+import { validateToken } from '../middleware/authMiddleware';
+import db from '../config/config-db';
 
-const router = Router()
-// routes/userRoutes.ts
+const router = Router();
+
 router.get('/perfil', validateToken, async (req: Request, res: Response) => {
   console.log("🚀 Entrando a GET /perfil");
   console.log("🧠 req.user:", req.user);
@@ -50,7 +50,6 @@ router.get('/perfil', validateToken, async (req: Request, res: Response) => {
         nombre: perfil.nombre,
         telefono: perfil.telefono,
         correo: perfil.correo,
-        fechaRegistro: perfil.fecha_registro,
         propiedadesPublicadas: perfil.propiedadesPublicadas,
         propiedadesVendidas: perfil.propiedadesVendidas,
       },
@@ -61,5 +60,4 @@ router.get('/perfil', validateToken, async (req: Request, res: Response) => {
   }
 });
 
-
-export default router
+export default router;
