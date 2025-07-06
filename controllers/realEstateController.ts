@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import realEstateServices from "../services/realEstateServices";
+import pool from "../config/config-db"
 
 /**
  * Handler para registrar una nueva inmobiliaria.
@@ -52,6 +53,39 @@ export const getRealEstateStatistics = async (req: Request, res: Response) => {
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
     }
+};
+
+export const updateRealEstate = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    name,
+    nit,
+    phone,
+    email,
+    department,
+    city,
+    address,
+    description
+  } = req.body;
+
+  try {
+    await pool.query("CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+      id,
+      name,
+      nit,
+      phone,
+      email,
+      department,
+      city,
+      address,
+      description
+    ]);
+
+    res.status(200).json({ message: "Inmobiliaria actualizada correctamente" });
+  } catch (error) {
+    console.error("❌ Error al actualizar inmobiliaria:", error);
+    res.status(500).json({ error: "Error al actualizar la inmobiliaria" });
+  }
 };
 
 

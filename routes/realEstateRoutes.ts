@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import registerRealEstate, { getAllRealEstates, getRealEstateStatistics } from '../controllers/realEstateController';
+import registerRealEstate, { getAllRealEstates, updateRealEstate ,getRealEstateStatistics } from '../controllers/realEstateController';
 
 const router = Router();
 
@@ -10,5 +10,8 @@ router.get('/stats', getRealEstateStatistics);
 
 // Ruta POST para registrar una nueva inmobiliaria (ya existente)
 router.post('/registerRealEstate', registerRealEstate);
+
+
+router.put("/realestate/:id", updateRealEstate);
 
 export default router;
