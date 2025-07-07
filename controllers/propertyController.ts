@@ -702,6 +702,7 @@ export const getPropertyById = async (req: Request, res: Response) => {
       last_name: property.last_name,
       agent_email: property.agent_email || "contacto@inmobiliaria.com",
       agent_phone: property.agent_phone || "+57 300 000 0000",
+      person_id: property.person_id,  
 
       // ✅ IMÁGENES PROCESADAS
       images: processedImages,
