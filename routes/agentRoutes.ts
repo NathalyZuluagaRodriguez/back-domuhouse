@@ -7,11 +7,11 @@ import registerAgentWithToken from "../controllers/registerAgentController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 import { generateInvitation } from '../controllers/invitationController';
+import { getAgentsByCompany } from "../controllers/agentController"; // 🆕
+import { validateToken } from "../middleware/authMiddleware";  
 import { createProperty, listPropertiesByAgent,listSalesAndRentals,getAgentPerformanceReport,getProperty,updateProperty,deleteProperty,} from "../controllers/propertyByAgentController";
 import { listVisitsByAgent, scheduleVisit, changeVisitStatus, updateVisit, deleteVisit } from "../controllers/visitByAgentController";
-import { getMessagesByAgent } from '../controllers/messageController';
-import { validateToken } from '../middleware/authMiddleware';
-import {getAgentsByCompany} from '../controllers/agentController'
+import { getMessagesByAgent, sendEmail } from '../controllers/messageController';
 
 
 const router = Router();
