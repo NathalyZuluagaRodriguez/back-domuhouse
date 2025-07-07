@@ -55,6 +55,8 @@ router.get("/agents/:agentId/performance", getAgentPerformanceReport);
 /*Obtener mensajes por agente */
 router.get("/agents/:agentId/messages", getMessagesByAgent)
 
+// ✨ Nueva ruta para enviar mensaje por correo
+router.post("/messages", sendEmail);
 
 
 router.get("/ventas-alquileres", getVentasAlquileres);
