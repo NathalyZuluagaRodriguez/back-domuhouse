@@ -68,3 +68,7 @@ export interface ICaracteristicaInmueble {
       confianza: number;
     };
   }
+
+  export interface ErrorResponse {
+  message: string;
+}

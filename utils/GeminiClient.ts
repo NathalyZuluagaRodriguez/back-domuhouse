@@ -1,6 +1,10 @@
-// Reemplaza TODO el contenido actual por esto
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ICaracteristicaInmueble, IEstimacionPrecio, ITendenciaMercado } from '../models/interfaces';
+import {
+  ICaracteristicaInmueble,
+  IEstimacionPrecio,
+  ITendenciaMercado,
+  ErrorResponse
+} from '../models/interfaces';
 
 const USD_TO_COP_RATE = 3950;
 
@@ -19,11 +23,11 @@ class GeminiClient {
     return Math.round(valorUSD * this.tasaCambioCOP);
   }
 
-  async extraerCaracteristicas(descripcion: string): Promise<ICaracteristicaInmueble> {
+  async extraerCaracteristicas(descripcion: string): Promise<ICaracteristicaInmueble | ErrorResponse> {
     try {
       const prompt = `Eres un asistente especializado en análisis de inmuebles. 
 Solo debes responder descripciones relacionadas con propiedades inmobiliarias reales.
-Si el texto es irrelevante (como preguntas matemáticas, chistes, saludos, etc), responde estrictamente:
+Si el texto es irrelevante (como preguntas matemáticas, chistes, saludos, etc), responde estrictamente y respondeme con un error de peticion cuando pase esto:
 
 { "error": "Solo respondo análisis de propiedades. Por favor, proporciona una descripción válida." }
 
@@ -44,42 +48,35 @@ Responde SOLO con un JSON válido:
 
 Descripción: ${descripcion}`;
 
-
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
       const json = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
       const parsed = JSON.parse(json);
 
-      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.error) {
+        console.log("Error de IA:", parsed);
+        return { message: parsed.error };
+      }
 
       return {
         tipoPropiedad: parsed.tipoPropiedad || 'Casa',
         habitaciones: Number(parsed.habitaciones) || 0,
         banos: Number(parsed.banos) || 0,
         metrosCuadrados: Number(parsed.metrosCuadrados) || 0,
-        garaje: Boolean(parsed.garaje),
-        piscina: Boolean(parsed.piscina),
-        jardin: Boolean(parsed.jardin),
-        terraza: Boolean(parsed.terraza),
+        garaje: parsed.garaje === true || parsed.garaje === 'true',
+        piscina: parsed.piscina === true || parsed.piscina === 'true',
+        jardin: parsed.jardin === true || parsed.jardin === 'true',
+        terraza: parsed.terraza === true || parsed.terraza === 'true',
         ubicacion: parsed.ubicacion || 'No especificado',
         antiguedad: parsed.antiguedad || 0
       };
     } catch (error) {
-      console.error('Error:', error);
-      return {
-        tipoPropiedad: 'Casa',
-        habitaciones: 0,
-        banos: 0,
-        metrosCuadrados: 0,
-        garaje: false,
-        piscina: false,
-        jardin: false,
-        terraza: false
-      };
+      const errorMsg = error instanceof Error ? error.message : 'Error inesperado al procesar la descripción';
+      return { message: errorMsg };
     }
   }
 
-  async estimarPrecio(caracteristicas: ICaracteristicaInmueble, datosMercado: any): Promise<IEstimacionPrecio> {
+  async estimarPrecio(caracteristicas: ICaracteristicaInmueble, datosMercado: any): Promise<IEstimacionPrecio | ErrorResponse> {
     try {
       const prompt = `Eres un experto en valoración inmobiliaria. 
 Si se te consulta algo fuera del contexto de propiedades (como matemáticas, recetas, etc), responde SOLO:
@@ -104,13 +101,12 @@ Responde SOLO con un JSON válido:
 Características: ${JSON.stringify(caracteristicas)}
 Datos del mercado: ${JSON.stringify(datosMercado)}`;
 
-
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
       const json = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
       const parsed = JSON.parse(json);
 
-      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.error) return { message: parsed.error };
 
       return {
         precioEstimado: this.convertirUSDaCOP(parsed.precioEstimado),
@@ -125,24 +121,12 @@ Datos del mercado: ${JSON.stringify(datosMercado)}`;
         confianzaPrediccion: parsed.confianzaPrediccion || 0.7
       };
     } catch (error) {
-      console.error('Error en estimación IA:', error);
-      const fallback = datosMercado.precioPromedio || 200000;
-      return {
-        precioEstimado: this.convertirUSDaCOP(fallback),
-        rangoMinimo: this.convertirUSDaCOP(fallback * 0.9),
-        rangoMaximo: this.convertirUSDaCOP(fallback * 1.1),
-        moneda: 'COP',
-        factoresConsiderados: {
-          precioBaseMercado: this.convertirUSDaCOP(fallback),
-          ajustesPorCaracteristicas: 0,
-          factoresAdicionales: {}
-        },
-        confianzaPrediccion: 0.7
-      };
+      const errorMsg = error instanceof Error ? error.message : 'Error inesperado al estimar precio';
+      return { message: errorMsg };
     }
   }
 
-  async generarRecomendaciones(caracteristicas: ICaracteristicaInmueble, estimacion: IEstimacionPrecio): Promise<string[]> {
+  async generarRecomendaciones(caracteristicas: ICaracteristicaInmueble, estimacion: IEstimacionPrecio): Promise<string[] | ErrorResponse> {
     try {
       const prompt = `Eres un asesor inmobiliario profesional. 
 Si te preguntan cosas que no tengan relación directa con propiedades, mejoras o valor inmobiliario, responde SOLO:
@@ -154,20 +138,19 @@ Devuelve SOLO un array JSON de strings con recomendaciones para aumentar el valo
 Características: ${JSON.stringify(caracteristicas)}
 Estimación: ${JSON.stringify(estimacion)}`;
 
-
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
       const jsonText = text.match(/\[[\s\S]*\]/)?.[0] || '[]';
       const parsed = JSON.parse(jsonText);
 
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed : [String(parsed)];
     } catch (error) {
-      console.error('Error recomendaciones IA:', error);
-      return ["Considere mejoras estructurales o asesoría profesional para aumentar el valor."];
+      const errorMsg = error instanceof Error ? error.message : 'Error inesperado al generar recomendaciones';
+      return { message: errorMsg };
     }
   }
 
-  async analizarTendenciaMercado(ubicacion: string, tipoPropiedad: string, datosMercado: any): Promise<ITendenciaMercado> {
+  async analizarTendenciaMercado(ubicacion: string, tipoPropiedad: string, datosMercado: any): Promise<ITendenciaMercado | ErrorResponse> {
     try {
       const prompt = `Eres un analista del mercado inmobiliario. 
 No debes responder nada que no esté relacionado con análisis de mercado de propiedades.
@@ -189,13 +172,12 @@ Ubicación: ${ubicacion}
 Tipo propiedad: ${tipoPropiedad}
 Datos de mercado: ${JSON.stringify(datosMercado)}`;
 
-
       const result = await this.model.generateContent(prompt);
       const text = result.response.text();
       const json = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
       const parsed = JSON.parse(json);
 
-      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.error) return { message: parsed.error };
 
       return {
         tendencia: parsed.tendencia || 'estable',
@@ -205,14 +187,8 @@ Datos de mercado: ${JSON.stringify(datosMercado)}`;
         factoresInfluyentes: parsed.factoresInfluyentes || ['Condiciones económicas generales']
       };
     } catch (error) {
-      console.error('Error en análisis de tendencia IA:', error);
-      return {
-        tendencia: 'estable',
-        demanda: 'Media',
-        prediccionCortoPlaza: 'Sin cambios significativos esperados',
-        tiempoPromedioVenta: '90 días',
-        factoresInfluyentes: ['Condiciones económicas generales']
-      };
+      const errorMsg = error instanceof Error ? error.message : 'Error inesperado al analizar tendencias';
+      return { message: errorMsg };
     }
   }
 }

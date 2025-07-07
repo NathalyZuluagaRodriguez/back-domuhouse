@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as iaService from '../services/iaService';
-import * as responseFormatter from '../utils/responseFormatter';
+import { responseFormatter } from '../utils/responseFormatter';
+
 
 export const procesarInmueble = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -13,8 +14,8 @@ export const procesarInmueble = async (req: Request, res: Response): Promise<voi
     }
     
     // Procesamiento del inmueble con IA (sin guardarlo en BD)
-    const resultado = await iaService.analizarInmueble(descripcion, ubicacion, caracteristicas);
-    
+    const resultado = await iaService.caracteristicasDetectadas(descripcion, ubicacion);
+    console.log(`resultado ${resultado}`)
     responseFormatter.success(res, resultado, 'Análisis de inmueble exitoso', 200);
   } catch (error) {
     console.error('Error al procesar inmueble:', error);

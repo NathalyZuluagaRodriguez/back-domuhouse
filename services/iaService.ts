@@ -6,6 +6,9 @@ import {
   IDatosMercado
 } from '../models/interfaces';
 import { geminiClient } from '../utils/GeminiClient';
+import { ErrorResponse } from '../models/interfaces';
+
+
 
 // Datos de mercado para complementar la IA
 // En producción, estos datos vendrían de una base de datos actualizada
@@ -147,95 +150,45 @@ completarTiposPropiedades();
 /**
  * Analiza un inmueble basado en su descripción y características opcionales
  */
-export const analizarInmueble = async (
-  descripcion: string, 
-  ubicacion: string = 'Centro', 
-  caracteristicas: Partial<ICaracteristicaInmueble> = {}
-): Promise<IResultadoAnalisis> => {
+
+export const caracteristicasDetectadas = async (
+  descripcion: string,
+  ubicacion: string = 'Centro'
+): Promise<{
+  caracteristicasDetectadas: ICaracteristicaInmueble;
+  resumenIA: string;
+  datosMercadoZona: IMercadoData;
+} | ErrorResponse> => {
   try {
-    // Análisis de texto para extraer características del inmueble usando IA
-    const caracteristicasExtraidas = await geminiClient.extraerCaracteristicas(descripcion);
-    
-    // Combinar características extraídas con las proporcionadas
-    const caracteristicasCompletas: ICaracteristicaInmueble = {
-      ...caracteristicasExtraidas,
-      ...caracteristicas,
-      ubicacion: ubicacion || caracteristicasExtraidas.ubicacion || 'Centro'
-    };
-    
-    // Validar que la ubicación exista en los datos de mercado
-    const ubicacionValida = caracteristicasCompletas.ubicacion && 
-      caracteristicasCompletas.ubicacion in datosMercadoSimulados ? 
-      caracteristicasCompletas.ubicacion : 'Centro';
-    
-    // Obtener datos del mercado para la ubicación y tipo de propiedad
-    const datosMercadoZona = datosMercadoSimulados[ubicacionValida];
-    
-    // Validar que el tipo de propiedad exista en los datos de mercado
-    const tipoValido = caracteristicasCompletas.tipoPropiedad in datosMercadoZona ? 
-      caracteristicasCompletas.tipoPropiedad : 'Casa';
-    
-    const datosTipoPropiedad = datosMercadoZona[tipoValido];
-    
-    // Calcular estimación de precio con IA
-    const estimacion = await geminiClient.estimarPrecio(caracteristicasCompletas, datosTipoPropiedad);
-    
-    // Recomendaciones basadas en el análisis con IA
-    const recomendaciones = await geminiClient.generarRecomendaciones(caracteristicasCompletas, estimacion);
-    
-    // Análisis de tendencia de mercado con IA
-    const tendencia = await geminiClient.analizarTendenciaMercado(
-      ubicacionValida,
-      tipoValido,
-      datosTipoPropiedad
-    );
-    
+    const caracteristicas = await geminiClient.extraerCaracteristicas(descripcion) as ICaracteristicaInmueble | ErrorResponse;
+
+    if ('message' in caracteristicas) {
+      return { message: caracteristicas.message };
+    }
+
+    const ubicacionDetectada = caracteristicas.ubicacion ?? 'Centro';
+    const tipoDetectado = caracteristicas.tipoPropiedad ?? 'Casa';
+
+    const ubicacionValida = datosMercadoSimulados[ubicacionDetectada]
+      ? ubicacionDetectada
+      : 'Centro';
+
+    const tipoValido = datosMercadoSimulados[ubicacionValida]?.[tipoDetectado]
+      ? tipoDetectado
+      : 'Casa';
+
+    const datosMercadoZona = datosMercadoSimulados[ubicacionValida]?.[tipoValido];
+
     return {
-      estimacion,
-      caracteristicasDetectadas: caracteristicasCompletas,
-      recomendaciones,
-      tendenciaMercado: tendencia
+      caracteristicasDetectadas: caracteristicas,
+      resumenIA: '', // aquí iría tu resumen
+      datosMercadoZona
     };
   } catch (error) {
-    console.error('Error en el análisis del inmueble:', error);
-    
-    // Devolver un resultado por defecto en caso de error
-    return {
-      estimacion: {
-        precioEstimado: 250000,
-        rangoMinimo: 225000,
-        rangoMaximo: 275000,
-        moneda: 'USD',
-        factoresConsiderados: {
-          precioBaseMercado: 250000,
-          ajustesPorCaracteristicas: 0
-        },
-        confianzaPrediccion: 0.7
-      },
-      caracteristicasDetectadas: {
-        tipoPropiedad: 'Casa',
-        habitaciones: 3,
-        banos: 2,
-        metrosCuadrados: 120,
-        garaje: false,
-        piscina: false,
-        jardin: false,
-        terraza: false,
-        ubicacion: ubicacion || 'Centro'
-      },
-      recomendaciones: [
-        'Para una valoración más precisa, considere solicitar una visita de un tasador profesional.'
-      ],
-      tendenciaMercado: {
-        tendencia: 'estable',
-        demanda: 'Media',
-        prediccionCortoPlaza: 'Se espera que los precios se mantengan estables en los próximos meses',
-        tiempoPromedioVenta: '90 días',
-        factoresInfluyentes: ['Condiciones económicas generales', 'Oferta y demanda local']
-      }
-    };
+    return { message: 'Ocurrió un error procesando las características' };
   }
 };
+
 
 /**
  * Obtiene los filtros disponibles para el análisis de inmuebles
@@ -351,73 +304,51 @@ export const analizarTendenciasMercado = async (
   tipoPropiedad: string,
   factoresAdicionales: Record<string, any> = {}
 ): Promise<any> => {
-  try {
-    // Validar que la zona exista en los datos
-    if (!datosMercadoSimulados[zona]) {
-      zona = 'Centro';
-    }
-    
-    // Validar que el tipo de propiedad exista en la zona
-    if (!datosMercadoSimulados[zona][tipoPropiedad]) {
-      tipoPropiedad = 'Casa';
-    }
-    
-    // Obtener datos base del mercado
-    const datosMercadoZona = datosMercadoSimulados[zona];
-    const datosTipoPropiedad = datosMercadoZona[tipoPropiedad];
-    
     try {
-      // Utilizar IA para un análisis más profundo de tendencias
-      const prompt = `Eres un analista experto en el mercado inmobiliario. Realiza un análisis detallado
-      de las tendencias del mercado para la zona y tipo de propiedad especificados, considerando 
-      los factores adicionales proporcionados. Incluye proyecciones a corto y mediano plazo, 
-      factores macroeconómicos, y recomendaciones para inversores. Responde con un objeto JSON 
-      estructurado con análisis detallado.
+      // Validar que la zona exista en los datos
+      if (!datosMercadoSimulados[zona]) {
+        zona = 'Centro';
+      }
       
-      Zona: ${zona}
-      Tipo de propiedad: ${tipoPropiedad}
-      Datos del mercado: ${JSON.stringify(datosTipoPropiedad)}
-      Factores adicionales: ${JSON.stringify(factoresAdicionales)}`;
+      // Validar que el tipo de propiedad exista en la zona
+      if (!datosMercadoSimulados[zona][tipoPropiedad]) {
+        tipoPropiedad = 'Casa';
+      }
+      
+      // Obtener datos base del mercado
+      const datosMercadoZona = datosMercadoSimulados[zona];
+      const datosTipoPropiedad = datosMercadoZona[tipoPropiedad];
+      
+      try {
+        // Utilizar IA para un análisis más profundo de tendencias
+        const prompt = `Eres un analista experto en el mercado inmobiliario. Realiza un análisis detallado
+        de las tendencias del mercado para la zona y tipo de propiedad especificados, considerando 
+        los factores adicionales proporcionados. Incluye proyecciones a corto y mediano plazo, 
+        factores macroeconómicos, y recomendaciones para inversores. Responde con un objeto JSON 
+        estructurado con análisis detallado.
+        
+        Zona: ${zona}
+        Tipo de propiedad: ${tipoPropiedad}
+        Datos del mercado: ${JSON.stringify(datosTipoPropiedad)}
+        Factores adicionales: ${JSON.stringify(factoresAdicionales)}`;
 
-      const result = await geminiClient.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      // Extraer solo el objeto JSON de la respuesta
-      const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
-      return JSON.parse(jsonStr);
+        const result = await geminiClient.model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        // Extraer solo el objeto JSON de la respuesta
+        const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
+        return JSON.parse(jsonStr);
+      } catch (error) {
+        console.error('Error al analizar tendencias con IA avanzada:', error);
+        throw new Error('Error en el análisis avanzado con IA');
+      }
     } catch (error) {
-      console.error('Error al analizar tendencias con IA avanzada:', error);
-      throw new Error('Error en el análisis avanzado con IA');
-    }
-  } catch (error) {
-    console.error('Error global en análisis de tendencias de mercado:', error);
-    
-    // Devolver un análisis básico en caso de error
-    return {
-      tendencia: datosMercadoSimulados.Centro.Casa.tendencia,
-      proyeccionCortoPlaza: 'Se espera que los precios se mantengan estables en los próximos 3-6 meses',
-      proyeccionMedianoPlaza: 'Condicionada a factores macroeconómicos',
-      factoresInfluyentes: [
-        'Tasas de interés',
-        'Oferta y demanda local',
-        'Situación económica general',
-        'Desarrollo de infraestructuras en la zona'
-      ],
-      recomendacionesInversores: [
-        'Diversificar cartera inmobiliaria',
-        'Considerar propiedades con potencial de revalorización',
-        'Evaluar cuidadosamente la relación precio-calidad'
-      ],
-      indicadoresEconomicos: {
-        impactoTasasInteres: 'Moderado',
-        impactoInflacion: 'Medio',
-        impactoEmpleo: 'Bajo'
-      },
-      confianzaAnalisis: 0.75
+      console.error('Error global en análisis de tendencias de mercado:', error);
+      
+      
     };
   }
-};
 
 /**
  * Compara propiedades similares para evaluar competitividad de precios
@@ -493,19 +424,6 @@ export const compararPropiedadesSimilares = async (
     }
   } catch (error) {
     console.error('Error al comparar propiedades similares:', error);
-    
-    // Devolver una comparación básica en caso de error
-    return {
-      precioOfertado,
-      diferenciaPorcentual: 0,
-      precioPromedioZona: 250000,
-      posicionCompetitiva: 'En línea con el mercado',
-      recomendacionesEstrategicas: [
-        'Revisar el precio según las características de la propiedad',
-        'Destacar elementos diferenciales en la promoción'
-      ],
-      tiempoEstimadoVenta: '90 días'
-    };
   }
 };
 
@@ -519,51 +437,63 @@ export const generarInformeValoracion = async (
 ): Promise<any> => {
   try {
     // Realizar análisis completo del inmueble
-    const resultadoAnalisis = await analizarInmueble(descripcion, ubicacion, caracteristicas);
-    
-    // Obtener datos de mercado para comparación
+    const resultadoAnalisis = await caracteristicasDetectadas(descripcion, ubicacion);
+
+    if ('message' in resultadoAnalisis) {
+      throw new Error(resultadoAnalisis.message);
+    }
+
     const datosMercado = await obtenerEstadisticasMercado(
       ubicacion || 'Centro',
       resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
     );
-    
-    // Generar comparativa de propiedades similares
+
     const comparativa = await compararPropiedadesSimilares(
       resultadoAnalisis.caracteristicasDetectadas,
-      resultadoAnalisis.estimacion.precioEstimado
+      datosMercado.precioPromedio // o el valor correcto
     );
-    
-    // Analizar tendencias de mercado específicas
+
     const tendencias = await analizarTendenciasMercado(
       ubicacion || 'Centro',
       resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
     );
+
     
-    // Estructurar el informe completo
-    return {
-      fechaInforme: new Date().toISOString().split('T')[0],
-      codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
-      resultadoAnalisis,
-      datosMercado,
-      comparativaCompetitiva: comparativa,
-      tendenciasMercado: tendencias,
-      conclusiones: {
-        valorOptimo: resultadoAnalisis.estimacion.precioEstimado,
-        rangoNegociacion: {
-          minimo: resultadoAnalisis.estimacion.rangoMinimo,
-          maximo: resultadoAnalisis.estimacion.rangoMaximo
-        },
-        estrategiaRecomendada: comparativa.posicionCompetitiva === 'Por encima del mercado' ?
-          'Ajustar precio para alinearse con el mercado' : 'Mantener precio destacando características distintivas',
-        tiempoEstimadoVenta: comparativa.tiempoEstimadoVenta
-      },
-      metodologiaValoracion: [
-        'Análisis comparativo de mercado',
-        'Evaluación de características y estado',
-        'Proyección de tendencias inmobiliarias',
-        'Inteligencia artificial avanzada'
-      ]
-    };
+    // Calcular estimación de precio basado en datos del mercado
+const estimacion = {
+  precioEstimado: datosMercado.precioPromedio,
+  rangoMinimo: datosMercado.precioPromedio * 0.95,
+  rangoMaximo: datosMercado.precioPromedio * 1.05
+};
+
+// Estructurar el informe completo
+return {
+  fechaInforme: new Date().toISOString().split('T')[0],
+  codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
+  resultadoAnalisis,
+  datosMercado,
+  comparativaCompetitiva: comparativa,
+  tendenciasMercado: tendencias,
+  conclusiones: {
+    valorOptimo: estimacion.precioEstimado,
+    rangoNegociacion: {
+      minimo: estimacion.rangoMinimo,
+      maximo: estimacion.rangoMaximo
+    },
+    estrategiaRecomendada:
+      comparativa.posicionCompetitiva === 'Por encima del mercado'
+        ? 'Ajustar precio para alinearse con el mercado'
+        : 'Mantener precio destacando características distintivas',
+    tiempoEstimadoVenta: comparativa.tiempoEstimadoVenta
+  },
+  metodologiaValoracion: [
+    'Análisis comparativo de mercado',
+    'Evaluación de características y estado',
+    'Proyección de tendencias inmobiliarias',
+    'Inteligencia artificial avanzada'
+  ]
+};
+
   } catch (error) {
     console.error('Error al generar informe de valoración:', error);
     
