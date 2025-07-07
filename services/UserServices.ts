@@ -1,10 +1,7 @@
-
 import generateHash from '../Helpers/generateHash';
 import UserRepository from '../repositories/UserRepository';
 import User from '../Dto/UserDto';
 import Login from '../Dto/loginDto';
-import Agent from '../Dto/AgentsDto';
-
 
 class usuarioServi {
     
@@ -16,7 +13,6 @@ class usuarioServi {
   static async login(login: Login) {
       return await UserRepository.searchUser(login);
   }
-
 
 
 }

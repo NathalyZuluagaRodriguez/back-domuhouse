@@ -1,28 +1,60 @@
 import { Router } from 'express';
 import db from '../config/config-db';
+import multer from "multer";
+
+
 import registerAgentWithToken from "../controllers/registerAgentController";
-// import getPropertiesByAgent from "../controllers/propertyByAgentController";
 import getVentasAlquileres from "../controllers/getAlquileresVentaController";
-// import getAgentePerformanceById from "../controllers/AgentPerformanceController";
 import { getReporteDesempenoAgentes } from "../controllers/reportesController";
 import { generateInvitation } from '../controllers/invitationController';
+import { getAgentsByCompany } from "../controllers/agentController"; // 🆕
+import { validateToken } from "../middleware/authMiddleware";  
+import { createProperty, listPropertiesByAgent,listSalesAndRentals,getAgentPerformanceReport,getProperty,updateProperty,deleteProperty,} from "../controllers/propertyByAgentController";
+import { listVisitsByAgent, scheduleVisit, changeVisitStatus, updateVisit, deleteVisit } from "../controllers/visitByAgentController";
+import { getMessagesByAgent } from '../controllers/messageController';
 
-import {
-  listPropertiesByAgent,
-  listSalesAndRentals,
-  getAgentPerformanceReport,
-} from "../controllers/propertyByAgentController";
 
 const router = Router();
+router.get("/agentes", validateToken, getAgentsByCompany);
 
+const upload = multer({ dest: "uploads/" });           // tmp folder; Cloudinary se encarga después
+
+
+/* Registro */
 router.post("/registro-agente", registerAgentWithToken);
 router.post('/generar-token', generateInvitation);
-// router.get("/propiedades-agente/:id", getPropertiesByAgent);
 
 // Rutas basadas en ID de agente
+// 0. Crear propiedad (con imágenes)
+router.post(
+  "/agents/:agentId/properties",
+  upload.array("images", 10),     // <‑‑ aquí se procesan los archivos
+  createProperty
+);
 router.get("/agents/:agentId/properties", listPropertiesByAgent);
 router.get("/:agentId/sales-rentals", listSalesAndRentals);
-router.get("/:agentId/performance", getAgentPerformanceReport);
+
+/* CRUD puntual */
+router.get("/agents/:agentId/properties/:propertyId", getProperty);
+router.put("/agents/:agentId/properties/:propertyId", updateProperty);
+router.delete("/agents/:agentId/properties/:propertyId", deleteProperty);
+
+/* Visitas Agendadas*/
+router.get("/agents/:agentId/visits", listVisitsByAgent);
+router.patch("/visits/:id/status", changeVisitStatus) // confirmar / cancelar
+router.put   ("/visits/:id",        updateVisit)      // editar
+router.delete("/visits/:id",        deleteVisit)      // eliminar
+
+/* Programar nueva visita */
+router.post("/agents/:agentId/visits/schedule", scheduleVisit);
+
+/* Reporte */
+router.get("/agents/:agentId/performance", getAgentPerformanceReport);
+
+
+/*Obtener mensajes por agente */
+router.get("/agents/:agentId/messages", getMessagesByAgent)
+
 
 
 router.get("/ventas-alquileres", getVentasAlquileres);
@@ -43,6 +75,7 @@ router.get('/:id/historial', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener historial' });
   }
 });
+
 
 
 

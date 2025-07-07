@@ -1,4 +1,3 @@
-// src/controllers/getAgentSalesAndRentalsController.ts
 import { Request, Response } from "express";
 import PropertyService from "../services/propertyServices";
 
