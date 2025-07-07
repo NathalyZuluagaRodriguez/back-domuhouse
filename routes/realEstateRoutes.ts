@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import registerRealEstate, { getAllRealEstates, updateRealEstate ,getRealEstateStatistics } from '../controllers/realEstateController';
+import registerRealEstate, { getAllRealEstates, updateRealEstate ,getRealEstateStatistics, getRealEstateById, deleteRealEstate } from '../controllers/realEstateController';
 
 const router = Router();
 
@@ -13,5 +13,11 @@ router.post('/registerRealEstate', registerRealEstate);
 
 
 router.put("/realestate/:id", updateRealEstate);
+
+router.get('/:id', getRealEstateById); // ✅ nueva ruta
+
+
+router.delete("/delete/realestate/:id", deleteRealEstate);
+
 
 export default router;
