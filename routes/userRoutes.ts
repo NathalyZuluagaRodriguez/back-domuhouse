@@ -1,13 +1,27 @@
-import express, { type Request, type Response } from "express"
+import { Router, type Request, type Response } from "express"
 import { validateToken } from "../middleware/authMiddleware"
 import db from "../config/config-db"
 
-const router = express.Router()
+const router = Router()
 
-// ✅ FIXED: Remove admin-only restriction, allow all authenticated users
 router.get("/perfil", validateToken, async (req: Request, res: Response) => {
   console.log("🚀 Entrando a GET /perfil")
-  console.log("🧠 req.user:", req.user)
+  console.log("🧠 req.user completo:", JSON.stringify(req.user, null, 2))
+  console.log("🔍 Headers de autorización:", req.headers.authorization)
+
+  // Decodificar manualmente el token para comparar
+  try {
+    const token = req.headers.authorization?.split(" ")[1]
+    if (token) {
+      const tokenParts = token.split(".")
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString())
+        console.log("🔍 Token decodificado manualmente:", JSON.stringify(payload, null, 2))
+      }
+    }
+  } catch (e) {
+    console.log("❌ Error decodificando token manualmente:", e)
+  }
 
   try {
     if (!req.user) {
@@ -19,9 +33,10 @@ router.get("/perfil", validateToken, async (req: Request, res: Response) => {
     }
 
     const userId = req.user.person_id
-    const userRole = req.user.role_id || req.user.role_id
-    console.log("🔍 userId extraído:", userId)
-    console.log("🔍 userRole extraído:", userRole)
+    const userRole = req.user.role_id
+
+    console.log("🔍 userId extraído:", userId, "tipo:", typeof userId)
+    console.log("🔍 userRole extraído:", userRole, "tipo:", typeof userRole)
 
     if (!userId) {
       console.log("❌ person_id no encontrado en req.user")
@@ -31,9 +46,6 @@ router.get("/perfil", validateToken, async (req: Request, res: Response) => {
       })
     }
 
-    // ✅ FIXED: Allow access for all authenticated users, not just admins
-    // Remove the admin check that was causing the 401 error for role 2 users
-
     const sql = `
       SELECT 
         p.person_id AS id,
@@ -42,7 +54,7 @@ router.get("/perfil", validateToken, async (req: Request, res: Response) => {
         p.email AS correo,
         p.verified,
         p.active
-      FROM Person p
+        FROM Person p
       WHERE p.person_id = ?
     `
 
@@ -50,157 +62,60 @@ router.get("/perfil", validateToken, async (req: Request, res: Response) => {
     const [results] = await db.query(sql, [userId])
     const rows = results as any[]
 
-    console.log("🔍 Resultados de la consulta:", rows)
+    console.log("🔍 Resultados de la consulta:", JSON.stringify(rows, null, 2))
 
     if (rows.length === 0) {
       console.log("❌ Usuario no encontrado en la base de datos")
+
+      // Verificar si existe algún usuario con ese ID
+      const [checkUser] = await db.query(
+        "SELECT person_id, name_person, email FROM Person WHERE person_id = ?",
+        [userId]
+      )
+      console.log("🔍 Verificación directa del usuario:", checkUser)
+
       return res.status(404).json({
         success: false,
         message: "Usuario no encontrado",
       })
     }
 
-    const perfil = rows[0]
-    console.log("✅ Perfil encontrado:", perfil)
+    // ✅ Usuario encontrado: extraer sus datos
+    const user = rows[0]
 
-    // Get property counts in separate queries to avoid complex joins
-    let propiedadesPublicadas = 0
-    let propiedadesVendidas = 0
+    // Obtener estadísticas de propiedades publicadas y vendidas
+    const [publicadasResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'disponible'`,
+      [userId]
+    )
 
-    try {
-      // Count published properties
-      const [propPublicadas] = await db.query("SELECT COUNT(*) as count FROM Property WHERE person_id = ?", [userId])
-      propiedadesPublicadas = (propPublicadas as any[])[0]?.count || 0
+    const [vendidasResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'vendida'`,
+      [userId]
+    )
 
-      // Count sold properties
-      const [propVendidas] = await db.query(
-        "SELECT COUNT(*) as count FROM Property WHERE person_id = ? AND status = ?",
-        [userId, "Vendida"],
-      )
-      propiedadesVendidas = (propVendidas as any[])[0]?.count || 0
-    } catch (propError) {
-      console.log("⚠️ Error al contar propiedades, usando valores por defecto:", propError)
-      // Keep default values of 0
-    }
+    const propiedadesPublicadas = (publicadasResult as any[])[0]?.total || 0
+    const propiedadesVendidas = (vendidasResult as any[])[0]?.total || 0
 
-    const responseData = {
-      nombre: perfil.nombre || "",
-      telefono: perfil.telefono || "",
-      correo: perfil.correo || "",
-      fechaRegistro: new Date().toISOString(), // Use current date as fallback since created_at doesn't exist
-      propiedadesPublicadas: propiedadesPublicadas,
-      propiedadesVendidas: propiedadesVendidas,
-      verified: perfil.verified,
-      active: perfil.active,
-      role: userRole, // Include role in response for frontend debugging
-    }
-
-    console.log("✅ Enviando respuesta:", responseData)
-
-    res.status(200).json({
+    // ✅ Retornar la respuesta
+    return res.status(200).json({
       success: true,
-      data: responseData,
+      data: {
+        nombre: user.nombre,
+        telefono: user.telefono,
+        correo: user.correo,
+        verified: user.verified,
+        active: user.active,
+        role: userRole,
+        propiedadesPublicadas,
+        propiedadesVendidas,
+      },
     })
   } catch (error) {
-    console.error("❌ Error al obtener perfil:", error)
-    res.status(500).json({
+    console.error("❌ Error completo:", error)
+    return res.status(500).json({
       success: false,
       message: "Error del servidor al obtener el perfil",
-    })
-  }
-})
-
-// ✅ FIXED: PUT route for updating profile (also allow all authenticated users)
-router.put("/perfil", validateToken, async (req: Request, res: Response) => {
-  console.log("🚀 Entrando a PUT /perfil")
-  console.log("🧠 req.user:", req.user)
-  console.log("🧠 req.body:", req.body)
-
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Usuario no autenticado",
-      })
-    }
-
-    const userId = req.user.person_id
-    const userRole = req.user.role_id || req.user.role_id
-    const { nombre, telefono, correo } = req.body
-
-    // Basic validation
-    if (!nombre || !correo) {
-      return res.status(400).json({
-        success: false,
-        message: "Nombre y correo son obligatorios",
-      })
-    }
-
-    // Update user data
-    const updateSql = `
-      UPDATE Person 
-      SET name_person = ?, phone = ?, email = ?
-      WHERE person_id = ?
-    `
-
-    await db.query(updateSql, [nombre, telefono || null, correo, userId])
-
-    // Get updated data
-    const [results] = await db.query(
-      "SELECT person_id AS id, name_person AS nombre, phone AS telefono, email AS correo, verified, active FROM Person WHERE person_id = ?",
-      [userId],
-    )
-    const rows = results as any[]
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Usuario no encontrado después de la actualización",
-      })
-    }
-
-    const updatedPerfil = rows[0]
-
-    // Get property counts
-    let propiedadesPublicadas = 0
-    let propiedadesVendidas = 0
-
-    try {
-      const [propPublicadas] = await db.query("SELECT COUNT(*) as count FROM Property WHERE person_id = ?", [userId])
-      propiedadesPublicadas = (propPublicadas as any[])[0]?.count || 0
-
-      const [propVendidas] = await db.query(
-        "SELECT COUNT(*) as count FROM Property WHERE person_id = ? AND status = ?",
-        [userId, "Vendida"],
-      )
-      propiedadesVendidas = (propVendidas as any[])[0]?.count || 0
-    } catch (propError) {
-      console.log("⚠️ Error al contar propiedades:", propError)
-    }
-
-    const responseData = {
-      nombre: updatedPerfil.nombre || "",
-      telefono: updatedPerfil.telefono || "",
-      correo: updatedPerfil.correo || "",
-      fechaRegistro: new Date().toISOString(),
-      propiedadesPublicadas: propiedadesPublicadas,
-      propiedadesVendidas: propiedadesVendidas,
-      verified: updatedPerfil.verified,
-      active: updatedPerfil.active,
-      role: userRole,
-    }
-
-    console.log("✅ Perfil actualizado:", responseData)
-
-    res.status(200).json({
-      success: true,
-      data: responseData,
-    })
-  } catch (error) {
-    console.error("❌ Error al actualizar perfil:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error del servidor al actualizar el perfil",
     })
   }
 })
