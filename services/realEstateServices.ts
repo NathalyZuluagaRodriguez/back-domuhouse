@@ -1,18 +1,19 @@
+// ===== SERVICIO (realEstateServices.ts) =====
 import realEstateRepo from "../repositories/realEstatesRepositorys";
 import sendEmail from "../utils/sendEmailer"; 
 
-//interface de inmobiliaria
+// ✅ INTERFACE MODIFICADA - num_properties REMOVIDO
 interface NewRealEstate {
     name_realestate: string,
     nit: string,
     phone: string,
     email: string,
-    num_properties: number,
     department: string,
     city: string;
     adress: string,
     description: string,
     person_id: number
+    logo_url?: string;
 }
 
 const registerRealEstate = async (data: NewRealEstate) => {

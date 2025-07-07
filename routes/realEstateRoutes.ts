@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import registerRealEstate, { getAllRealEstates, getRealEstateStatistics } from '../controllers/realEstateController';
+import upload from "../config/cloudinary";
 
 const router = Router();
 
