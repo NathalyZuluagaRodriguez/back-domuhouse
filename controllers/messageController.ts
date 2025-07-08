@@ -1,39 +1,54 @@
 import { Request, Response } from "express"
 import MessageService from "../services/messageServices"
 
-/* ──────────────────────────────────────────────────────────────
-   POST /api/messages   → envía correo y guarda mensaje sin subject
-   Body: { senderId, receiverId, content }
-────────────────────────────────────────────────────────────── */
+/* POST /api/messages   (IDs) */
 export const sendEmail = async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, content } = req.body
-
-    if (!senderId || !receiverId || !content) {
+    const { senderId, receiverId, subject, content } = req.body
+    if (!senderId || !receiverId || !content?.trim()) {
       return res.status(400).json({ error: "Datos incompletos" })
     }
 
     const messageId = await MessageService.sendEmail(
       senderId,
       receiverId,
-      content
+      subject?.trim() || "Nuevo mensaje de DomuHouse",
+      content.trim()
     )
 
-    res.status(201).json({ message: "Correo enviado", messageId })
+    return res.status(201).json({ message: "Correo enviado", messageId })
   } catch (error) {
     console.error("Error sendEmail:", error)
-    res.status(500).json({ error: "No se pudo enviar el correo" })
+    return res.status(500).json({ error: "No se pudo enviar el correo" })
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   POST /api/messages/save   → guarda mensaje sin enviar correo
-   Body: { senderId, receiverId, content }
-────────────────────────────────────────────────────────────── */
+/* POST /api/by-email   (emails) */
+export const sendEmailByEmail = async (req: Request, res: Response) => {
+  try {
+    const { senderEmail, receiverEmail, subject, content } = req.body
+    if (!senderEmail || !receiverEmail || !content?.trim()) {
+      return res.status(400).json({ error: "Datos incompletos" })
+    }
+
+    const messageId = await MessageService.sendEmailByEmail(
+      senderEmail,
+      receiverEmail,
+      subject?.trim() || "Nuevo mensaje de DomuHouse",
+      content.trim()
+    )
+
+    return res.status(201).json({ message: "Correo enviado", messageId })
+  } catch (error) {
+    console.error("Error sendEmailByEmail:", error)
+    return res.status(500).json({ error: "No se pudo enviar el correo" })
+  }
+}
+
+/* POST /api/messages/save   → sin correo */
 export const saveMessage = async (req: Request, res: Response) => {
   try {
     const { senderId, receiverId, content } = req.body
-
     if (!senderId || !receiverId || !content) {
       return res.status(400).json({ error: "Datos incompletos" })
     }
@@ -44,16 +59,14 @@ export const saveMessage = async (req: Request, res: Response) => {
       content
     )
 
-    res.status(201).json({ message: "Mensaje guardado", messageId })
+    return res.status(201).json({ message: "Mensaje guardado", messageId })
   } catch (error) {
     console.error("Error saveMessage:", error)
-    res.status(500).json({ error: "No se pudo guardar el mensaje" })
+    return res.status(500).json({ error: "No se pudo guardar el mensaje" })
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   GET /api/agents/:agentId/messages   → mensajes ENVIADOS por el agente
-────────────────────────────────────────────────────────────── */
+/* GET /api/agents/:agentId/messages */
 export const getMessagesByAgent = async (req: Request, res: Response) => {
   const agentPersonId = Number(req.params.agentId)
   const limit = req.query.limit ? Number(req.query.limit) : 20
