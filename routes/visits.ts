@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../config/config-db';
+import visitController from '../controllers/visitAdminController'
 
 const router = Router();
 
@@ -27,4 +28,5 @@ router.get('/visits/by-agency', async (req, res) => {
   }
 });
 
+router.get('/visitas', visitController.getAllVisits)
 export default router;
