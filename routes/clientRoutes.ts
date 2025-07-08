@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { getAllClients } from "../controllers/clientController";
+import { getAllClients, getTotalClients } from "../controllers/clientController";
 import { sendEmail, saveMessage } from "../controllers/messageController"
 
 const router = Router();
 
 // Clientes
 router.get("/clients", getAllClients);
+router.get("/clients/count", getTotalClients);
 
 
 // Mensajes

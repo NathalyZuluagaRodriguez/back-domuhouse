@@ -29,6 +29,18 @@ class ClientService {
     );
     return rows.length ? rows[0].clientId : null;
   }
+    /* ────────────────────────────
+     Obtener la totalidad de clientes
+     ──────────────────────────── */
+  static async getTotalClients() {
+    const sql = `
+      SELECT COUNT(*) AS totalClients
+      FROM person
+      WHERE role_id = 3
+    `;
+    const [rows]: any = await db.execute(sql);
+    return rows[0]; // { totalClients: número }
+  }
 }
 
 export default ClientService;
