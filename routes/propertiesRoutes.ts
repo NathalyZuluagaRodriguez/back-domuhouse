@@ -25,7 +25,7 @@ const router = express.Router();
 router.post('/create', upload.array('images', 10), createProperty);
 
 // ✅ Editar propiedad
-router.put('/editar/:id', editProperty);
+router.put("/editar/:id", upload.array("images", 10), editProperty);
 
 // ✅ Eliminar propiedad
 router.delete('/eliminar/:id', deleteProperty);
