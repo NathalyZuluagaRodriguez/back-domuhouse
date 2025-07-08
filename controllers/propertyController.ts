@@ -237,13 +237,23 @@ export const createProperty = async (req: Request, res: Response) => {
   }
 };
 
+
 export const editProperty = async (req: Request, res: Response) => {
   try {
-    console.log("✏️ editProperty - ID:", req.params.id)
-    const { id } = req.params
+    console.log("✏️ editProperty - ID:", req.params.id);
+    const { id } = req.params;
+
+    // ✅ Parsea el JSON dentro del campo `data`
+    let parsedData;
+    try {
+      parsedData = JSON.parse(req.body.data);
+    } catch (error) {
+      return res.status(400).json({ error: "El formato de los datos es inválido." });
+    }
+
     const {
       property_title,
-      adress,
+      address,
       description,
       price,
       status,
@@ -258,14 +268,19 @@ export const editProperty = async (req: Request, res: Response) => {
       total_area,
       latitude,
       longitude,
-    } = req.body
+    } = parsedData;
+
+    // ✅ Validación opcional para evitar errores como el que ya tuviste
+    if (!status) {
+      return res.status(400).json({ error: "El campo 'status' es requerido." });
+    }
 
     const [result] = await Promisepool.query(
       "CALL sp_edit_property(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
         property_title,
-        adress,
+        address,
         description,
         price,
         status,
@@ -280,23 +295,24 @@ export const editProperty = async (req: Request, res: Response) => {
         total_area,
         latitude,
         longitude,
-      ],
-    )
+      ]
+    );
 
-    console.log("✅ Property updated successfully")
+    console.log("✅ Property updated successfully");
     res.json({
       success: true,
       message: "Property updated successfully",
       result,
-    })
+    });
   } catch (error: any) {
-    console.error("❌ Error in editProperty:", error)
+    console.error("❌ Error in editProperty:", error);
     res.status(500).json({
       error: "Error updating property",
       detail: error.message,
-    })
+    });
   }
-}
+};
+
 
 export const deleteProperty = async (req: Request, res: Response) => {
   try {
@@ -673,41 +689,47 @@ export const getPropertyById = async (req: Request, res: Response) => {
 
     // ✅ ESTRUCTURA DE RESPUESTA CORREGIDA
     const formattedProperty = {
-      property_id: property.property_id,
-      property_title: property.property_title,
-      title: property.property_title, // Para compatibilidad con frontend
-      description: property.description,
-      price: property.price,
-      address: property.address,
-      city: property.city,
-      neighborhood: property.neighborhood,
-      operation_type: property.operation_type,
-      property_type: property.property_type_name,
-      property_type_id: property.property_type_id,
-      socioeconomic_stratum: property.socioeconomic_stratum,
-      bedrooms: property.bedrooms,
-      bathrooms: property.bathrooms,
-      parking_spaces: property.parking_spaces,
-      built_area: property.built_area,
-      total_area: property.total_area,
-      latitude: property.latitude,
-      longitude: property.longitude,
-      status: property.status,
-      approved: property.approved,
-      publish_date: property.publish_date,
+  property_id: property.property_id,
+  property_title: property.property_title,
+  title: property.property_title,
+  description: property.description,
+  price: property.price,
+  address: property.address,
+  city: property.city,
+  neighborhood: property.neighborhood,
+  operation_type: property.operation_type,
+  
+  // 💥 Ajustes para que el frontend reconozca los campos correctamente
+  type: property.property_type_name || "",                 // <- Front espera "type"
+  stratum: property.socioeconomic_stratum || "",           // <- Front espera "stratum"
+  builtArea: property.built_area || "",                    // <- Front espera "builtArea"
+  area: property.total_area || "",                         // <- Front espera "area"
+  parkingSpaces: property.parking_spaces || "",            // <- Front espera "parkingSpaces"
 
-      // ✅ CAMPOS QUE EL FRONTEND ESPERA
-      agent_name: property.agent_name || "Agente Inmobiliario",
-      name_person: property.name_person,
-      last_name: property.last_name,
-      agent_email: property.agent_email || "contacto@inmobiliaria.com",
-      agent_phone: property.agent_phone || "+57 300 000 0000",
-      person_id: property.person_id,  
+  socioeconomic_stratum: property.socioeconomic_stratum,   // También lo dejamos por compatibilidad
+  property_type: property.property_type_name,
+  property_type_id: property.property_type_id,
+  bedrooms: property.bedrooms,
+  bathrooms: property.bathrooms,
+  latitude: property.latitude,
+  longitude: property.longitude,
+  status: property.status,
+  approved: property.approved,
+  publish_date: property.publish_date,
 
-      // ✅ IMÁGENES PROCESADAS
-      images: processedImages,
-      image_urls: processedImages, // Para compatibilidad adicional
-    }
+  // Agente
+  agent_name: property.agent_name || "Agente Inmobiliario",
+  name_person: property.name_person,
+  last_name: property.last_name,
+  agent_email: property.agent_email || "contacto@inmobiliaria.com",
+  agent_phone: property.agent_phone || "+57 300 000 0000",
+  person_id: property.person_id,  
+
+  // Imágenes
+  images: processedImages,
+  image_urls: processedImages,
+}
+
 
     console.log(`✅ Propiedad encontrada exitosamente: ${formattedProperty.property_title}`)
     console.log(`👤 Agente: ${formattedProperty.agent_name}`)

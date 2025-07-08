@@ -195,6 +195,49 @@ class PropertyService {
     const [result]: any = await db.execute(sql, [propertyId, agentId]);
     return result.affectedRows;
   }
+
+  
+// 👤 Para cuando un USUARIO (cliente) crea una propiedad
+static async createPropertyByUser(userId: number, payload: PropertyPayload) {
+  const sql = `
+    INSERT INTO Property (
+      person_id, property_title, address, description, price, status,
+      property_type_id, socioeconomic_stratum, city, neighborhood, operation_type,
+      bedrooms, bathrooms, parking_spaces, built_area, total_area,
+      latitude, longitude, image, publish_date
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+  `;
+
+  const values = [
+    userId,
+    payload.property_title,
+    payload.address,
+    payload.description,
+    payload.price,
+    payload.status,
+    payload.property_type_id,
+    payload.socioeconomic_stratum,
+    payload.city,
+    payload.neighborhood,
+    payload.operation_type,
+    payload.bedrooms,
+    payload.bathrooms,
+    payload.parking_spaces,
+    payload.built_area,
+    payload.total_area,
+    payload.latitude,
+    payload.longitude,
+    payload.image,
+  ];
+
+  const [result]: any = await db.execute(sql, values);
+  return result.insertId;
 }
+
+  
+}
+
+
 
 export default PropertyService;

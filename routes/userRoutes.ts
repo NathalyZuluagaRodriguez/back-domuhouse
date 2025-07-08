@@ -1,8 +1,15 @@
 import { Router, type Request, type Response } from "express"
 import { validateToken } from "../middleware/authMiddleware"
+import { createPropertyByUser } from "../controllers/propertyByUserController"
 import db from "../config/config-db"
+import upload from "../middleware/upload"
 
 const router = Router()
+
+
+
+router.post("/user/:userId", upload.array("images", 10), createPropertyByUser)
+
 
 router.get("/perfil", validateToken, async (req: Request, res: Response) => {
   console.log("🚀 Entrando a GET /perfil")
