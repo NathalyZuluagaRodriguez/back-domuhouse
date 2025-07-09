@@ -195,6 +195,157 @@ class PropertyService {
     const [result]: any = await db.execute(sql, [propertyId, agentId]);
     return result.affectedRows;
   }
+
+  
+// 👤 Para cuando un USUARIO (cliente) crea una propiedad
+static async createPropertyByUser(userId: number, payload: PropertyPayload) {
+  const sql = `
+    INSERT INTO Property (
+      person_id, property_title, address, description, price, status,
+      property_type_id, socioeconomic_stratum, city, neighborhood, operation_type,
+      bedrooms, bathrooms, parking_spaces, built_area, total_area,
+      latitude, longitude, image, publish_date
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+  `;
+
+  const values = [
+    userId,
+    payload.property_title,
+    payload.address,
+    payload.description,
+    payload.price,
+    payload.status,
+    payload.property_type_id,
+    payload.socioeconomic_stratum,
+    payload.city,
+    payload.neighborhood,
+    payload.operation_type,
+    payload.bedrooms,
+    payload.bathrooms,
+    payload.parking_spaces,
+    payload.built_area,
+    payload.total_area,
+    payload.latitude,
+    payload.longitude,
+    payload.image,
+  ];
+
+  const [result]: any = await db.execute(sql, values);
+  return result.insertId;
+
 }
+   /* --------------- NUEVO: resumen global de ventas ---------------- */
+  static async getGlobalSalesSummary(agentId?: number) {
+    let sql = `
+      SELECT
+        COALESCE(SUM(property.price), 0) AS totalSales,
+        COUNT(property.property_id)      AS soldProperties
+      FROM property
+      WHERE property.status IN ('Vendida', 'Alquilada')
+    `;
+
+    const params: any[] = [];
+    if (agentId) {
+      sql += " AND property.person_id = ?";
+      params.push(agentId);
+    }
+
+    const [rows]: any = await db.execute(sql, params);
+    return rows[0]; // { totalSales, soldProperties }
+  }
+
+      /* -------------- NUEVO: cantidad de propiedades vendidas -------------- */
+  static async getTotalSoldProperties(agentId?: number) {
+    let sql = `
+      SELECT COUNT(*) AS totalSold
+      FROM property
+      WHERE status = 'Vendida'
+    `;
+
+    const params: any[] = [];
+    if (agentId) {
+      sql += " AND person_id = ?";
+      params.push(agentId);
+    }
+
+    const [rows]: any = await db.execute(sql, params);
+    return rows[0]; // { totalSold: número }
+  }
+
+    /* -------- NUEVO: ventas agrupadas por tipo de propiedad -------- */
+static async getSalesByPropertyType(agentId?: number) {
+  // Usa LET (no const) porque la vas a modificar después
+  let sql = `
+    SELECT
+      pt.type_name          AS tipo,
+      SUM(p.price)          AS ventas
+    FROM property p
+    JOIN propertytype pt ON p.property_type_id = pt.property_type_id
+    WHERE p.status = 'Vendida'
+  `;
+
+  const params: any[] = [];
+  if (agentId) {
+    sql += " AND p.person_id = ?";
+    params.push(agentId);
+  }
+
+  sql += " GROUP BY pt.type_name";
+
+  const [rows]: any = await db.execute(sql, params);
+
+  // Mapeo final (sin porcentaje)
+  return rows.map((r: any) => ({
+    tipo: r.tipo,
+    ventas: r.ventas,
+  }));
+}
+
+static async getTopAgents(limit: number = 5) {
+  const LIM = Number.isInteger(limit) && limit > 0 ? limit : 5; // sanitizar
+
+  let sql = `
+    SELECT
+      per.person_id,
+      CONCAT(per.name_person, ' ', per.last_name) AS nombre,
+      COUNT(p.property_id)       AS ventas,
+      SUM(p.price)               AS totalVentas
+    FROM property p
+    JOIN person per ON p.person_id = per.person_id
+    WHERE p.status = 'Vendida'
+      AND per.role_id = 2
+    GROUP BY per.person_id
+    ORDER BY ventas DESC
+    LIMIT ${LIM}                     -- ← ya no es un placeholder
+  `;
+
+  /*  Si más adelante quisieras filtrar por agentId:
+      const params: any[] = [agentId];
+      sql = sql.replace('WHERE', 'WHERE p.person_id = ? AND');
+      const [rows]: any = await db.execute(sql, params);
+  */
+  const [rows]: any = await db.execute(sql);   // ← sin array de params
+
+  const COMISION_RATE = 0.05;
+  const totalVentasGlobal = rows.reduce((acc: number, r: any) => acc + r.ventas, 0);
+
+  const topAgentes = rows.map((r: any) => ({
+    nombre: r.nombre,
+    ventas: r.ventas,
+    porcentaje: totalVentasGlobal
+      ? Number(((r.ventas / totalVentasGlobal) * 100).toFixed(1))
+      : 0,
+    comisiones: Math.round(r.totalVentas * COMISION_RATE)
+  }));
+
+  return topAgentes;
+}
+}
+
+  
+
+
+
 
 export default PropertyService;

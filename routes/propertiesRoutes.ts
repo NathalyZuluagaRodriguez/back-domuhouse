@@ -12,7 +12,8 @@ import {
   getPropertyById,
   getPropertyImages,
   getPropertiesWithMainImages,
-  getPropertyMainImage
+  getPropertyMainImage,
+  getMyProperties
 } from '../controllers/propertyController';
 import { getUserProperties } from '../controllers/userPropertyController';
 import { verifyToken } from '../middleware/VerifyToken';
@@ -25,7 +26,7 @@ const router = express.Router();
 router.post('/create', upload.array('images', 10), createProperty);
 
 // ✅ Editar propiedad
-router.put('/editar/:id', editProperty);
+router.put("/editar/:id", upload.array("images", 10), editProperty);
 
 // ✅ Eliminar propiedad
 router.delete('/eliminar/:id', deleteProperty);
@@ -55,5 +56,7 @@ router.get("/properties/approved", getApprovedProperties)
 // ✅ Nuevas rutas para imágenes
 router.get("/properties/with-images", getPropertiesWithMainImages)
 router.get("/properties/:id/main-image", getPropertyMainImage)
+router.get('/mis-propiedades/:personId', getMyProperties);
+
 
 export default router;

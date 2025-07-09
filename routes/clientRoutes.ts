@@ -6,6 +6,7 @@ const router = Router();
 
 // Clientes
 router.get("/clients", getAllClients);
+router.get("/clients/count", getTotalClients);
 
 
 // Mensajes
