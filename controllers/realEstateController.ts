@@ -71,35 +71,42 @@ export const getRealEstateStatistics = async (req: Request, res: Response) => {
     }
 };
 
-// controllers/realEstateController.ts (fragmento relevante corregido)
-const updateRealEstate = async (req: Request, res: Response) => {
+export const updateRealEstate = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    name_realestate,
+    nit,
+    phone,
+    email,
+    department,
+    city,
+    address,
+    description,
+    person_id
+  } = req.body;
+
   try {
-    const {
-      name_realestate,
-      nit,
-      phone,
-      email,
-      department,
-      city,
-      address,
-      description,
-      person_id // ✅ Asegúrate de recibir el nuevo ID del encargado (no el nombre)
-    } = req.body;
+    // Validación básica
+    if (!person_id) {
+      return res.status(400).json({ error: "El campo person_id es obligatorio" });
+    }
 
-    const id = req.params.id;
-
-    await pool.query("CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-      id,
-      name_realestate,
-      nit,
-      phone,
-      email,
-      department,
-      city,
-      address,
-      description,
-      person_id
-    ]);
+    // Llamar al procedimiento
+    await pool.query(
+      `CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        name_realestate,
+        nit,
+        phone,
+        email,
+        department,
+        city,
+        address,
+        description,
+        person_id
+      ]
+    );
 
     res.status(200).json({ message: "Inmobiliaria actualizada correctamente" });
   } catch (error) {
@@ -108,37 +115,36 @@ const updateRealEstate = async (req: Request, res: Response) => {
   }
 };
 
-
-
+// Obtener inmobiliaria por ID con nombre del encargado
 export const getRealEstateById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    // Datos de la inmobiliaria y nombre del encargado
-    const [realEstateRows]: any[] = await pool.query(
-      `SELECT r.*, CONCAT(p.name_person, ' ', p.last_name) AS encargado_nombre
-       FROM realestate r
-       LEFT JOIN Person p ON r.person_id = p.person_id
-       WHERE r.id = ?`,
-      [id]
-    );
+    const [rows]: any = await pool.query(`
+      SELECT 
+        r.name_realestate,
+        r.nit,
+        r.phone,
+        r.email,
+        r.department,
+        r.city,
+        r.address,
+        r.description,
+        r.person_id,
+        CONCAT(p.name_person, ' ', p.last_name) AS encargado_nombre
+      FROM realestate r
+      LEFT JOIN person p ON r.person_id = p.id
+      WHERE r.id = ?
+    `, [id]);
 
-    const realEstate = realEstateRows[0];
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Inmobiliaria no encontrada" });
+    }
 
-    // Lista de todos los administradores disponibles
-    const [admins]: any[] = await pool.query(
-      `SELECT person_id, CONCAT(name_person, ' ', last_name) AS full_name
-       FROM Person
-       WHERE role_id = 1`
-    );
-
-    res.json({
-      realEstate,
-      admins
-    });
+    res.json(rows[0]);
   } catch (error) {
     console.error("❌ Error al obtener inmobiliaria:", error);
-    res.status(500).json({ error: "Error al obtener la inmobiliaria" });
+    res.status(500).json({ message: "Error al obtener la inmobiliaria" });
   }
 };
 
