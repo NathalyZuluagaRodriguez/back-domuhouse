@@ -71,82 +71,148 @@ export const getRealEstateStatistics = async (req: Request, res: Response) => {
     }
 };
 
-export const updateRealEstate = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const {
-    name_realestate,
-    nit,
-    phone,
-    email,
-    department,
-    city,
-    address,
-    description,
-    person_id
-  } = req.body;
+export const getRealEstateById = async (req: Request, res: Response) => {
+  const { id } = req.params
+
+  console.log("🔍 [getRealEstateById] ID recibido:", id)
 
   try {
-    // Validación básica
-    if (!person_id) {
-      return res.status(400).json({ error: "El campo person_id es obligatorio" });
+    // Validar ID
+    if (!id || isNaN(Number(id))) {
+      console.log("❌ ID inválido")
+      return res.status(400).json({
+        success: false,
+        message: "ID de inmobiliaria inválido",
+      })
     }
 
-    // Llamar al procedimiento
-    await pool.query(
-      `CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        name_realestate,
-        nit,
-        phone,
-        email,
-        department,
-        city,
-        address,
-        description,
-        person_id
-      ]
-    );
+    // Consulta SQL simplificada - SIN JOIN primero para probar
+    console.log("📊 Ejecutando consulta básica...")
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM realestate WHERE id = ?", [id])
 
-    res.status(200).json({ message: "Inmobiliaria actualizada correctamente" });
-  } catch (error) {
-    console.error("❌ Error al actualizar inmobiliaria:", error);
-    res.status(500).json({ error: "Error al actualizar la inmobiliaria" });
-  }
-};
-
-// Obtener inmobiliaria por ID con nombre del encargado
-export const getRealEstateById = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  try {
-    const [rows]: any = await pool.query(`
-      SELECT 
-        r.name_realestate,
-        r.nit,
-        r.phone,
-        r.email,
-        r.department,
-        r.city,
-        r.address,
-        r.description,
-        r.person_id,
-        CONCAT(p.name_person, ' ', p.last_name) AS encargado_nombre
-      FROM realestate r
-      LEFT JOIN person p ON r.person_id = p.id
-      WHERE r.id = ?
-    `, [id]);
+    console.log("📊 Resultados encontrados:", rows.length)
+    console.log("📊 Datos:", rows)
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Inmobiliaria no encontrada" });
+      console.log("❌ Inmobiliaria no encontrada")
+      return res.status(404).json({
+        success: false,
+        message: "Inmobiliaria no encontrada",
+      })
     }
 
-    res.json(rows[0]);
+    const realEstate = rows[0]
+
+    // Intentar obtener el nombre del encargado por separado
+    let encargadoNombre = "Sin encargado"
+    if (realEstate.person_id) {
+      try {
+        console.log("👤 Buscando persona con ID:", realEstate.person_id)
+        const [personRows] = await pool.query<RowDataPacket[]>(
+          "SELECT name_person, last_name FROM Person WHERE person_id = ?",
+          [realEstate.person_id],
+        )
+
+        if (personRows.length > 0) {
+          encargadoNombre = `${personRows[0].name_person} ${personRows[0].last_name}`
+          console.log("👤 Encargado encontrado:", encargadoNombre)
+        }
+      } catch (personError) {
+        console.warn("⚠️ Error al obtener persona:", personError)
+        // Continuar sin el nombre del encargado
+      }
+    }
+
+    // Preparar respuesta
+    const response = {
+      id: realEstate.id,
+      name_realestate: realEstate.name_realestate,
+      nit: realEstate.nit,
+      phone: realEstate.phone,
+      email: realEstate.email,
+      department: realEstate.department,
+      city: realEstate.city,
+      address: realEstate.address, // ✅ Mapear correctamente adress -> address
+      description: realEstate.description,
+      person_id: realEstate.person_id,
+      encargado_nombre: encargadoNombre,
+      images: [], // Array vacío por ahora
+    }
+
+    console.log("✅ Respuesta preparada:", response)
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    })
   } catch (error) {
-    console.error("❌ Error al obtener inmobiliaria:", error);
-    res.status(500).json({ message: "Error al obtener la inmobiliaria" });
+    console.error("❌ Error completo:", error)
+
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: errorMessage,
+      details:
+        process.env.NODE_ENV === "development"
+          ? {
+              stack: error instanceof Error ? error.stack : undefined,
+              id: id,
+            }
+          : undefined,
+    })
   }
-};
+}
+
+// Actualizar inmobiliaria
+export const updateRealEstate = async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { name_realestate, nit, phone, email, department, city, address, description, person_id } = req.body
+
+  console.log("🔄 Actualizando inmobiliaria ID:", id)
+  console.log("📝 Datos recibidos:", req.body)
+
+  try {
+    if (!person_id) {
+      return res.status(400).json({
+        success: false,
+        error: "El campo person_id es obligatorio",
+      })
+    }
+
+    // Actualizar con SQL directo
+    const [result] = await pool.query(
+      `UPDATE realestate SET 
+        name_realestate = ?, 
+        nit = ?, 
+        phone = ?, 
+        email = ?, 
+        department = ?, 
+        city = ?, 
+        address = ?, -- ✅ Usar 'adress' (como está en la BD)
+        description = ?
+      WHERE id = ? AND person_id = ?`,
+      [name_realestate, nit, phone, email, department, city, address, description, id, person_id],
+    )
+
+    console.log("✅ Actualización completada:", result)
+
+    res.status(200).json({
+      success: true,
+      message: "Inmobiliaria actualizada correctamente",
+    })
+  } catch (error) {
+    console.error("❌ Error al actualizar:", error)
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+    })
+  }
+}
+
 
 
 
