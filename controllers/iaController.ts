@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as iaService from '../services/iaService';
 import { responseFormatter } from '../utils/responseFormatter';
+import {generarInformeValoracion} from '../services/iaService';
 
 
 export const procesarInmueble = async (req: Request, res: Response): Promise<void> => {
@@ -70,31 +71,14 @@ export const analizarTendenciasAvanzado = async (req: Request, res: Response): P
 
 export const calcularValoracionAutomatica = async (req: Request, res: Response) => {
   try {
-    const {
+    const { descripcion, barrio, ciudad, ...otros } = req.body;
+
+    const resultado = await generarInformeValoracion(
+      descripcion,
+      barrio || '',
       ciudad,
-      barrio,
-      tipoPropiedad,
-      estrato,
-      habitaciones,
-      banos,
-      garaje,
-      areaConstruida,
-      descripcion
-    } = req.body;
-
-    if (!descripcion || !ciudad || !tipoPropiedad || !areaConstruida) {
-      return responseFormatter.error(res, 'Faltan datos para hacer la valoración', 400);
-    }
-
-    const resultado = await iaService.generarInformeValoracion(descripcion, barrio || ciudad, {
-      tipoPropiedad,
-      estrato,
-      habitaciones,
-      banos,
-      garaje,
-      metrosCuadrados: areaConstruida,
-      antiguedad: 2025 - new Date().getFullYear(), // o calcula desde otro dato
-    });
+      otros
+    );
 
     return responseFormatter.success(res, resultado, 'Valoración automática generada con éxito');
   } catch (error) {

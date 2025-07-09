@@ -24,59 +24,67 @@ class GeminiClient {
   }
 
   async extraerCaracteristicas(descripcion: string): Promise<ICaracteristicaInmueble | ErrorResponse> {
-    try {
-      const prompt = `Eres un asistente especializado en análisis de inmuebles. 
-Solo debes responder descripciones relacionadas con propiedades inmobiliarias reales.
-Si el texto es irrelevante (como preguntas matemáticas, chistes, saludos, etc), responde estrictamente y respondeme con un error de peticion cuando pase esto:
+  try {
+    const prompt = `Eres un asistente especializado en análisis de inmuebles. 
+    Solo debes responder descripciones relacionadas con propiedades inmobiliarias reales.
+    Si el texto es irrelevante (como preguntas matemáticas, chistes, saludos, etc), responde estrictamente:
 
-{ "error": "Solo respondo análisis de propiedades. Por favor, proporciona una descripción válida." }
+    { "error": "Solo respondo análisis de propiedades. Por favor, proporciona una descripción válida." }
 
-Responde SOLO con un JSON válido:
+    Responde SOLO con un JSON válido:
 
-{
-  "tipoPropiedad": string,
-  "habitaciones": number,
-  "banos": number,
-  "metrosCuadrados": number,
-  "garaje": boolean,
-  "piscina": boolean,
-  "jardin": boolean,
-  "terraza": boolean,
-  "ubicacion": string,
-  "antiguedad": number,
-  "estrato": number
+    {
+      "tipoPropiedad": string,
+      "habitaciones": number,
+      "banos": number,
+      "metrosCuadrados": number,
+      "garaje": boolean,
+      "piscina": boolean,
+      "jardin": boolean,
+      "terraza": boolean,
+      "ubicacion": string,
+      "antiguedad": number,
+      "estrato": number
+    }
+
+    Descripción: ${descripcion}`;
+
+    const result = await this.model.generateContent(prompt);
+    const text = result.response.text();
+    const json = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
+    const parsed = JSON.parse(json);
+
+    if (parsed.error) {
+      console.log("Error de IA:", parsed);
+      return { message: parsed.error };
+    }
+
+    // Validación y saneamiento de resultados
+    const tiposPermitidos = ['Casa', 'Apartamento', 'Local Comercial', 'Terreno'];
+    const tipoPropiedadDetectado = parsed.tipoPropiedad?.trim();
+    const tipoPropiedad = tiposPermitidos.includes(tipoPropiedadDetectado)
+      ? tipoPropiedadDetectado
+      : 'Casa';
+
+    return {
+      tipoPropiedad,
+      habitaciones: Number(parsed.habitaciones) || 0,
+      banos: Number(parsed.banos) || 0,
+      metrosCuadrados: Number(parsed.metrosCuadrados) || 0,
+      garaje: parsed.garaje === true || parsed.garaje === 'true',
+      piscina: parsed.piscina === true || parsed.piscina === 'true',
+      jardin: parsed.jardin === true || parsed.jardin === 'true',
+      terraza: parsed.terraza === true || parsed.terraza === 'true',
+      ubicacion: typeof parsed.ubicacion === 'string' ? parsed.ubicacion : 'Centro',
+      antiguedad: Number(parsed.antiguedad) || 0,
+      estrato: parsed.estrato !== undefined ? Number(parsed.estrato) : undefined
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Error inesperado al procesar la descripción';
+    return { message: errorMsg };
+  }
 }
 
-Descripción: ${descripcion}`;
-
-      const result = await this.model.generateContent(prompt);
-      const text = result.response.text();
-      const json = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
-      const parsed = JSON.parse(json);
-
-      if (parsed.error) {
-        console.log("Error de IA:", parsed);
-        return { message: parsed.error };
-      }
-
-      return {
-        tipoPropiedad: parsed.tipoPropiedad || 'Casa',
-        habitaciones: Number(parsed.habitaciones) || 0,
-        banos: Number(parsed.banos) || 0,
-        metrosCuadrados: Number(parsed.metrosCuadrados) || 0,
-        garaje: parsed.garaje === true || parsed.garaje === 'true',
-        piscina: parsed.piscina === true || parsed.piscina === 'true',
-        jardin: parsed.jardin === true || parsed.jardin === 'true',
-        terraza: parsed.terraza === true || parsed.terraza === 'true',
-        ubicacion: parsed.ubicacion || 'No especificado',
-        antiguedad: parsed.antiguedad || 0,
-        estrato: Number(parsed.estrato) || undefined
-      };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Error inesperado al procesar la descripción';
-      return { message: errorMsg };
-    }
-  }
 
   async estimarPrecio(caracteristicas: ICaracteristicaInmueble, datosMercado: any): Promise<IEstimacionPrecio | ErrorResponse> {
     try {

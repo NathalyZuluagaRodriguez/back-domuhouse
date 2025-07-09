@@ -13,6 +13,8 @@ import { ErrorResponse } from '../models/interfaces';
 // Datos de mercado para complementar la IA
 // En producción, estos datos vendrían de una base de datos actualizada
 interface IMercadoData {
+  zona: string;
+  tipoPropiedad: string;
   precioPromedio: number;
   precioMinimo: number;
   precioMaximo: number;
@@ -32,112 +34,262 @@ interface IZonasMercado {
 const datosMercadoSimulados: IZonasMercado = {
   Bogotá: {
     Centro: {
-      precioPromedio: 4500000, precioMinimo: 3000000, precioMaximo: 7000000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 120, tendencia: 'estable'
+      zona: 'Centro',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 450000,
+      precioMinimo: 300000,
+      precioMaximo: 700000,
+      metrosCuadradosPromedio: 85,
+      ofertaDisponible: 90,
+      tendencia: 'alza'
     },
     Norte: {
-      precioPromedio: 6500000, precioMinimo: 5000000, precioMaximo: 8000000,
-      metrosCuadradosPromedio: 85, ofertaDisponible: 90, tendencia: 'alza'
+      zona: 'Norte',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 6500000,
+      precioMinimo: 5000000,
+      precioMaximo: 8000000,
+      metrosCuadradosPromedio: 85,
+      ofertaDisponible: 90,
+      tendencia: 'alza'
     },
     Sur: {
-      precioPromedio: 3800000, precioMinimo: 2500000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 85, ofertaDisponible: 100, tendencia: 'estable'
+      zona: 'Sur',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 3800000,
+      precioMinimo: 2500000,
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 85,
+      ofertaDisponible: 100,
+      tendencia: 'estable'
     },
     Este: {
-      precioPromedio: 5400000, precioMinimo: 4500000, precioMaximo: 6500000,
-      metrosCuadradosPromedio: 85, ofertaDisponible: 90, tendencia: 'estable'
+      zona: 'Este',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 5400000,
+      precioMinimo: 4500000,
+      precioMaximo: 6500000,
+      metrosCuadradosPromedio: 85,
+      ofertaDisponible: 90, 
+      tendencia: 'estable'
     },
     Oeste: {
-      precioPromedio: 4800000, precioMinimo: 4000000, precioMaximo: 6500000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 110, tendencia: 'estable'
+      zona: 'Oeste',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 4800000, 
+      precioMinimo: 4000000, 
+      precioMaximo: 6500000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 110, 
+      tendencia: 'estable'
     }
   },
   Medellín: {
     Centro: {
-      precioPromedio: 3905405, precioMinimo: 3000000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 90, tendencia: 'alza'
+      zona: 'Centro',
+      tipoPropiedad: 'Apartamento',
+      precioPromedio: 3905405, 
+      precioMinimo: 3000000, 
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 90, 
+      tendencia: 'alza'
     },
     Norte: {
-      precioPromedio: 6626127, precioMinimo: 5500000, precioMaximo: 8000000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 70, tendencia: 'alza'
+      zona: 'Norte',
+      tipoPropiedad: 'Apartamento',
+      precioPromedio: 6626127, 
+      precioMinimo: 5500000, 
+      precioMaximo: 8000000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 70, 
+      tendencia: 'alza'
     },
     Sur: {
-      precioPromedio: 3905405, precioMinimo: 3000000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 80, tendencia: 'estable'
+      zona: 'Sur',
+      tipoPropiedad: 'Apartamento',
+      precioPromedio: 3905405, 
+      precioMinimo: 3000000, 
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 80, 
+      tendencia: 'estable'
     },
     Este: {
-      precioPromedio: 6426000, precioMinimo: 5000000, precioMaximo: 8000000,
-      metrosCuadradosPromedio: 85, ofertaDisponible: 60, tendencia: 'alza'
+      zona: 'Este',
+      tipoPropiedad: 'Apartamento',
+      precioPromedio: 6426000, 
+      precioMinimo: 5000000, 
+      precioMaximo: 8000000,
+      metrosCuadradosPromedio: 85, 
+      ofertaDisponible: 60, 
+      tendencia: 'alza'
     },
     Oeste: {
-      precioPromedio: 4264000, precioMinimo: 3000000, precioMaximo: 6000000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 60, tendencia: 'estable'
+      zona: 'Oeste',
+      tipoPropiedad: 'Apartamento',
+      precioPromedio: 4264000, 
+      precioMinimo: 3000000, 
+      precioMaximo: 6000000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 60, 
+      tendencia: 'estable'
     }
   },
   Cali: {
     Centro: {
-      precioPromedio: 4560000, precioMinimo: 3000000, precioMaximo: 6500000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 50, tendencia: 'estable'
+      zona: 'Centro',
+      tipoPropiedad: 'apartamento',
+      precioPromedio: 4560000, 
+      precioMinimo: 3000000, 
+      precioMaximo: 6500000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 50, 
+      tendencia: 'estable'
     },
     Norte: {
-      precioPromedio: 4500000, precioMinimo: 3200000, precioMaximo: 7000000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 40, tendencia: 'alza'
+      zona: 'Norte',
+      tipoPropiedad: 'apartamento',
+      precioPromedio: 4500000, 
+      precioMinimo: 3200000, 
+      precioMaximo: 7000000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 40, 
+      tendencia: 'alza'
     },
     Sur: {
-      precioPromedio: 3500000, precioMinimo: 2500000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 85, ofertaDisponible: 60, tendencia: 'estable'
+      zona: 'Sur',
+      tipoPropiedad: 'apartamento',
+      precioPromedio: 3500000, 
+      precioMinimo: 2500000, 
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 85, 
+      ofertaDisponible: 60, 
+      tendencia: 'estable'
     },
     Este: {
-      precioPromedio: 4000000, precioMinimo: 3000000, precioMaximo: 5500000,
-      metrosCuadradosPromedio: 80, ofertaDisponible: 45, tendencia: 'estable'
+      zona: 'Este',
+      tipoPropiedad: 'apartamento',
+      precioPromedio: 4000000, 
+      precioMinimo: 3000000, 
+      precioMaximo: 5500000,
+      metrosCuadradosPromedio: 80, 
+      ofertaDisponible: 45, 
+      tendencia: 'estable'
     },
     Oeste: {
-      precioPromedio: 3800000, precioMinimo: 2800000, precioMaximo: 5200000,
-      metrosCuadradosPromedio: 78, ofertaDisponible: 50, tendencia: 'estable'
+      zona: 'Oeste',
+      tipoPropiedad: 'apartamento',
+      precioPromedio: 3800000, 
+      precioMinimo: 2800000, 
+      precioMaximo: 5200000,
+      metrosCuadradosPromedio: 78, 
+      ofertaDisponible: 50, 
+      tendencia: 'estable'
     }
   },
   Barranquilla: {
     Centro: {
-      precioPromedio: 3790000, precioMinimo: 3000000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 70, ofertaDisponible: 50, tendencia: 'alza'
+      zona: 'Centro',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 3790000, 
+      precioMinimo: 3000000, 
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 70, 
+      ofertaDisponible: 50, 
+      tendencia: 'alza'
     },
     Norte: {
-      precioPromedio: 4230000, precioMinimo: 3000000, precioMaximo: 6000000,
-      metrosCuadradosPromedio: 70, ofertaDisponible: 40, tendencia: 'alza'
+      zona: 'Norte',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 4230000, 
+      precioMinimo: 3000000, 
+      precioMaximo: 6000000,
+      metrosCuadradosPromedio: 70, 
+      ofertaDisponible: 40, 
+      tendencia: 'alza'
     },
     Sur: {
-      precioPromedio: 3000000, precioMinimo: 2000000, precioMaximo: 4500000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 45, tendencia: 'estable'
+      zona: 'Sur',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 3000000, 
+      precioMinimo: 2000000, 
+      precioMaximo: 4500000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 45, 
+      tendencia: 'estable'
     },
     Este: {
-      precioPromedio: 3400000, precioMinimo: 2500000, precioMaximo: 5000000,
-      metrosCuadradosPromedio: 72, ofertaDisponible: 30, tendencia: 'estable'
+      zona: 'Este',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 3400000, 
+      precioMinimo: 2500000, 
+      precioMaximo: 5000000,
+      metrosCuadradosPromedio: 72, 
+      ofertaDisponible: 30, 
+      tendencia: 'estable'
     },
     Oeste: {
-      precioPromedio: 3100000, precioMinimo: 2200000, precioMaximo: 4600000,
-      metrosCuadradosPromedio: 70, ofertaDisponible: 35, tendencia: 'estable'
+      zona: 'Oeste',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 3100000, 
+      precioMinimo: 2200000, 
+      precioMaximo: 4600000,
+      metrosCuadradosPromedio: 70, 
+      ofertaDisponible: 35, 
+      tendencia: 'estable'
     }
   },
   Cartagena: {
     Centro: {
-      precioPromedio: 6624706, precioMinimo: 4000000, precioMaximo: 10000000,
-      metrosCuadradosPromedio: 70, ofertaDisponible: 45, tendencia: 'alza'
+      zona: 'Centro',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 6624706, 
+      precioMinimo: 4000000, 
+      precioMaximo: 10000000,
+      metrosCuadradosPromedio: 70, 
+      ofertaDisponible: 45, 
+      tendencia: 'alza'
     },
     Norte: {
-      precioPromedio: 6200000, precioMinimo: 4000000, precioMaximo: 9000000,
-      metrosCuadradosPromedio: 70, ofertaDisponible: 40, tendencia: 'alza'
+      zona: 'Norte',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 6200000, 
+      precioMinimo: 4000000, 
+      precioMaximo: 9000000,
+      metrosCuadradosPromedio: 70, 
+      ofertaDisponible: 40, 
+      tendencia: 'alza'
     },
     Sur: {
-      precioPromedio: 5500000, precioMinimo: 3500000, precioMaximo: 8000000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 30, tendencia: 'alza'
+      zona: 'Sur',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 5500000, 
+      precioMinimo: 3500000, 
+      precioMaximo: 8000000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 30, 
+      tendencia: 'alza'
     },
     Este: {
-      precioPromedio: 6000000, precioMinimo: 3800000, precioMaximo: 9000000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 25, tendencia: 'alza'
+      zona: 'Este',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 6000000, 
+      precioMinimo: 3800000, 
+      precioMaximo: 9000000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 25, 
+      tendencia: 'alza'
     },
     Oeste: {
-      precioPromedio: 5800000, precioMinimo: 3500000, precioMaximo: 8500000,
-      metrosCuadradosPromedio: 75, ofertaDisponible: 25, tendencia: 'alza'
+      zona: 'Oeste',
+      tipoPropiedad: 'Casa',
+      precioPromedio: 5800000, 
+      precioMinimo: 3500000, 
+      precioMaximo: 8500000,
+      metrosCuadradosPromedio: 75, 
+      ofertaDisponible: 25, 
+      tendencia: 'alza'
     }
   }
 };
@@ -153,12 +305,14 @@ const completarTiposPropiedades = () => {
       if (!datosMercadoSimulados[zona][tipo]) {
         // Crear datos por defecto para los tipos faltantes
         datosMercadoSimulados[zona][tipo] = {
-          precioPromedio: tipo === 'Terreno' ? 200000000 : tipo === 'Local Comercial' ? 250000000 : 230000000,
-          precioMinimo: tipo === 'Terreno' ? 120000000 : tipo === 'Local Comercial' ? 150000000 : 140000000,
-          precioMaximo: tipo === 'Terreno' ? 300000000 : tipo === 'Local Comercial' ? 380000000 : 350000000,
-          metrosCuadradosPromedio: tipo === 'Terreno' ? 500000 : tipo === 'Local Comercial' ? 100000 : 900000,
+          precioPromedio: tipo === 'Terreno' ? 20000000 : tipo === 'Local Comercial' ? 25000000 : 23000000,
+          precioMinimo: tipo === 'Terreno' ? 12000000 : tipo === 'Local Comercial' ? 15000000 : 14000000,
+          precioMaximo: tipo === 'Terreno' ? 30000000 : tipo === 'Local Comercial' ? 38000000 : 35000000,
+          metrosCuadradosPromedio: tipo === 'Terreno' ? 50000 : tipo === 'Local Comercial' ? 100000 : 90000,
           ofertaDisponible: 15,
-          tendencia: 'estable'
+          tendencia: 'estable',
+          zona: zona, 
+          tipoPropiedad: tipo 
         };
       }
     }
@@ -451,79 +605,73 @@ export const compararPropiedadesSimilares = async (
 /**
  * Genera un informe completo de valoración inmobiliaria
  */
+function detectarZonaDesdeUbicacion(ubicacion: string): string {
+  const zonas = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
+  const lowerUbicacion = ubicacion.toLowerCase();
+
+  for (const zona of zonas) {
+    if (lowerUbicacion.includes(zona.toLowerCase())) {
+      return zona;
+    }
+  }
+
+  return 'Centro'; // Valor por defecto si no se detecta
+}
+
 export const generarInformeValoracion = async (
   descripcion: string,
-  ubicacion: string,
-  caracteristicas: Partial<ICaracteristicaInmueble>
-): Promise<any> => {
+  barrio: string,
+  ciudad: string,
+  infoParcial?: Partial<ICaracteristicaInmueble>
+) => {
   try {
-    // Realizar análisis completo del inmueble
-    const resultadoAnalisis = await caracteristicasDetectadas(descripcion, ubicacion);
+    let caracteristicas: ICaracteristicaInmueble;
 
-    if ('message' in resultadoAnalisis) {
-      throw new Error(resultadoAnalisis.message);
+    if (!infoParcial || Object.keys(infoParcial).length === 0) {
+      const extraidas = await geminiClient.extraerCaracteristicas(descripcion);
+
+      if ('message' in extraidas) {
+        throw new Error(extraidas.message);
+      }
+
+      caracteristicas = extraidas;
+    } else {
+      caracteristicas = {
+        tipoPropiedad: infoParcial.tipoPropiedad || 'Apartamento',
+        habitaciones: infoParcial.habitaciones || 0,
+        banos: infoParcial.banos || 0,
+        metrosCuadrados: infoParcial.metrosCuadrados || 0,
+        garaje: infoParcial.garaje || false,
+        piscina: infoParcial.piscina || false,
+        jardin: infoParcial.jardin || false,
+        terraza: infoParcial.terraza || false,
+        ubicacion: infoParcial.ubicacion || `${barrio}, ${ciudad}`,
+        antiguedad: infoParcial.antiguedad || (new Date().getFullYear() - 2020)
+      };
     }
 
-    const datosMercado = await obtenerEstadisticasMercado(
-      ubicacion || 'Centro',
-      resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
-    );
+    // Detectar zona
+    const zona = detectarZonaDesdeUbicacion(caracteristicas.ubicacion!);
+    const datosCiudad = datosMercadoSimulados[ciudad as keyof typeof datosMercadoSimulados];
+    const datosZona = (datosCiudad?.[zona as keyof typeof datosCiudad] as any)?.[caracteristicas.tipoPropiedad];
 
-    const comparativa = await compararPropiedadesSimilares(
-      resultadoAnalisis.caracteristicasDetectadas,
-      datosMercado.precioPromedio // o el valor correcto
-    );
 
-    const tendencias = await analizarTendenciasMercado(
-      ubicacion || 'Centro',
-      resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
-    );
+    if (!datosZona) {
+      throw new Error(`No hay datos disponibles para ${caracteristicas.tipoPropiedad} en la zona ${zona} de ${ciudad}`);
+    }
 
-    
-    // Calcular estimación de precio basado en datos del mercado
-const estimacion = {
-  precioEstimado: datosMercado.precioPromedio,
-  rangoMinimo: datosMercado.precioPromedio * 0.95,
-  rangoMaximo: datosMercado.precioPromedio * 1.05
-};
+    const estimacion = await geminiClient.estimarPrecio(caracteristicas, datosZona);
 
-// Estructurar el informe completo
-return {
-  fechaInforme: new Date().toISOString().split('T')[0],
-  codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
-  resultadoAnalisis,
-  datosMercado,
-  comparativaCompetitiva: comparativa,
-  tendenciasMercado: tendencias,
-  conclusiones: {
-    valorOptimo: estimacion.precioEstimado,
-    rangoNegociacion: {
-      minimo: estimacion.rangoMinimo,
-      maximo: estimacion.rangoMaximo
-    },
-    estrategiaRecomendada:
-      comparativa.posicionCompetitiva === 'Por encima del mercado'
-        ? 'Ajustar precio para alinearse con el mercado'
-        : 'Mantener precio destacando características distintivas',
-    tiempoEstimadoVenta: comparativa.tiempoEstimadoVenta
-  },
-  metodologiaValoracion: [
-    'Análisis comparativo de mercado',
-    'Evaluación de características y estado',
-    'Proyección de tendencias inmobiliarias',
-    'Inteligencia artificial avanzada'
-  ]
-};
+    if ('message' in estimacion) {
+      throw new Error(estimacion.message);
+    }
 
-  } catch (error) {
-    console.error('Error al generar informe de valoración:', error);
-    
-    // Devolver un informe básico en caso de error
     return {
-      fechaInforme: new Date().toISOString().split('T')[0],
-      codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
-      mensaje: 'No se pudo generar el informe detallado debido a un error técnico',
-      recomendacion: 'Intente de nuevo más tarde o contacte con nuestro servicio de atención al cliente'
+      caracteristicasDetectadas: caracteristicas,
+      estimacionPrecio: estimacion,
+      resumenIA: '' // Opcional: puedes generar aquí un resumen si quieres
     };
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Error en la valoración automática');
   }
 };
