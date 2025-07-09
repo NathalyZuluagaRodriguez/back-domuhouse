@@ -10,6 +10,9 @@ interface DecodedToken {
 
 // Middleware para validar el token sin filtrar por rol
 export const validateToken = (req: Request, res: Response, next: NextFunction) => {
+  console.log("🚀 MIDDLEWARE - Iniciando validación de token");
+  console.log("🔍 MIDDLEWARE - URL:", req.originalUrl);
+  console.log("🔍 MIDDLEWARE - Method:", req.method);
   try {
     const authHeader = req.headers.authorization;
 

@@ -20,9 +20,11 @@ interface NewRealEstate {
   num_properties: number;
   department: string;
   city: string;
-  adress: string;
+  address: string;
   description: string;
   person_id: number;
+    logo_url?: string; // ✅ Agregar logo_url
+
 }
 
 const findByNameOrEmail = async (name_realestate: string, email: string): Promise<boolean> => {
@@ -40,19 +42,26 @@ const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
     phone,
     department,
     city,
-    adress,
+    address,
     description,
     email,
     num_properties,
     person_id,
+    logo_url, // ✅ Agregar logo_url
   } = data;
-
+  
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO RealEstate (name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id]
+    `INSERT INTO RealEstate (
+      name_realestate, nit, phone, email, num_properties, 
+      description, department, city, address, person_id, logo_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // ✅ Agregar ? para logo_url
+    [
+      name_realestate, nit, phone, email, num_properties, 
+      description, department, city, address, person_id, 
+      logo_url || null // ✅ Agregar logo_url
+    ]
   );
-
+  
   return result.affectedRows === 1;
 };
 

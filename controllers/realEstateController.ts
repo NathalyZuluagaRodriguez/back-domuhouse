@@ -1,30 +1,80 @@
 import { Request, Response } from "express";
 import realEstateServices from "../services/realEstateServices";
-import pool from "../config/config-db"
+import pool from "../config/config-db";
 import { RowDataPacket } from "mysql2";
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
 
+// Configurar Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Configurar multer para almacenamiento en memoria
+const storage = multer.memoryStorage();
+export const uploadLogo = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB límite
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      // ✅ Corrección: usar null en lugar de new Error()
+      cb(null, false);
+    }
+  }
+});
+
+// Interfaz actualizada para incluir logo_url
 interface RealEstate extends RowDataPacket {
   id: number;
   name_realestate: string;
   nit: string;
   responsible: string;
-  adress: string;
+  address: string;
   city: string;
   phone: string;
   email: string;
   description: string;
+  logo_url?: string;
   images?: string[];
 }
 
-
+// Función helper para subir a Cloudinary
+const uploadToCloudinary = (buffer: Buffer, folder: string = 'real-estate-logos'): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'image',
+        transformation: [
+          { width: 300, height: 300, crop: 'limit' },
+          { quality: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    ).end(buffer);
+  });
+};
 
 /**
- * Handler para registrar una nueva inmobiliaria.
+ * Handler para registrar una nueva inmobiliaria con logo.
  */
 const registerRealEstate = async (req: Request, res: Response) => {
   try {
     const data = req.body;
-
+    const logoFile = req.file; // Archivo de logo subido
+    
     const fields = [
       "name_realestate",
       "nit",
@@ -33,22 +83,62 @@ const registerRealEstate = async (req: Request, res: Response) => {
       "department",
       "num_properties",
       "city",
-      "adress",
+      "address",
       "description",
       "person_id"
     ];
+
+    // Validar campos requeridos
     for (const field of fields) {
       if (!data[field as keyof typeof data]) {
         return res.status(400).json({ message: `Missing field: ${field}` });
       }
     }
 
-    await realEstateServices.registerRealEstate(data);
-    return res.status(201).json({ message: "Real estate registered successfully." });
+    // ✅ Validar tipo de archivo si se subió uno
+    if (req.file && !req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ 
+        message: 'Solo se permiten archivos de imagen para el logo' 
+      });
+    }
+
+    let logoUrl: string | null = null;
+
+    // Subir logo a Cloudinary si se proporcionó
+    if (logoFile) {
+      try {
+        console.log('📸 Subiendo logo a Cloudinary...');
+        const uploadResult = await uploadToCloudinary(logoFile.buffer);
+        logoUrl = uploadResult.secure_url;
+        console.log('✅ Logo subido exitosamente:', logoUrl);
+      } catch (uploadError) {
+        console.error('❌ Error subiendo logo a Cloudinary:', uploadError);
+        return res.status(400).json({ 
+          message: 'Error al subir el logo. Por favor intenta de nuevo.' 
+        });
+      }
+    }
+
+    // Agregar logo URL a los datos
+    const realEstateData = {
+      ...data,
+      logo_url: logoUrl
+    };
+    console.log('🔍 Datos enviados al servicio:', realEstateData); // ✅ Debug
+
+    await realEstateServices.registerRealEstate(realEstateData);
+    
+    return res.status(201).json({ 
+      message: "Real estate registered successfully.",
+      logo_url: logoUrl 
+    });
+    
   } catch (error: any) {
+    console.error('❌ Error registrando inmobiliaria:', error);
     return res.status(400).json({ message: error.message });
   }
-}; // ← Cierre completo de registerRealEstate
+};
+// ← Cierre completo de registerRealEstate
 
 /**
  * Handler para obtener todas las inmobiliarias registradas.
@@ -132,7 +222,7 @@ export const getRealEstateById = async (req: Request, res: Response) => {
       email: realEstate.email,
       department: realEstate.department,
       city: realEstate.city,
-      address: realEstate.address, // ✅ Mapear correctamente adress -> address
+      address: realEstate.address, // ✅ Mapear correctamente address
       description: realEstate.description,
       person_id: realEstate.person_id,
       encargado_nombre: encargadoNombre,
@@ -190,7 +280,7 @@ export const updateRealEstate = async (req: Request, res: Response) => {
         email = ?, 
         department = ?, 
         city = ?, 
-        address = ?, -- ✅ Usar 'adress' (como está en la BD)
+        address = ?, -- ✅ Usar (como está en la BD)
         description = ?
       WHERE id = ? AND person_id = ?`,
       [name_realestate, nit, phone, email, department, city, address, description, id, person_id],
