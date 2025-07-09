@@ -9,6 +9,7 @@ export interface ICaracteristicaInmueble {
     terraza: boolean;
     ubicacion?: string;
     antiguedad?: number;
+    estrato?: number;
   }
   
   export interface IEstimacionPrecio {

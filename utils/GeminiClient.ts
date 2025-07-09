@@ -43,7 +43,8 @@ Responde SOLO con un JSON válido:
   "jardin": boolean,
   "terraza": boolean,
   "ubicacion": string,
-  "antiguedad": number
+  "antiguedad": number,
+  "estrato": number
 }
 
 Descripción: ${descripcion}`;
@@ -68,7 +69,8 @@ Descripción: ${descripcion}`;
         jardin: parsed.jardin === true || parsed.jardin === 'true',
         terraza: parsed.terraza === true || parsed.terraza === 'true',
         ubicacion: parsed.ubicacion || 'No especificado',
-        antiguedad: parsed.antiguedad || 0
+        antiguedad: parsed.antiguedad || 0,
+        estrato: Number(parsed.estrato) || undefined
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error inesperado al procesar la descripción';

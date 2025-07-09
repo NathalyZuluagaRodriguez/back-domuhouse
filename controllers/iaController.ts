@@ -67,3 +67,39 @@ export const analizarTendenciasAvanzado = async (req: Request, res: Response): P
     responseFormatter.error(res, 'Error en el análisis de tendencias de mercado', 500);
   }
 };
+
+export const calcularValoracionAutomatica = async (req: Request, res: Response) => {
+  try {
+    const {
+      ciudad,
+      barrio,
+      tipoPropiedad,
+      estrato,
+      habitaciones,
+      banos,
+      garaje,
+      areaConstruida,
+      descripcion
+    } = req.body;
+
+    if (!descripcion || !ciudad || !tipoPropiedad || !areaConstruida) {
+      return responseFormatter.error(res, 'Faltan datos para hacer la valoración', 400);
+    }
+
+    const resultado = await iaService.generarInformeValoracion(descripcion, barrio || ciudad, {
+      tipoPropiedad,
+      estrato,
+      habitaciones,
+      banos,
+      garaje,
+      metrosCuadrados: areaConstruida,
+      antiguedad: 2025 - new Date().getFullYear(), // o calcula desde otro dato
+    });
+
+    return responseFormatter.success(res, resultado, 'Valoración automática generada con éxito');
+  } catch (error) {
+    console.error('Error en valoración automática:', error);
+    return responseFormatter.error(res, 'No se pudo realizar la valoración automática');
+  }
+};
+

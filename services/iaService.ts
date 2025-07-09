@@ -30,97 +30,118 @@ interface IZonasMercado {
 }
 
 const datosMercadoSimulados: IZonasMercado = {
-  'Centro': {
-    'Casa': {
-      precioPromedio: 350000,
-      precioMinimo: 200000,
-      precioMaximo: 500000,
-      metrosCuadradosPromedio: 120,
-      ofertaDisponible: 25,
-      tendencia: 'alza'
+  Bogotá: {
+    Centro: {
+      precioPromedio: 4500000, precioMinimo: 3000000, precioMaximo: 7000000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 120, tendencia: 'estable'
     },
-    'Apartamento': {
-      precioPromedio: 180000,
-      precioMinimo: 120000,
-      precioMaximo: 250000,
-      metrosCuadradosPromedio: 75,
-      ofertaDisponible: 43,
-      tendencia: 'estable'
+    Norte: {
+      precioPromedio: 6500000, precioMinimo: 5000000, precioMaximo: 8000000,
+      metrosCuadradosPromedio: 85, ofertaDisponible: 90, tendencia: 'alza'
+    },
+    Sur: {
+      precioPromedio: 3800000, precioMinimo: 2500000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 85, ofertaDisponible: 100, tendencia: 'estable'
+    },
+    Este: {
+      precioPromedio: 5400000, precioMinimo: 4500000, precioMaximo: 6500000,
+      metrosCuadradosPromedio: 85, ofertaDisponible: 90, tendencia: 'estable'
+    },
+    Oeste: {
+      precioPromedio: 4800000, precioMinimo: 4000000, precioMaximo: 6500000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 110, tendencia: 'estable'
     }
   },
-  'Sur': {
-    'Casa': {
-      precioPromedio: 280000,
-      precioMinimo: 180000,
-      precioMaximo: 420000,
-      metrosCuadradosPromedio: 150,
-      ofertaDisponible: 18,
-      tendencia: 'alza'
+  Medellín: {
+    Centro: {
+      precioPromedio: 3905405, precioMinimo: 3000000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 90, tendencia: 'alza'
     },
-    'Apartamento': {
-      precioPromedio: 150000,
-      precioMinimo: 100000,
-      precioMaximo: 220000,
-      metrosCuadradosPromedio: 85,
-      ofertaDisponible: 32,
-      tendencia: 'estable'
+    Norte: {
+      precioPromedio: 6626127, precioMinimo: 5500000, precioMaximo: 8000000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 70, tendencia: 'alza'
+    },
+    Sur: {
+      precioPromedio: 3905405, precioMinimo: 3000000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 80, tendencia: 'estable'
+    },
+    Este: {
+      precioPromedio: 6426000, precioMinimo: 5000000, precioMaximo: 8000000,
+      metrosCuadradosPromedio: 85, ofertaDisponible: 60, tendencia: 'alza'
+    },
+    Oeste: {
+      precioPromedio: 4264000, precioMinimo: 3000000, precioMaximo: 6000000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 60, tendencia: 'estable'
     }
   },
-  'Norte': {
-    'Casa': {
-      precioPromedio: 380000,
-      precioMinimo: 220000,
-      precioMaximo: 550000,
-      metrosCuadradosPromedio: 140,
-      ofertaDisponible: 22,
-      tendencia: 'alza'
+  Cali: {
+    Centro: {
+      precioPromedio: 4560000, precioMinimo: 3000000, precioMaximo: 6500000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 50, tendencia: 'estable'
     },
-    'Apartamento': {
-      precioPromedio: 200000,
-      precioMinimo: 130000,
-      precioMaximo: 280000,
-      metrosCuadradosPromedio: 90,
-      ofertaDisponible: 38,
-      tendencia: 'alza'
+    Norte: {
+      precioPromedio: 4500000, precioMinimo: 3200000, precioMaximo: 7000000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 40, tendencia: 'alza'
+    },
+    Sur: {
+      precioPromedio: 3500000, precioMinimo: 2500000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 85, ofertaDisponible: 60, tendencia: 'estable'
+    },
+    Este: {
+      precioPromedio: 4000000, precioMinimo: 3000000, precioMaximo: 5500000,
+      metrosCuadradosPromedio: 80, ofertaDisponible: 45, tendencia: 'estable'
+    },
+    Oeste: {
+      precioPromedio: 3800000, precioMinimo: 2800000, precioMaximo: 5200000,
+      metrosCuadradosPromedio: 78, ofertaDisponible: 50, tendencia: 'estable'
     }
   },
-  'Este': {
-    'Casa': {
-      precioPromedio: 320000,
-      precioMinimo: 190000,
-      precioMaximo: 460000,
-      metrosCuadradosPromedio: 130,
-      ofertaDisponible: 20,
-      tendencia: 'estable'
+  Barranquilla: {
+    Centro: {
+      precioPromedio: 3790000, precioMinimo: 3000000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 70, ofertaDisponible: 50, tendencia: 'alza'
     },
-    'Apartamento': {
-      precioPromedio: 170000,
-      precioMinimo: 110000,
-      precioMaximo: 240000,
-      metrosCuadradosPromedio: 80,
-      ofertaDisponible: 35,
-      tendencia: 'estable'
+    Norte: {
+      precioPromedio: 4230000, precioMinimo: 3000000, precioMaximo: 6000000,
+      metrosCuadradosPromedio: 70, ofertaDisponible: 40, tendencia: 'alza'
+    },
+    Sur: {
+      precioPromedio: 3000000, precioMinimo: 2000000, precioMaximo: 4500000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 45, tendencia: 'estable'
+    },
+    Este: {
+      precioPromedio: 3400000, precioMinimo: 2500000, precioMaximo: 5000000,
+      metrosCuadradosPromedio: 72, ofertaDisponible: 30, tendencia: 'estable'
+    },
+    Oeste: {
+      precioPromedio: 3100000, precioMinimo: 2200000, precioMaximo: 4600000,
+      metrosCuadradosPromedio: 70, ofertaDisponible: 35, tendencia: 'estable'
     }
   },
-  'Oeste': {
-    'Casa': {
-      precioPromedio: 300000,
-      precioMinimo: 180000,
-      precioMaximo: 430000,
-      metrosCuadradosPromedio: 135,
-      ofertaDisponible: 19,
-      tendencia: 'estable'
+  Cartagena: {
+    Centro: {
+      precioPromedio: 6624706, precioMinimo: 4000000, precioMaximo: 10000000,
+      metrosCuadradosPromedio: 70, ofertaDisponible: 45, tendencia: 'alza'
     },
-    'Apartamento': {
-      precioPromedio: 160000,
-      precioMinimo: 105000,
-      precioMaximo: 230000,
-      metrosCuadradosPromedio: 78,
-      ofertaDisponible: 30,
-      tendencia: 'baja'
+    Norte: {
+      precioPromedio: 6200000, precioMinimo: 4000000, precioMaximo: 9000000,
+      metrosCuadradosPromedio: 70, ofertaDisponible: 40, tendencia: 'alza'
+    },
+    Sur: {
+      precioPromedio: 5500000, precioMinimo: 3500000, precioMaximo: 8000000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 30, tendencia: 'alza'
+    },
+    Este: {
+      precioPromedio: 6000000, precioMinimo: 3800000, precioMaximo: 9000000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 25, tendencia: 'alza'
+    },
+    Oeste: {
+      precioPromedio: 5800000, precioMinimo: 3500000, precioMaximo: 8500000,
+      metrosCuadradosPromedio: 75, ofertaDisponible: 25, tendencia: 'alza'
     }
   }
 };
+
 
 // Añadir tipos de propiedades faltantes
 const completarTiposPropiedades = () => {
@@ -132,10 +153,10 @@ const completarTiposPropiedades = () => {
       if (!datosMercadoSimulados[zona][tipo]) {
         // Crear datos por defecto para los tipos faltantes
         datosMercadoSimulados[zona][tipo] = {
-          precioPromedio: tipo === 'Terreno' ? 200000 : tipo === 'Local Comercial' ? 250000 : 230000,
-          precioMinimo: tipo === 'Terreno' ? 120000 : tipo === 'Local Comercial' ? 150000 : 140000,
-          precioMaximo: tipo === 'Terreno' ? 300000 : tipo === 'Local Comercial' ? 380000 : 350000,
-          metrosCuadradosPromedio: tipo === 'Terreno' ? 500 : tipo === 'Local Comercial' ? 100 : 90,
+          precioPromedio: tipo === 'Terreno' ? 200000000 : tipo === 'Local Comercial' ? 250000000 : 230000000,
+          precioMinimo: tipo === 'Terreno' ? 120000000 : tipo === 'Local Comercial' ? 150000000 : 140000000,
+          precioMaximo: tipo === 'Terreno' ? 300000000 : tipo === 'Local Comercial' ? 380000000 : 350000000,
+          metrosCuadradosPromedio: tipo === 'Terreno' ? 500000 : tipo === 'Local Comercial' ? 100000 : 900000,
           ofertaDisponible: 15,
           tendencia: 'estable'
         };

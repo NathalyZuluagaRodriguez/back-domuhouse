@@ -15,4 +15,6 @@ router.get('/mercado', iaController.obtenerDatosMercado);
 // Nueva ruta para análisis de tendencias avanzado
 router.post('/analisis-tendencias', iaController.analizarTendenciasAvanzado);
 
+router.post('/valorar-propiedad', iaController.calcularValoracionAutomatica);
+
 export default router;
