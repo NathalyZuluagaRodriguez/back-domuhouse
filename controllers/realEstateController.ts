@@ -16,6 +16,8 @@ interface RealEstate extends RowDataPacket {
   images?: string[];
 }
 
+
+
 /**
  * Handler para registrar una nueva inmobiliaria.
  */
@@ -69,21 +71,24 @@ export const getRealEstateStatistics = async (req: Request, res: Response) => {
     }
 };
 
-export const updateRealEstate = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const {
-    name_realestate,
-    nit,
-    phone,
-    email,
-    department,
-    city,
-    address,
-    description
-  } = req.body;
-
+// controllers/realEstateController.ts (fragmento relevante corregido)
+const updateRealEstate = async (req: Request, res: Response) => {
   try {
-    await pool.query("CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    const {
+      name_realestate,
+      nit,
+      phone,
+      email,
+      department,
+      city,
+      address,
+      description,
+      person_id // ✅ Asegúrate de recibir el nuevo ID del encargado (no el nombre)
+    } = req.body;
+
+    const id = req.params.id;
+
+    await pool.query("CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
       id,
       name_realestate,
       nit,
@@ -92,7 +97,8 @@ export const updateRealEstate = async (req: Request, res: Response) => {
       department,
       city,
       address,
-      description
+      description,
+      person_id
     ]);
 
     res.status(200).json({ message: "Inmobiliaria actualizada correctamente" });
@@ -102,28 +108,40 @@ export const updateRealEstate = async (req: Request, res: Response) => {
   }
 };
 
-export const getRealEstateById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
 
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT re.*, p.name_person AS encargado_nombre 
-       FROM realestate re 
-       JOIN person p ON re.person_id = p.person_id 
-       WHERE re.id = ?`,
+
+export const getRealEstateById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // Datos de la inmobiliaria y nombre del encargado
+    const [realEstateRows]: any[] = await pool.query(
+      `SELECT r.*, CONCAT(p.name_person, ' ', p.last_name) AS encargado_nombre
+       FROM realestate r
+       LEFT JOIN Person p ON r.person_id = p.person_id
+       WHERE r.id = ?`,
       [id]
     );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Inmobiliaria no encontrada" });
-    }
+    const realEstate = realEstateRows[0];
 
-    res.json(rows[0]);
+    // Lista de todos los administradores disponibles
+    const [admins]: any[] = await pool.query(
+      `SELECT person_id, CONCAT(name_person, ' ', last_name) AS full_name
+       FROM Person
+       WHERE role_id = 1`
+    );
+
+    res.json({
+      realEstate,
+      admins
+    });
   } catch (error) {
-    console.error("❌ Error al obtener inmobiliaria por ID:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    console.error("❌ Error al obtener inmobiliaria:", error);
+    res.status(500).json({ error: "Error al obtener la inmobiliaria" });
   }
 };
+
 
 
 export const deleteRealEstate = async (req: Request, res: Response) => {
