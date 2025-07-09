@@ -1,3 +1,4 @@
+// ===== REPOSITORIO (realEstatesRepositorys.ts) =====
 import db from '../config/config-db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
@@ -12,17 +13,18 @@ export const checkRealEstateExists = async (realEstateId: number): Promise<boole
   return result[0]['COUNT(*)'] > 0;
 };
 
+// ✅ INTERFACE MODIFICADA - num_properties REMOVIDO
 interface NewRealEstate {
   name_realestate: string;
   nit: string;
   phone: string;
   email: string;
-  num_properties: number;
   department: string;
   city: string;
   adress: string;
   description: string;
   person_id: number;
+  logo_url?: string; 
 }
 
 const findByNameOrEmail = async (name_realestate: string, email: string): Promise<boolean> => {
@@ -33,6 +35,7 @@ const findByNameOrEmail = async (name_realestate: string, email: string): Promis
   return rows.length > 0;
 };
 
+// ✅ FUNCIÓN MODIFICADA - num_properties REMOVIDO DE LA INSERCIÓN
 const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
   const {
     name_realestate,
@@ -43,14 +46,15 @@ const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
     adress,
     description,
     email,
-    num_properties,
     person_id,
+    logo_url,
   } = data;
 
+  // ✅ QUERY MODIFICADA - num_properties removido
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO RealEstate (name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id)
+    `INSERT INTO RealEstate (name_realestate, nit, phone, email, description, department, city, adress, person_id, logo_url)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name_realestate, nit, phone, email, num_properties, description, department, city, adress, person_id]
+    [name_realestate, nit, phone, email, description, department, city, adress, person_id, logo_url]
   );
 
   return result.affectedRows === 1;
@@ -86,7 +90,7 @@ export const getAllRealEstates = async (): Promise<RowDataPacket[]> => {
   return rows;
 };
 
-// 🆕 Tipo y función para estadísticas de inmobiliarias
+// ✅ FUNCIÓN MODIFICADA - Ahora cuenta propiedades dinámicamente
 type RealEstateStatsResult = RowDataPacket & {
   total_properties: number;
   total_real_estates: number;
