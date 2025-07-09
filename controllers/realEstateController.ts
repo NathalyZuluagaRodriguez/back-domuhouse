@@ -1,33 +1,81 @@
 // ===== CONTROLADOR (realEstateController.ts) =====
 import { Request, Response } from "express";
 import realEstateServices from "../services/realEstateServices";
-import pool from "../config/config-db"
+import pool from "../config/config-db";
 import { RowDataPacket } from "mysql2";
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
 
+// Configurar Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Configurar multer para almacenamiento en memoria
+const storage = multer.memoryStorage();
+export const uploadLogo = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB límite
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      // ✅ Corrección: usar null en lugar de new Error()
+      cb(null, false);
+    }
+  }
+});
+
+// Interfaz actualizada para incluir logo_url
 interface RealEstate extends RowDataPacket {
   id: number;
   name_realestate: string;
   nit: string;
   responsible: string;
-  adress: string;
+  address: string;
   city: string;
   phone: string;
   email: string;
   description: string;
+  logo_url?: string;
   images?: string[];
 }
-import cloudinary from "../config/cloudinary";
-import fs from 'fs';
+
+// Función helper para subir a Cloudinary
+const uploadToCloudinary = (buffer: Buffer, folder: string = 'real-estate-logos'): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'image',
+        transformation: [
+          { width: 300, height: 300, crop: 'limit' },
+          { quality: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    ).end(buffer);
+  });
+};
 
 /**
- * Handler para registrar una nueva inmobiliaria.
+ * Handler para registrar una nueva inmobiliaria con logo.
  */
 const registerRealEstate = async (req: Request, res: Response) => {
   try {
     const data = req.body;
-    let logoUrl = null;
-
-    // ✅ CAMPO num_properties REMOVIDO DE LA VALIDACIÓN
+    const logoFile = req.file; // Archivo de logo subido
+    
     const fields = [
       "name_realestate",
       "nit",
@@ -35,58 +83,62 @@ const registerRealEstate = async (req: Request, res: Response) => {
       "email",
       "department",
       "city",
-      "adress",
+      "address",
       "description",
       "person_id"
     ];
-    
+
+    // Validar campos requeridos
     for (const field of fields) {
       if (!data[field as keyof typeof data]) {
         return res.status(400).json({ message: `Missing field: ${field}` });
       }
     }
 
-    if (req.file) {
-      try {
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'inmobiliarias/logos',
-          public_id: `logo_${data.name_realestate.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
-          transformation: [
-            { width: 300, height: 300, crop: 'fit' },
-            { quality: 'auto' },
-            { format: 'auto' }
-          ]
-        });
+    // ✅ Validar tipo de archivo si se subió uno
+    if (req.file && !req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ 
+        message: 'Solo se permiten archivos de imagen para el logo' 
+      });
+    }
 
-        logoUrl = result.secure_url;
-        
-        // Eliminar el archivo temporal
-        fs.unlinkSync(req.file.path);
+    let logoUrl: string | null = null;
+
+    // Subir logo a Cloudinary si se proporcionó
+    if (logoFile) {
+      try {
+        console.log('📸 Subiendo logo a Cloudinary...');
+        const uploadResult = await uploadToCloudinary(logoFile.buffer);
+        logoUrl = uploadResult.secure_url;
+        console.log('✅ Logo subido exitosamente:', logoUrl);
       } catch (uploadError) {
-        console.error('Error uploading logo to Cloudinary:', uploadError);
-        // Eliminar el archivo temporal en caso de error
-        if (req.file && req.file.path) {
-          fs.unlinkSync(req.file.path);
-        }
-        return res.status(500).json({ message: 'Error uploading logo' });
+        console.error('❌ Error subiendo logo a Cloudinary:', uploadError);
+        return res.status(400).json({ 
+          message: 'Error al subir el logo. Por favor intenta de nuevo.' 
+        });
       }
     }
 
-    // Agregar la URL del logo a los datos
+    // Agregar logo URL a los datos
     const realEstateData = {
       ...data,
       logo_url: logoUrl
     };
+    console.log('🔍 Datos enviados al servicio:', realEstateData); // ✅ Debug
 
     await realEstateServices.registerRealEstate(realEstateData);
-    return res.status(201).json({ message: "Real estate registered successfully.", logo_url: logoUrl });
+    
+    return res.status(201).json({ 
+      message: "Real estate registered successfully.",
+      logo_url: logoUrl 
+    });
+    
   } catch (error: any) {
-    if (req.file && req.file.path) {
-      fs.unlinkSync(req.file.path);
-    }
+    console.error('❌ Error registrando inmobiliaria:', error);
     return res.status(400).json({ message: error.message });
   }
 };
+// ← Cierre completo de registerRealEstate
 
 /**
  * Handler para obtener todas las inmobiliarias registradas.
@@ -110,61 +162,149 @@ export const getRealEstateStatistics = async (req: Request, res: Response) => {
     }
 };
 
-export const updateRealEstate = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const {
-    name_realestate,
-    nit,
-    phone,
-    email,
-    department,
-    city,
-    address,
-    description
-  } = req.body;
-
-  try {
-    await pool.query("CALL sp_update_real_estate(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-      id,
-      name_realestate,
-      nit,
-      phone,
-      email,
-      department,
-      city,
-      address,
-      description
-    ]);
-
-    res.status(200).json({ message: "Inmobiliaria actualizada correctamente" });
-  } catch (error) {
-    console.error("❌ Error al actualizar inmobiliaria:", error);
-    res.status(500).json({ error: "Error al actualizar la inmobiliaria" });
-  }
-};
-
 export const getRealEstateById = async (req: Request, res: Response) => {
+  const { id } = req.params
+
+  console.log("🔍 [getRealEstateById] ID recibido:", id)
+
   try {
-    const { id } = req.params;
-
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT re.*, p.name_person AS encargado_nombre 
-       FROM realestate re 
-       JOIN person p ON re.person_id = p.person_id 
-       WHERE re.id = ?`,
-      [id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Inmobiliaria no encontrada" });
+    // Validar ID
+    if (!id || isNaN(Number(id))) {
+      console.log("❌ ID inválido")
+      return res.status(400).json({
+        success: false,
+        message: "ID de inmobiliaria inválido",
+      })
     }
 
-    res.json(rows[0]);
+    // Consulta SQL simplificada - SIN JOIN primero para probar
+    console.log("📊 Ejecutando consulta básica...")
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM realestate WHERE id = ?", [id])
+
+    console.log("📊 Resultados encontrados:", rows.length)
+    console.log("📊 Datos:", rows)
+
+    if (rows.length === 0) {
+      console.log("❌ Inmobiliaria no encontrada")
+      return res.status(404).json({
+        success: false,
+        message: "Inmobiliaria no encontrada",
+      })
+    }
+
+    const realEstate = rows[0]
+
+    // Intentar obtener el nombre del encargado por separado
+    let encargadoNombre = "Sin encargado"
+    if (realEstate.person_id) {
+      try {
+        console.log("👤 Buscando persona con ID:", realEstate.person_id)
+        const [personRows] = await pool.query<RowDataPacket[]>(
+          "SELECT name_person, last_name FROM Person WHERE person_id = ?",
+          [realEstate.person_id],
+        )
+
+        if (personRows.length > 0) {
+          encargadoNombre = `${personRows[0].name_person} ${personRows[0].last_name}`
+          console.log("👤 Encargado encontrado:", encargadoNombre)
+        }
+      } catch (personError) {
+        console.warn("⚠️ Error al obtener persona:", personError)
+        // Continuar sin el nombre del encargado
+      }
+    }
+
+    // Preparar respuesta
+    const response = {
+      id: realEstate.id,
+      name_realestate: realEstate.name_realestate,
+      nit: realEstate.nit,
+      phone: realEstate.phone,
+      email: realEstate.email,
+      department: realEstate.department,
+      city: realEstate.city,
+      address: realEstate.address, // ✅ Mapear correctamente address
+      description: realEstate.description,
+      person_id: realEstate.person_id,
+      encargado_nombre: encargadoNombre,
+      images: [], // Array vacío por ahora
+    }
+
+    console.log("✅ Respuesta preparada:", response)
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    })
   } catch (error) {
-    console.error("❌ Error al obtener inmobiliaria por ID:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    console.error("❌ Error completo:", error)
+
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: errorMessage,
+      details:
+        process.env.NODE_ENV === "development"
+          ? {
+              stack: error instanceof Error ? error.stack : undefined,
+              id: id,
+            }
+          : undefined,
+    })
   }
-};
+}
+
+// Actualizar inmobiliaria
+export const updateRealEstate = async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { name_realestate, nit, phone, email, department, city, address, description, person_id } = req.body
+
+  console.log("🔄 Actualizando inmobiliaria ID:", id)
+  console.log("📝 Datos recibidos:", req.body)
+
+  try {
+    if (!person_id) {
+      return res.status(400).json({
+        success: false,
+        error: "El campo person_id es obligatorio",
+      })
+    }
+
+    // Actualizar con SQL directo
+    const [result] = await pool.query(
+      `UPDATE realestate SET 
+        name_realestate = ?, 
+        nit = ?, 
+        phone = ?, 
+        email = ?, 
+        department = ?, 
+        city = ?, 
+        address = ?, -- ✅ Usar (como está en la BD)
+        description = ?
+      WHERE id = ? AND person_id = ?`,
+      [name_realestate, nit, phone, email, department, city, address, description, id, person_id],
+    )
+
+    console.log("✅ Actualización completada:", result)
+
+    res.status(200).json({
+      success: true,
+      message: "Inmobiliaria actualizada correctamente",
+    })
+  } catch (error) {
+    console.error("❌ Error al actualizar:", error)
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+    })
+  }
+}
+
+
 
 
 export const deleteRealEstate = async (req: Request, res: Response) => {

@@ -1051,3 +1051,45 @@ export const getPropertiesWithMainImages = async (req: Request, res: Response) =
     })
   }
 }
+
+// Tipo para una propiedad
+type MyProperty = {
+  property_id: number;
+  property_title: string;
+  address: string;
+  description: string;
+  image: string;
+  price: number;
+  status: string;
+  operation_type: string;
+  bedrooms: number;
+  bathrooms: number;
+  parking_spaces: number;
+  built_area: number;
+  total_area: number;
+  publish_date: string;
+};
+
+// Tipo para el resultado del SP
+type PropertyQueryResult = [MyProperty[], { total_properties: number }[]];
+
+export const getMyProperties = async (req: Request, res: Response) => {
+  const { personId } = req.params;
+
+  try {
+    const [rows]: any = await Promisepool.query('CALL sp_get_properties_by_user(?)', [personId]);
+
+    const properties = rows[0];
+    const total = rows[1][0].total_properties;
+
+    res.json({
+      properties,
+      total
+    });
+
+  } catch (error) {
+    console.error('❌ Error al obtener las propiedades del usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
