@@ -10,14 +10,16 @@ interface NewRealEstate {
     email: string,
     department: string,
     city: string;
-    adress: string;
+    address: string;
     description: string;
     person_id: number;
-    logo_url?: string;
+    logo_url?: string; 
 }
 
 const registerRealEstate = async (data: NewRealEstate) => {
     try {
+        console.log('🔍 Datos recibidos en servicio:', data); // ✅ Debug
+        
         const personExists = await realEstateRepo.personExists(data.person_id);
         if (!personExists) {
             throw new Error("The person_id is not registered in the database");
@@ -33,7 +35,12 @@ const registerRealEstate = async (data: NewRealEstate) => {
             throw new Error("A real estate with this name or email already exists");
         }
 
-        const created = await realEstateRepo.createRealEstate(data);
+        // ✅ Pasar logo_url al repositorio
+        const created = await realEstateRepo.createRealEstate({
+            ...data,
+            logo_url: data.logo_url // ✅ Asegurar que se pase logo_url
+        });
+        
         if (!created) {
             throw new Error("Error registering the real estate");
         }
@@ -46,8 +53,11 @@ const registerRealEstate = async (data: NewRealEstate) => {
             );
         }
 
+        console.log('✅ Inmobiliaria registrada con logo_url:', data.logo_url); // ✅ Debug
+
         return true;
     } catch (error: any) {
+        console.error('❌ Error en servicio:', error); // ✅ Debug
         throw new Error(error.message);
     }
 };

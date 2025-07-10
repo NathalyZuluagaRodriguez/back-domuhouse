@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import registerRealEstate, { getAllRealEstates, updateRealEstate, getPropertiesByAdmin, getRealEstateStatistics, getRealEstateById, deleteRealEstate } from '../controllers/realEstateController';
+import registerRealEstate, { getAllRealEstates, updateRealEstate, getPropertiesByAdmin, getRealEstateStatistics, getRealEstateById, deleteRealEstate, uploadLogo } from '../controllers/realEstateController';
 import upload from "../config/cloudinary";
 
 const router = Router();
@@ -10,11 +10,11 @@ router.get('/getAllRealEstates', getAllRealEstates);
 router.get('/stats', getRealEstateStatistics);
 
 // Ruta POST para registrar una nueva inmobiliaria (ya existente)
-router.post('/registerRealEstate', registerRealEstate);
+router.post('/register', uploadLogo.single('logo'), registerRealEstate);
 
 // Ruta para obtener las propiedades
 router.get('/admin/:adminId/properties', getPropertiesByAdmin);
-
+router.put('/:id', uploadLogo.single('logo'), updateRealEstate);
 
 router.put("/realestate/:id", updateRealEstate);
 
