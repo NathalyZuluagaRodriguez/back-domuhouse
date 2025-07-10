@@ -1,4 +1,3 @@
-// ===== REPOSITORIO (realEstatesRepositorys.ts) =====
 import db from '../config/config-db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
@@ -13,12 +12,12 @@ export const checkRealEstateExists = async (realEstateId: number): Promise<boole
   return result[0]['COUNT(*)'] > 0;
 };
 
-// ✅ INTERFACE MODIFICADA - num_properties REMOVIDO
 interface NewRealEstate {
   name_realestate: string;
   nit: string;
   phone: string;
   email: string;
+  num_properties: number;
   department: string;
   city: string;
   address: string;
@@ -36,7 +35,6 @@ const findByNameOrEmail = async (name_realestate: string, email: string): Promis
   return rows.length > 0;
 };
 
-// ✅ FUNCIÓN MODIFICADA - num_properties REMOVIDO DE LA INSERCIÓN
 const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
   const {
     name_realestate,
@@ -47,6 +45,7 @@ const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
     address,
     description,
     email,
+    num_properties,
     person_id,
     logo_url, // ✅ Agregar logo_url
   } = data;
@@ -96,7 +95,7 @@ export const getAllRealEstates = async (): Promise<RowDataPacket[]> => {
   return rows;
 };
 
-// ✅ FUNCIÓN MODIFICADA - Ahora cuenta propiedades dinámicamente
+// 🆕 Tipo y función para estadísticas de inmobiliarias
 type RealEstateStatsResult = RowDataPacket & {
   total_properties: number;
   total_real_estates: number;

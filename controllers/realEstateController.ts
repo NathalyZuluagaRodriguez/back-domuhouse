@@ -68,29 +68,6 @@ const uploadToCloudinary = (buffer: Buffer, folder: string = 'real-estate-logos'
   });
 };
 
-// Función helper para subir a Cloudinary
-const uploadToCloudinary = (buffer: Buffer, folder: string = 'real-estate-logos'): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        folder: folder,
-        resource_type: 'image',
-        transformation: [
-          { width: 300, height: 300, crop: 'limit' },
-          { quality: 'auto' }
-        ]
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      }
-    ).end(buffer);
-  });
-};
-
 /**
  * Handler para registrar una nueva inmobiliaria con logo.
  */
