@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+import path from 'path';
+import fs from 'fs';
 // 📁 Importar todas las rutas
 import "express-session";
 import login from './routes/login';
@@ -26,7 +27,7 @@ import propertiesAdminRoutes from './routes/propertiesAdminRoutes';
 //import clientRoutes from "./routes/clientRoutes";
 import interestRoutes from "./routes/interestRoutes"
 import visitRoutes from './routes/visits.js';
-
+import contractsRoutes from './routes/contractsRoutes';
 
 
 dotenv.config();
@@ -102,6 +103,26 @@ app.use('/login', login);
 // app.use('/roles', rolesRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/ia', iaRoute);
+app.use('/api/contracts', contractsRoutes);
+
+app.get('/mi-inmobiliaria/uploads/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    console.log('Buscando archivo en:', filePath);
+    
+    if (fs.existsSync(filePath)) {
+      res.sendFile(path.resolve(filePath));
+    } else {
+      console.log('Archivo no encontrado:', filePath);
+      res.status(404).send('Archivo no encontrado');
+    }
+  } catch (error) {
+    console.error('Error sirviendo archivo:', error);
+    res.status(500).send('Error del servidor');
+  }
+});
 
 // ✅ Ruta base de salud
 app.get('/', (_req, res) => {

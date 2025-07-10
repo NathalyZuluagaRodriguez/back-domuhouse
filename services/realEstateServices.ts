@@ -1,14 +1,14 @@
-// ===== SERVICIO (realEstateServices.ts) =====
 import realEstateRepo from "../repositories/realEstatesRepositorys";
 import { sendRealEstateConfirmationEmail } from "../utils/sendEmailer"; 
 
-// ✅ INTERFACE MODIFICADA - num_properties REMOVIDO
+// Interface de inmobiliaria
 interface NewRealEstate {
-    name_realestate: string,
-    nit: string,
-    phone: string,
-    email: string,
-    department: string,
+    name_realestate: string;
+    nit: string;
+    phone: string;
+    email: string;
+    num_properties: number;
+    department: string;
     city: string;
     address: string;
     description: string;
