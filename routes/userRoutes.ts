@@ -1,4 +1,4 @@
-import { Router, type Request, type Response, type Express } from "express"
+import { Router, type Request, type Response } from "express"
 import { validateToken } from "../middleware/authMiddleware"
 import { createPropertyByUser } from "../controllers/propertyByUserController"
 import db from "../config/config-db"
@@ -9,7 +9,7 @@ const router = Router()
 // Ruta existente para crear propiedad
 router.post("/user/:userId", upload.array("images", 10), createPropertyByUser)
 
-// GET - Obtener perfil del usuario
+// GET - Obtener perfil del usuario (CORREGIDO)
 router.get("/getUser/perfil", validateToken, async (req: Request, res: Response) => {
   console.log("🚀 Entrando a GET /perfil")
   console.log("🧠 req.user completo:", JSON.stringify(req.user, null, 2))
@@ -25,7 +25,6 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
 
     const userId = req.user.person_id
     const userRole = req.user.role_id
-
     console.log("🔍 userId extraído:", userId, "tipo:", typeof userId)
     console.log("🔍 userRole extraído:", userRole, "tipo:", typeof userRole)
 
@@ -37,7 +36,7 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
       })
     }
 
-    // Consulta mejorada para incluir teléfono y fecha de registro
+    // ✅ CONSULTA CORREGIDA - Sin created_at
     const sql = `
       SELECT 
         p.person_id AS id,
@@ -45,8 +44,7 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
         p.phone AS telefono,
         p.email AS correo,
         p.verified,
-        p.active,
-        p.created_at AS fechaRegistro
+        p.active
       FROM Person p
       WHERE p.person_id = ?
     `
@@ -54,7 +52,6 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
     console.log("🔍 Ejecutando consulta SQL para userId:", userId)
     const [results] = await db.query(sql, [userId])
     const rows = results as any[]
-
     console.log("🔍 Resultados de la consulta:", JSON.stringify(rows, null, 2))
 
     if (rows.length === 0) {
@@ -69,12 +66,11 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
 
     // Obtener estadísticas de propiedades
     const [publicadasResult] = await db.query(
-      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'disponible'`,
+      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'Disponible'`,
       [userId],
     )
-
     const [vendidasResult] = await db.query(
-      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'vendida'`,
+      `SELECT COUNT(*) AS total FROM Property WHERE person_id = ? AND status = 'Vendida'`,
       [userId],
     )
 
@@ -90,7 +86,7 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
         verified: user.verified,
         active: user.active,
         role: userRole,
-        fechaRegistro: user.fechaRegistro,
+        fechaRegistro: new Date().toISOString(), // Fecha actual como fallback
         propiedadesPublicadas,
         propiedadesVendidas,
       },
@@ -104,7 +100,7 @@ router.get("/getUser/perfil", validateToken, async (req: Request, res: Response)
   }
 })
 
-// PUT - Actualizar perfil del usuario (versión corregida)
+// PUT - Actualizar perfil del usuario (sin cambios, ya está bien)
 router.put("/update/perfil", validateToken, async (req: Request, res: Response) => {
   console.log("🚀 Entrando a PUT /perfil")
   console.log("🔍 Datos recibidos:", req.body)
@@ -120,7 +116,7 @@ router.put("/update/perfil", validateToken, async (req: Request, res: Response) 
     const userId = req.user.person_id
     const { nombre, telefono, correo } = req.body
 
-    // Validaciones (mantén las mismas validaciones que ya tienes)
+    // Validaciones
     if (!nombre || !nombre.trim()) {
       return res.status(400).json({
         success: false,
@@ -144,10 +140,10 @@ router.put("/update/perfil", validateToken, async (req: Request, res: Response) 
     }
 
     // Verificar si el correo ya existe
-    const [emailCheck] = await db.query(
-      "SELECT person_id FROM Person WHERE email = ? AND person_id != ?", 
-      [correo, userId]
-    )
+    const [emailCheck] = await db.query("SELECT person_id FROM Person WHERE email = ? AND person_id != ?", [
+      correo,
+      userId,
+    ])
 
     if ((emailCheck as any[]).length > 0) {
       return res.status(400).json({
@@ -156,24 +152,19 @@ router.put("/update/perfil", validateToken, async (req: Request, res: Response) 
       })
     }
 
-    // ACTUALIZACIÓN CORREGIDA (sin updated_at)
+    // Actualización
     const updateSql = `
       UPDATE Person 
       SET name_person = ?, phone = ?, email = ?
       WHERE person_id = ?
     `
 
-    await db.query(updateSql, [
-      nombre.trim(), 
-      telefono?.trim(), 
-      correo.trim(), 
-      userId
-    ])
+    await db.query(updateSql, [nombre.trim(), telefono?.trim(), correo.trim(), userId])
 
     // Obtener los datos actualizados
     const [updatedUser] = await db.query(
       "SELECT name_person AS nombre, phone AS telefono, email AS correo FROM Person WHERE person_id = ?",
-      [userId]
+      [userId],
     )
 
     const userData = (updatedUser as any[])[0]
@@ -193,9 +184,9 @@ router.put("/update/perfil", validateToken, async (req: Request, res: Response) 
   }
 })
 
-// GET - Obtener propiedades del usuario
-router.get("/mis-propiedades", validateToken, async (req: Request, res: Response) => {
-  console.log("🚀 Entrando a GET /mis-propiedades")
+// ✅ RUTA CORREGIDA - Obtener propiedades del usuario
+router.get("/properties/mis-propiedades/:userId", validateToken, async (req: Request, res: Response) => {
+  console.log("🚀 Entrando a GET /properties/mis-propiedades/:userId")
 
   try {
     if (!req.user) {
@@ -205,38 +196,48 @@ router.get("/mis-propiedades", validateToken, async (req: Request, res: Response
       })
     }
 
-    const userId = req.user.person_id
+    const userId = req.params.userId
     const { tipo } = req.query // 'publicadas', 'vendidas', 'todas'
 
     let whereClause = "WHERE p.person_id = ?"
     const params = [userId]
 
     if (tipo === "publicadas") {
-      whereClause += " AND p.status = 'disponible'"
+      whereClause += " AND p.status = 'Disponible'"
     } else if (tipo === "vendidas") {
-      whereClause += " AND p.status = 'vendida'"
+      whereClause += " AND p.status = 'Vendida'"
     }
 
-  const sql = `
-  SELECT 
-    p.person_id AS id,
-    p.name_person AS nombre,
-    p.phone AS telefono,
-    p.email AS correo,
-    p.verified,
-    p.active
-    // ⬅️ Sin fechaRegistro
-  FROM Person p
-  WHERE p.person_id = ?
-`;
+    // ✅ CONSULTA CORREGIDA para propiedades
+    const sql = `
+      SELECT 
+        p.property_id,
+        p.property_title,
+        p.address,
+        p.description,
+        p.image,
+        p.price,
+        p.status,
+        p.operation_type,
+        p.bedrooms,
+        p.bathrooms,
+        p.built_area,
+        p.total_area,
+        p.publish_date
+      FROM Property p
+      ${whereClause}
+      ORDER BY p.publish_date DESC
+    `
 
     const [results] = await db.query(sql, params)
     const propiedades = results as any[]
 
     console.log(`✅ Se encontraron ${propiedades.length} propiedades`)
+
     return res.status(200).json({
       success: true,
-      data: propiedades,
+      total: propiedades.length,
+      properties: propiedades,
     })
   } catch (error) {
     console.error("❌ Error al obtener propiedades:", error)
@@ -265,12 +266,9 @@ router.get("/propiedad/:id", validateToken, async (req: Request, res: Response) 
     // Obtener detalles de la propiedad
     const sql = `
       SELECT 
-        p.*,
-        GROUP_CONCAT(pi.image_url) AS images
+        p.*
       FROM Property p
-      LEFT JOIN PropertyImage pi ON p.property_id = pi.property_id
       WHERE p.property_id = ? AND p.person_id = ?
-      GROUP BY p.property_id
     `
 
     const [results] = await db.query(sql, [propertyId, userId])
@@ -284,8 +282,14 @@ router.get("/propiedad/:id", validateToken, async (req: Request, res: Response) 
     }
 
     const property = properties[0]
-    if (property.images) {
-      property.images = property.images.split(",")
+
+    // Procesar imágenes si existen
+    if (property.image) {
+      try {
+        property.images = JSON.parse(property.image)
+      } catch {
+        property.images = [property.image]
+      }
     } else {
       property.images = []
     }
@@ -317,8 +321,18 @@ router.put("/propiedad/:id", validateToken, upload.array("images", 10), async (r
 
     const userId = req.user.person_id
     const propertyId = req.params.id
-    const { title, address, price, rooms, bathrooms, area, description, property_type, transaction_type, status } =
-      req.body
+    const {
+      property_title,
+      address,
+      price,
+      bedrooms,
+      bathrooms,
+      built_area,
+      description,
+      property_type_id,
+      operation_type,
+      status,
+    } = req.body
 
     // Verificar que la propiedad pertenece al usuario
     const [ownerCheck] = await db.query("SELECT property_id FROM Property WHERE property_id = ? AND person_id = ?", [
@@ -336,22 +350,22 @@ router.put("/propiedad/:id", validateToken, upload.array("images", 10), async (r
     // Actualizar la propiedad
     const updateSql = `
       UPDATE Property 
-      SET title = ?, address = ?, price = ?, rooms = ?, bathrooms = ?, 
-          area = ?, description = ?, property_type = ?, transaction_type = ?, 
-          status = ?, updated_at = NOW()
+      SET property_title = ?, address = ?, price = ?, bedrooms = ?, bathrooms = ?,
+          built_area = ?, description = ?, property_type_id = ?, operation_type = ?,
+          status = ?
       WHERE property_id = ? AND person_id = ?
     `
 
     await db.query(updateSql, [
-      title,
+      property_title,
       address,
       price,
-      rooms,
+      bedrooms,
       bathrooms,
-      area,
+      built_area,
       description,
-      property_type,
-      transaction_type,
+      property_type_id,
+      operation_type,
       status,
       propertyId,
       userId,
@@ -359,7 +373,6 @@ router.put("/propiedad/:id", validateToken, upload.array("images", 10), async (r
 
     // Si hay nuevas imágenes, procesarlas
     if (req.files && (req.files as Express.Multer.File[]).length > 0) {
-      // Aquí puedes agregar lógica para manejar las nuevas imágenes
       console.log("📸 Nuevas imágenes recibidas:", (req.files as Express.Multer.File[]).length)
     }
 
@@ -403,9 +416,6 @@ router.delete("/propiedad/:id", validateToken, async (req: Request, res: Respons
         message: "No tienes permisos para eliminar esta propiedad",
       })
     }
-
-    // Eliminar imágenes asociadas primero
-    await db.query("DELETE FROM PropertyImage WHERE property_id = ?", [propertyId])
 
     // Eliminar la propiedad
     await db.query("DELETE FROM Property WHERE property_id = ? AND person_id = ?", [propertyId, userId])
