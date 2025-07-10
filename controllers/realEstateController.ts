@@ -339,25 +339,6 @@ export const deleteRealEstate = async (req: Request, res: Response) => {
   }
 };
 
-export const getPropertiesByAdmin = async (req: Request, res: Response) => {
-  const { adminId } = req.params;
-
-  try {
-    const [result]: any = await pool.query('CALL GetPropertiesByAdmin(?)', [adminId]);
-
-    const properties = result[0]; // 👈 Accedemos al primer array de resultados
-
-    if (!properties || properties.length === 0) {
-      return res.status(404).json({ message: "No se encontraron propiedades para esta inmobiliaria" });
-    }
-
-    return res.status(200).json(properties);
-  } catch (error) {
-    console.error("❌ Error al ejecutar GetPropertiesByAdmin:", error);
-    return res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-
 
 
 export default registerRealEstate;

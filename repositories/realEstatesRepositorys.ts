@@ -52,11 +52,11 @@ const createRealEstate = async (data: NewRealEstate): Promise<boolean> => {
   
   const [result] = await db.query<ResultSetHeader>(
     `INSERT INTO RealEstate (
-      name_realestate, nit, phone, email, num_properties, 
+      name_realestate, nit, phone, email, 
       description, department, city, address, person_id, logo_url
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // ✅ Agregar ? para logo_url
     [
-      name_realestate, nit, phone, email, num_properties, 
+      name_realestate, nit, phone, email, 
       description, department, city, address, person_id, 
       logo_url || null // ✅ Agregar logo_url
     ]
