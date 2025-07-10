@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import * as iaService from '../services/iaService';
-import { responseFormatter } from '../utils/responseFormatter';
-import {generarInformeValoracion} from '../services/iaService';
-
+import * as responseFormatter from '../utils/responseFormatter';
 
 export const procesarInmueble = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -15,8 +13,8 @@ export const procesarInmueble = async (req: Request, res: Response): Promise<voi
     }
     
     // Procesamiento del inmueble con IA (sin guardarlo en BD)
-    const resultado = await iaService.caracteristicasDetectadas(descripcion, ubicacion);
-    console.log(`resultado ${resultado}`)
+    const resultado = await iaService.analizarInmueble(descripcion, ubicacion, caracteristicas);
+    
     responseFormatter.success(res, resultado, 'Análisis de inmueble exitoso', 200);
   } catch (error) {
     console.error('Error al procesar inmueble:', error);
@@ -49,41 +47,6 @@ export const obtenerDatosMercado = async (req: Request, res: Response): Promise<
   } catch (error) {
     console.error('Error al obtener datos del mercado:', error);
     responseFormatter.error(res, 'Error al obtener datos del mercado inmobiliario', 500);
-  }
-};
-
-export const analizarTendenciasAvanzado = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { zona, tipoPropiedad, factoresAdicionales } = req.body;
-    
-    if (!zona || !tipoPropiedad) {
-      responseFormatter.error(res, 'Se requiere zona y tipo de propiedad para el análisis', 400);
-      return;
-    }
-    
-    const resultado = await iaService.analizarTendenciasMercado(zona, tipoPropiedad, factoresAdicionales);
-    responseFormatter.success(res, resultado, 'Análisis de tendencias de mercado exitoso', 200);
-  } catch (error) {
-    console.error('Error al analizar tendencias de mercado:', error);
-    responseFormatter.error(res, 'Error en el análisis de tendencias de mercado', 500);
-  }
-};
-
-export const calcularValoracionAutomatica = async (req: Request, res: Response) => {
-  try {
-    const { descripcion, barrio, ciudad, ...otros } = req.body;
-
-    const resultado = await generarInformeValoracion(
-      descripcion,
-      barrio || '',
-      ciudad,
-      otros
-    );
-
-    return responseFormatter.success(res, resultado, 'Valoración automática generada con éxito');
-  } catch (error) {
-    console.error('Error en valoración automática:', error);
-    return responseFormatter.error(res, 'No se pudo realizar la valoración automática');
   }
 };
 

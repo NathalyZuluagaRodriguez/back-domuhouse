@@ -6,22 +6,22 @@ interface ApiResponse {
   data: any;
 }
 
-const success = (res: Response, data: any, message: string = '', statusCode: number = 200): Response => {
+export const success = (res: Response, data: any, message: string = '', statusCode: number = 200): Response => {
   const responseBody: ApiResponse = {
     status: 'success',
     message,
     data
   };
+  
   return res.status(statusCode).json(responseBody);
 };
 
-const error = (res: Response, message: string = 'Error en el servidor', statusCode: number = 500): Response => {
+export const error = (res: Response, message: string = 'Error en el servidor', statusCode: number = 500): Response => {
   const responseBody: ApiResponse = {
     status: 'error',
     message,
     data: null
   };
+  
   return res.status(statusCode).json(responseBody);
 };
-
-export const responseFormatter = { success, error };

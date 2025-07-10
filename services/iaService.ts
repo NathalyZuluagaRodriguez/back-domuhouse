@@ -6,21 +6,16 @@ import {
   IDatosMercado
 } from '../models/interfaces';
 import { geminiClient } from '../utils/GeminiClient';
-import { ErrorResponse } from '../models/interfaces';
-
-
 
 // Datos de mercado para complementar la IA
-// En producción, estos datos vendrían de una base de datos actualizada
-interface IMercadoData {
-  zona: string;
-  tipoPropiedad: string;
+export interface IMercadoData {
   precioPromedio: number;
   precioMinimo: number;
   precioMaximo: number;
   metrosCuadradosPromedio: number;
   ofertaDisponible: number;
   tendencia: string;
+  zona: string;
 }
 
 interface ITiposPropiedades {
@@ -32,270 +27,108 @@ interface IZonasMercado {
 }
 
 const datosMercadoSimulados: IZonasMercado = {
-  Bogotá: {
-    Centro: {
+  'Centro': {
+    'Casa': {
       zona: 'Centro',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 450000,
-      precioMinimo: 300000,
-      precioMaximo: 700000,
-      metrosCuadradosPromedio: 85,
-      ofertaDisponible: 90,
-      tendencia: 'alza'
+      precioPromedio: 350000,
+      precioMinimo: 200000,
+      precioMaximo: 500000,
+      metrosCuadradosPromedio: 120,
+      ofertaDisponible: 25,
+      tendencia: 'alza',
     },
-    Norte: {
-      zona: 'Norte',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 6500000,
-      precioMinimo: 5000000,
-      precioMaximo: 8000000,
-      metrosCuadradosPromedio: 85,
-      ofertaDisponible: 90,
-      tendencia: 'alza'
-    },
-    Sur: {
-      zona: 'Sur',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 3800000,
-      precioMinimo: 2500000,
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 85,
-      ofertaDisponible: 100,
-      tendencia: 'estable'
-    },
-    Este: {
-      zona: 'Este',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 5400000,
-      precioMinimo: 4500000,
-      precioMaximo: 6500000,
-      metrosCuadradosPromedio: 85,
-      ofertaDisponible: 90, 
-      tendencia: 'estable'
-    },
-    Oeste: {
-      zona: 'Oeste',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 4800000, 
-      precioMinimo: 4000000, 
-      precioMaximo: 6500000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 110, 
+    'Apartamento': {
+      zona: 'Centro',
+      precioPromedio: 180000,
+      precioMinimo: 120000,
+      precioMaximo: 250000,
+      metrosCuadradosPromedio: 75,
+      ofertaDisponible: 43,
       tendencia: 'estable'
     }
   },
-  Medellín: {
-    Centro: {
-      zona: 'Centro',
-      tipoPropiedad: 'Apartamento',
-      precioPromedio: 3905405, 
-      precioMinimo: 3000000, 
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 90, 
-      tendencia: 'alza'
-    },
-    Norte: {
-      zona: 'Norte',
-      tipoPropiedad: 'Apartamento',
-      precioPromedio: 6626127, 
-      precioMinimo: 5500000, 
-      precioMaximo: 8000000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 70, 
-      tendencia: 'alza'
-    },
-    Sur: {
+  'Sur': {
+    'Casa': {
       zona: 'Sur',
-      tipoPropiedad: 'Apartamento',
-      precioPromedio: 3905405, 
-      precioMinimo: 3000000, 
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 80, 
-      tendencia: 'estable'
-    },
-    Este: {
-      zona: 'Este',
-      tipoPropiedad: 'Apartamento',
-      precioPromedio: 6426000, 
-      precioMinimo: 5000000, 
-      precioMaximo: 8000000,
-      metrosCuadradosPromedio: 85, 
-      ofertaDisponible: 60, 
+      precioPromedio: 280000,
+      precioMinimo: 180000,
+      precioMaximo: 420000,
+      metrosCuadradosPromedio: 150,
+      ofertaDisponible: 18,
       tendencia: 'alza'
     },
-    Oeste: {
-      zona: 'Oeste',
-      tipoPropiedad: 'Apartamento',
-      precioPromedio: 4264000, 
-      precioMinimo: 3000000, 
-      precioMaximo: 6000000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 60, 
+    'Apartamento': {
+      zona: 'Sur',
+      precioPromedio: 150000,
+      precioMinimo: 100000,
+      precioMaximo: 220000,
+      metrosCuadradosPromedio: 85,
+      ofertaDisponible: 32,
       tendencia: 'estable'
     }
   },
-  Cali: {
-    Centro: {
-      zona: 'Centro',
-      tipoPropiedad: 'apartamento',
-      precioPromedio: 4560000, 
-      precioMinimo: 3000000, 
-      precioMaximo: 6500000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 50, 
-      tendencia: 'estable'
-    },
-    Norte: {
+  'Norte': {
+    'Casa': {
       zona: 'Norte',
-      tipoPropiedad: 'apartamento',
-      precioPromedio: 4500000, 
-      precioMinimo: 3200000, 
-      precioMaximo: 7000000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 40, 
+      precioPromedio: 380000,
+      precioMinimo: 220000,
+      precioMaximo: 550000,
+      metrosCuadradosPromedio: 140,
+      ofertaDisponible: 22,
       tendencia: 'alza'
     },
-    Sur: {
-      zona: 'Sur',
-      tipoPropiedad: 'apartamento',
-      precioPromedio: 3500000, 
-      precioMinimo: 2500000, 
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 85, 
-      ofertaDisponible: 60, 
-      tendencia: 'estable'
-    },
-    Este: {
+    'Apartamento': {
+      zona: 'Norte',
+      precioPromedio: 200000,
+      precioMinimo: 130000,
+      precioMaximo: 280000,
+      metrosCuadradosPromedio: 90,
+      ofertaDisponible: 38,
+      tendencia: 'alza'
+    }
+  },
+  'Este': {
+    'Casa': {
       zona: 'Este',
-      tipoPropiedad: 'apartamento',
-      precioPromedio: 4000000, 
-      precioMinimo: 3000000, 
-      precioMaximo: 5500000,
-      metrosCuadradosPromedio: 80, 
-      ofertaDisponible: 45, 
+      precioPromedio: 320000,
+      precioMinimo: 190000,
+      precioMaximo: 460000,
+      metrosCuadradosPromedio: 130,
+      ofertaDisponible: 20,
       tendencia: 'estable'
     },
-    Oeste: {
-      zona: 'Oeste',
-      tipoPropiedad: 'apartamento',
-      precioPromedio: 3800000, 
-      precioMinimo: 2800000, 
-      precioMaximo: 5200000,
-      metrosCuadradosPromedio: 78, 
-      ofertaDisponible: 50, 
+    'Apartamento': {
+      zona: 'Este',
+      precioPromedio: 170000,
+      precioMinimo: 110000,
+      precioMaximo: 240000,
+      metrosCuadradosPromedio: 80,
+      ofertaDisponible: 35,
       tendencia: 'estable'
     }
   },
-  Barranquilla: {
-    Centro: {
-      zona: 'Centro',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 3790000, 
-      precioMinimo: 3000000, 
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 70, 
-      ofertaDisponible: 50, 
-      tendencia: 'alza'
-    },
-    Norte: {
-      zona: 'Norte',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 4230000, 
-      precioMinimo: 3000000, 
-      precioMaximo: 6000000,
-      metrosCuadradosPromedio: 70, 
-      ofertaDisponible: 40, 
-      tendencia: 'alza'
-    },
-    Sur: {
-      zona: 'Sur',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 3000000, 
-      precioMinimo: 2000000, 
-      precioMaximo: 4500000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 45, 
-      tendencia: 'estable'
-    },
-    Este: {
-      zona: 'Este',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 3400000, 
-      precioMinimo: 2500000, 
-      precioMaximo: 5000000,
-      metrosCuadradosPromedio: 72, 
-      ofertaDisponible: 30, 
-      tendencia: 'estable'
-    },
-    Oeste: {
+  'Oeste': {
+    'Casa': {
       zona: 'Oeste',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 3100000, 
-      precioMinimo: 2200000, 
-      precioMaximo: 4600000,
-      metrosCuadradosPromedio: 70, 
-      ofertaDisponible: 35, 
+      precioPromedio: 300000,
+      precioMinimo: 180000,
+      precioMaximo: 430000,
+      metrosCuadradosPromedio: 135,
+      ofertaDisponible: 19,
       tendencia: 'estable'
-    }
-  },
-  Cartagena: {
-    Centro: {
-      zona: 'Centro',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 6624706, 
-      precioMinimo: 4000000, 
-      precioMaximo: 10000000,
-      metrosCuadradosPromedio: 70, 
-      ofertaDisponible: 45, 
-      tendencia: 'alza'
     },
-    Norte: {
-      zona: 'Norte',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 6200000, 
-      precioMinimo: 4000000, 
-      precioMaximo: 9000000,
-      metrosCuadradosPromedio: 70, 
-      ofertaDisponible: 40, 
-      tendencia: 'alza'
-    },
-    Sur: {
-      zona: 'Sur',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 5500000, 
-      precioMinimo: 3500000, 
-      precioMaximo: 8000000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 30, 
-      tendencia: 'alza'
-    },
-    Este: {
-      zona: 'Este',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 6000000, 
-      precioMinimo: 3800000, 
-      precioMaximo: 9000000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 25, 
-      tendencia: 'alza'
-    },
-    Oeste: {
+    'Apartamento': {
       zona: 'Oeste',
-      tipoPropiedad: 'Casa',
-      precioPromedio: 5800000, 
-      precioMinimo: 3500000, 
-      precioMaximo: 8500000,
-      metrosCuadradosPromedio: 75, 
-      ofertaDisponible: 25, 
-      tendencia: 'alza'
+      precioPromedio: 160000,
+      precioMinimo: 105000,
+      precioMaximo: 230000,
+      metrosCuadradosPromedio: 78,
+      ofertaDisponible: 30,
+      tendencia: 'baja'
     }
   }
 };
 
-
-// Añadir tipos de propiedades faltantes
 const completarTiposPropiedades = () => {
   const tiposAdicionales = ['Terreno', 'Local Comercial', 'Oficina'];
   const zonas = Object.keys(datosMercadoSimulados);
@@ -303,67 +136,137 @@ const completarTiposPropiedades = () => {
   for (const zona of zonas) {
     for (const tipo of tiposAdicionales) {
       if (!datosMercadoSimulados[zona][tipo]) {
-        // Crear datos por defecto para los tipos faltantes
         datosMercadoSimulados[zona][tipo] = {
-          precioPromedio: tipo === 'Terreno' ? 20000000 : tipo === 'Local Comercial' ? 25000000 : 23000000,
-          precioMinimo: tipo === 'Terreno' ? 12000000 : tipo === 'Local Comercial' ? 15000000 : 14000000,
-          precioMaximo: tipo === 'Terreno' ? 30000000 : tipo === 'Local Comercial' ? 38000000 : 35000000,
-          metrosCuadradosPromedio: tipo === 'Terreno' ? 50000 : tipo === 'Local Comercial' ? 100000 : 90000,
+          zona,
+          precioPromedio: tipo === 'Terreno' ? 200000 : tipo === 'Local Comercial' ? 250000 : 230000,
+          precioMinimo: tipo === 'Terreno' ? 120000 : tipo === 'Local Comercial' ? 150000 : 140000,
+          precioMaximo: tipo === 'Terreno' ? 300000 : tipo === 'Local Comercial' ? 380000 : 350000,
+          metrosCuadradosPromedio: tipo === 'Terreno' ? 500 : tipo === 'Local Comercial' ? 100 : 90,
           ofertaDisponible: 15,
-          tendencia: 'estable',
-          zona: zona, 
-          tipoPropiedad: tipo 
+          tendencia: 'estable'
         };
       }
     }
   }
 };
 
-// Inicializar datos completos
 completarTiposPropiedades();
+
 
 /**
  * Analiza un inmueble basado en su descripción y características opcionales
  */
-
-export const caracteristicasDetectadas = async (
+export const analizarInmueble = async (
   descripcion: string,
-  ubicacion: string = 'Centro'
-): Promise<{
-  caracteristicasDetectadas: ICaracteristicaInmueble;
-  resumenIA: string;
-  datosMercadoZona: IMercadoData;
-} | ErrorResponse> => {
+  ubicacion: string = 'Centro',
+  caracteristicas: Partial<ICaracteristicaInmueble> = {}
+): Promise<IResultadoAnalisis> => {
   try {
-    const caracteristicas = await geminiClient.extraerCaracteristicas(descripcion) as ICaracteristicaInmueble | ErrorResponse;
+    const caracteristicasExtraidas = await geminiClient.extraerCaracteristicas(descripcion);
 
-    if ('message' in caracteristicas) {
-      return { message: caracteristicas.message };
+    if ('message' in caracteristicasExtraidas) {
+      return {
+        estimacion: {
+          precioEstimado: -1,
+          rangoMinimo: 0,
+          rangoMaximo: 0,
+          moneda: 'COP',
+          factoresConsiderados: {
+            precioBaseMercado: 0,
+            ajustesPorCaracteristicas: 0,
+          },
+          confianzaPrediccion: 0,
+        },
+        caracteristicasDetectadas: {
+          tipoPropiedad: '',
+          habitaciones: 0,
+          banos: 0,
+          metrosCuadrados: 0,
+          garaje: false,
+          piscina: false,
+          jardin: false,
+          terraza: false,
+        },
+        recomendaciones: [],
+        tendenciaMercado: {
+          tendencia: 'error',
+        demanda: 'No disponible',
+        prediccionCortoPlaza: 'No disponible',
+        tiempoPromedioVenta: 'No disponible',
+        factoresInfluyentes: ['Solo se responden preguntas relacionadas con inmuebles.']
+        }
+      };
     }
 
-    const ubicacionDetectada = caracteristicas.ubicacion ?? 'Centro';
-    const tipoDetectado = caracteristicas.tipoPropiedad ?? 'Casa';
+    // 🔽 Agrega la lógica real y el return final aquí abajo:
+    // Supongamos que caracteristicasExtraidas es válido
 
-    const ubicacionValida = datosMercadoSimulados[ubicacionDetectada]
-      ? ubicacionDetectada
-      : 'Centro';
+    const caracteristicasCompletas = {
+      ...caracteristicasExtraidas,
+      ...caracteristicas,
+      ubicacion,
+    };
 
-    const tipoValido = datosMercadoSimulados[ubicacionValida]?.[tipoDetectado]
-      ? tipoDetectado
-      : 'Casa';
+    const tipoPropiedad = caracteristicasCompletas.tipoPropiedad;
+    const datosZona = datosMercadoSimulados[ubicacion]?.[tipoPropiedad];
 
-    const datosMercadoZona = datosMercadoSimulados[ubicacionValida]?.[tipoValido];
+    const estimacion = await geminiClient.estimarPrecio(caracteristicasCompletas, datosZona);
+
+    // 🔒 Validación: si es ErrorResponse, lanzamos excepción
+    if ('message' in estimacion) {
+      throw new Error(estimacion.message);
+    }
+
+    const recomendaciones = await geminiClient.generarRecomendaciones(caracteristicasCompletas, estimacion);
+
+    const tendencia = await geminiClient.analizarTendenciaMercado(
+      ubicacion,
+      tipoPropiedad,
+      datosZona
+    );
 
     return {
-      caracteristicasDetectadas: caracteristicas,
-      resumenIA: '', // aquí iría tu resumen
-      datosMercadoZona
+      estimacion,
+      caracteristicasDetectadas: caracteristicasCompletas,
+      recomendaciones,
+      tendenciaMercado: tendencia,
     };
-  } catch (error) {
-    return { message: 'Ocurrió un error procesando las características' };
-  }
-};
 
+  } catch (error) {
+    // Manejo de error final
+    return {
+      estimacion: {
+        precioEstimado: -1,
+        rangoMinimo: 0,
+        rangoMaximo: 0,
+        moneda: 'COP',
+        factoresConsiderados: {
+          precioBaseMercado: 0,
+          ajustesPorCaracteristicas: 0,
+        },
+        confianzaPrediccion: 0,
+      },
+      caracteristicasDetectadas: {
+        tipoPropiedad: '',
+        habitaciones: 0,
+        banos: 0,
+        metrosCuadrados: 0,
+        garaje: false,
+        piscina: false,
+        jardin: false,
+        terraza: false,
+      },
+      recomendaciones: [],
+      tendenciaMercado: {
+        tendencia: 'error',
+        demanda: 'No disponible',
+        prediccionCortoPlaza: 'No disponible',
+        tiempoPromedioVenta: 'No disponible',
+        factoresInfluyentes: [(error as Error).message],
+      }
+    };
+  }
+}
 
 /**
  * Obtiene los filtros disponibles para el análisis de inmuebles
@@ -479,51 +382,73 @@ export const analizarTendenciasMercado = async (
   tipoPropiedad: string,
   factoresAdicionales: Record<string, any> = {}
 ): Promise<any> => {
+  try {
+    // Validar que la zona exista en los datos
+    if (!datosMercadoSimulados[zona]) {
+      zona = 'Centro';
+    }
+    
+    // Validar que el tipo de propiedad exista en la zona
+    if (!datosMercadoSimulados[zona][tipoPropiedad]) {
+      tipoPropiedad = 'Casa';
+    }
+    
+    // Obtener datos base del mercado
+    const datosMercadoZona = datosMercadoSimulados[zona];
+    const datosTipoPropiedad = datosMercadoZona[tipoPropiedad];
+    
     try {
-      // Validar que la zona exista en los datos
-      if (!datosMercadoSimulados[zona]) {
-        zona = 'Centro';
-      }
+      // Utilizar IA para un análisis más profundo de tendencias
+      const prompt = `Eres un analista experto en el mercado inmobiliario. Realiza un análisis detallado
+      de las tendencias del mercado para la zona y tipo de propiedad especificados, considerando 
+      los factores adicionales proporcionados. Incluye proyecciones a corto y mediano plazo, 
+      factores macroeconómicos, y recomendaciones para inversores. Responde con un objeto JSON 
+      estructurado con análisis detallado.
       
-      // Validar que el tipo de propiedad exista en la zona
-      if (!datosMercadoSimulados[zona][tipoPropiedad]) {
-        tipoPropiedad = 'Casa';
-      }
-      
-      // Obtener datos base del mercado
-      const datosMercadoZona = datosMercadoSimulados[zona];
-      const datosTipoPropiedad = datosMercadoZona[tipoPropiedad];
-      
-      try {
-        // Utilizar IA para un análisis más profundo de tendencias
-        const prompt = `Eres un analista experto en el mercado inmobiliario. Realiza un análisis detallado
-        de las tendencias del mercado para la zona y tipo de propiedad especificados, considerando 
-        los factores adicionales proporcionados. Incluye proyecciones a corto y mediano plazo, 
-        factores macroeconómicos, y recomendaciones para inversores. Responde con un objeto JSON 
-        estructurado con análisis detallado.
-        
-        Zona: ${zona}
-        Tipo de propiedad: ${tipoPropiedad}
-        Datos del mercado: ${JSON.stringify(datosTipoPropiedad)}
-        Factores adicionales: ${JSON.stringify(factoresAdicionales)}`;
+      Zona: ${zona}
+      Tipo de propiedad: ${tipoPropiedad}
+      Datos del mercado: ${JSON.stringify(datosTipoPropiedad)}
+      Factores adicionales: ${JSON.stringify(factoresAdicionales)}`;
 
-        const result = await geminiClient.model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        
-        // Extraer solo el objeto JSON de la respuesta
-        const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
-        return JSON.parse(jsonStr);
-      } catch (error) {
-        console.error('Error al analizar tendencias con IA avanzada:', error);
-        throw new Error('Error en el análisis avanzado con IA');
-      }
+      const result = await geminiClient.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Extraer solo el objeto JSON de la respuesta
+      const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || '{}';
+      return JSON.parse(jsonStr);
     } catch (error) {
-      console.error('Error global en análisis de tendencias de mercado:', error);
-      
-      
+      console.error('Error al analizar tendencias con IA avanzada:', error);
+      throw new Error('Error en el análisis avanzado con IA');
+    }
+  } catch (error) {
+    console.error('Error global en análisis de tendencias de mercado:', error);
+    
+    // Devolver un análisis básico en caso de error
+    return {
+      tendencia: datosMercadoSimulados.Centro.Casa.tendencia,
+      proyeccionCortoPlaza: 'Se espera que los precios se mantengan estables en los próximos 3-6 meses',
+      proyeccionMedianoPlaza: 'Condicionada a factores macroeconómicos',
+      factoresInfluyentes: [
+        'Tasas de interés',
+        'Oferta y demanda local',
+        'Situación económica general',
+        'Desarrollo de infraestructuras en la zona'
+      ],
+      recomendacionesInversores: [
+        'Diversificar cartera inmobiliaria',
+        'Considerar propiedades con potencial de revalorización',
+        'Evaluar cuidadosamente la relación precio-calidad'
+      ],
+      indicadoresEconomicos: {
+        impactoTasasInteres: 'Moderado',
+        impactoInflacion: 'Medio',
+        impactoEmpleo: 'Bajo'
+      },
+      confianzaAnalisis: 0.75
     };
   }
+};
 
 /**
  * Compara propiedades similares para evaluar competitividad de precios
@@ -599,79 +524,86 @@ export const compararPropiedadesSimilares = async (
     }
   } catch (error) {
     console.error('Error al comparar propiedades similares:', error);
+    
+    // Devolver una comparación básica en caso de error
+    return {
+      precioOfertado,
+      diferenciaPorcentual: 0,
+      precioPromedioZona: 250000,
+      posicionCompetitiva: 'En línea con el mercado',
+      recomendacionesEstrategicas: [
+        'Revisar el precio según las características de la propiedad',
+        'Destacar elementos diferenciales en la promoción'
+      ],
+      tiempoEstimadoVenta: '90 días'
+    };
   }
 };
 
 /**
  * Genera un informe completo de valoración inmobiliaria
  */
-function detectarZonaDesdeUbicacion(ubicacion: string): string {
-  const zonas = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
-  const lowerUbicacion = ubicacion.toLowerCase();
-
-  for (const zona of zonas) {
-    if (lowerUbicacion.includes(zona.toLowerCase())) {
-      return zona;
-    }
-  }
-
-  return 'Centro'; // Valor por defecto si no se detecta
-}
-
 export const generarInformeValoracion = async (
   descripcion: string,
-  barrio: string,
-  ciudad: string,
-  infoParcial?: Partial<ICaracteristicaInmueble>
-) => {
+  ubicacion: string,
+  caracteristicas: Partial<ICaracteristicaInmueble>
+): Promise<any> => {
   try {
-    let caracteristicas: ICaracteristicaInmueble;
-
-    if (!infoParcial || Object.keys(infoParcial).length === 0) {
-      const extraidas = await geminiClient.extraerCaracteristicas(descripcion);
-
-      if ('message' in extraidas) {
-        throw new Error(extraidas.message);
-      }
-
-      caracteristicas = extraidas;
-    } else {
-      caracteristicas = {
-        tipoPropiedad: infoParcial.tipoPropiedad || 'Apartamento',
-        habitaciones: infoParcial.habitaciones || 0,
-        banos: infoParcial.banos || 0,
-        metrosCuadrados: infoParcial.metrosCuadrados || 0,
-        garaje: infoParcial.garaje || false,
-        piscina: infoParcial.piscina || false,
-        jardin: infoParcial.jardin || false,
-        terraza: infoParcial.terraza || false,
-        ubicacion: infoParcial.ubicacion || `${barrio}, ${ciudad}`,
-        antiguedad: infoParcial.antiguedad || (new Date().getFullYear() - 2020)
-      };
-    }
-
-    // Detectar zona
-    const zona = detectarZonaDesdeUbicacion(caracteristicas.ubicacion!);
-    const datosCiudad = datosMercadoSimulados[ciudad as keyof typeof datosMercadoSimulados];
-    const datosZona = (datosCiudad?.[zona as keyof typeof datosCiudad] as any)?.[caracteristicas.tipoPropiedad];
-
-
-    if (!datosZona) {
-      throw new Error(`No hay datos disponibles para ${caracteristicas.tipoPropiedad} en la zona ${zona} de ${ciudad}`);
-    }
-
-    const estimacion = await geminiClient.estimarPrecio(caracteristicas, datosZona);
-
-    if ('message' in estimacion) {
-      throw new Error(estimacion.message);
-    }
-
+    // Realizar análisis completo del inmueble
+    const resultadoAnalisis = await analizarInmueble(descripcion, ubicacion, caracteristicas);
+    
+    // Obtener datos de mercado para comparación
+    const datosMercado = await obtenerEstadisticasMercado(
+      ubicacion || 'Centro',
+      resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
+    );
+    
+    // Generar comparativa de propiedades similares
+    const comparativa = await compararPropiedadesSimilares(
+      resultadoAnalisis.caracteristicasDetectadas,
+      resultadoAnalisis.estimacion.precioEstimado
+    );
+    
+    // Analizar tendencias de mercado específicas
+    const tendencias = await analizarTendenciasMercado(
+      ubicacion || 'Centro',
+      resultadoAnalisis.caracteristicasDetectadas.tipoPropiedad
+    );
+    
+    // Estructurar el informe completo
     return {
-      caracteristicasDetectadas: caracteristicas,
-      estimacionPrecio: estimacion,
-      resumenIA: '' // Opcional: puedes generar aquí un resumen si quieres
+      fechaInforme: new Date().toISOString().split('T')[0],
+      codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
+      resultadoAnalisis,
+      datosMercado,
+      comparativaCompetitiva: comparativa,
+      tendenciasMercado: tendencias,
+      conclusiones: {
+        valorOptimo: resultadoAnalisis.estimacion.precioEstimado,
+        rangoNegociacion: {
+          minimo: resultadoAnalisis.estimacion.rangoMinimo,
+          maximo: resultadoAnalisis.estimacion.rangoMaximo
+        },
+        estrategiaRecomendada: comparativa.posicionCompetitiva === 'Por encima del mercado' ?
+          'Ajustar precio para alinearse con el mercado' : 'Mantener precio destacando características distintivas',
+        tiempoEstimadoVenta: comparativa.tiempoEstimadoVenta
+      },
+      metodologiaValoracion: [
+        'Análisis comparativo de mercado',
+        'Evaluación de características y estado',
+        'Proyección de tendencias inmobiliarias',
+        'Inteligencia artificial avanzada'
+      ]
     };
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message : 'Error en la valoración automática');
+    console.error('Error al generar informe de valoración:', error);
+    
+    // Devolver un informe básico en caso de error
+    return {
+      fechaInforme: new Date().toISOString().split('T')[0],
+      codigoReferencia: `VAL-${Date.now().toString().slice(-8)}`,
+      mensaje: 'No se pudo generar el informe detallado debido a un error técnico',
+      recomendacion: 'Intente de nuevo más tarde o contacte con nuestro servicio de atención al cliente'
+    };
   }
 };
