@@ -60,6 +60,8 @@ export const getRealEstateStatistics = async () => {
     return await realEstateRepo.getRealEstateStats();
 };
 
+
+
 export default {
     registerRealEstate,
     fetchAllRealEstates,
