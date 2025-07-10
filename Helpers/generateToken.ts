@@ -8,12 +8,10 @@ const generateToken = (properties: any, minutes: number) => {
   }
 
   return jwt.sign(
-    {
-      ...properties, // all properties are placed at the root level of the token
-      exp: Math.floor(Date.now() / 1000) + minutes * 60,
-    },
-    secretKey
-  );
+  properties, // Sin añadir `exp` manualmente
+  secretKey,
+  { expiresIn: '2h' } // 2 horas (también vale '120m' o '7200s')
+);
 };
 
 export default generateToken;
