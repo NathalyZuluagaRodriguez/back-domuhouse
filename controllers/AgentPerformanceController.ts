@@ -1,22 +1,26 @@
 // src/controllers/getAgentPerformanceByIdController.ts
 import { Request, Response } from "express";
-import { getAgentePerformanceReportById } from "../services/propertyServices";
+import PropertyService from "../services/propertyServices";
 
-const getAgentePerformanceById = async (req: Request, res: Response) => {
-  const { id } = req.params;
+const getAgentPerformanceById = async (req: Request, res: Response) => {
+  let { id } = req.params;
+
+  if (!id || isNaN(Number(id))) {
+    return res.status(400).json({ error: "Invalid agent ID" });
+  }
 
   try {
-    const resultados = await getAgentePerformanceReportById(Number(id));
+    let result = await PropertyService.getAgentPerformanceReportById(Number(id));
 
-    if (resultados.length === 0) {
-      return res.status(404).json({ message: "Agente no encontrado o sin registros." });
+    if (!result) {
+      return res.status(404).json({ message: "Agent not found or no records." });
     }
 
-    return res.status(200).json(resultados[0]);
+    return res.status(200).json(result);
   } catch (error: any) {
-    console.error("Error al obtener desempeño del agente:", error);
+    console.error("Error fetching agent performance:", error);
     return res.status(500).json({ error: error.message });
   }
 };
 
-export default getAgentePerformanceById;
+export default getAgentPerformanceById;

@@ -50,19 +50,3 @@ export const obtenerDatosMercado = async (req: Request, res: Response): Promise<
   }
 };
 
-export const analizarTendenciasAvanzado = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { zona, tipoPropiedad, factoresAdicionales } = req.body;
-    
-    if (!zona || !tipoPropiedad) {
-      responseFormatter.error(res, 'Se requiere zona y tipo de propiedad para el análisis', 400);
-      return;
-    }
-    
-    const resultado = await iaService.analizarTendenciasMercado(zona, tipoPropiedad, factoresAdicionales);
-    responseFormatter.success(res, resultado, 'Análisis de tendencias de mercado exitoso', 200);
-  } catch (error) {
-    console.error('Error al analizar tendencias de mercado:', error);
-    responseFormatter.error(res, 'Error en el análisis de tendencias de mercado', 500);
-  }
-};

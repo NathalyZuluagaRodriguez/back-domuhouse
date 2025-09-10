@@ -8,14 +8,14 @@ import {
 import { geminiClient } from '../utils/GeminiClient';
 
 // Datos de mercado para complementar la IA
-// En producción, estos datos vendrían de una base de datos actualizada
-interface IMercadoData {
+export interface IMercadoData {
   precioPromedio: number;
   precioMinimo: number;
   precioMaximo: number;
   metrosCuadradosPromedio: number;
   ofertaDisponible: number;
   tendencia: string;
+  zona: string;
 }
 
 interface ITiposPropiedades {
@@ -29,14 +29,16 @@ interface IZonasMercado {
 const datosMercadoSimulados: IZonasMercado = {
   'Centro': {
     'Casa': {
+      zona: 'Centro',
       precioPromedio: 350000,
       precioMinimo: 200000,
       precioMaximo: 500000,
       metrosCuadradosPromedio: 120,
       ofertaDisponible: 25,
-      tendencia: 'alza'
+      tendencia: 'alza',
     },
     'Apartamento': {
+      zona: 'Centro',
       precioPromedio: 180000,
       precioMinimo: 120000,
       precioMaximo: 250000,
@@ -47,6 +49,7 @@ const datosMercadoSimulados: IZonasMercado = {
   },
   'Sur': {
     'Casa': {
+      zona: 'Sur',
       precioPromedio: 280000,
       precioMinimo: 180000,
       precioMaximo: 420000,
@@ -55,6 +58,7 @@ const datosMercadoSimulados: IZonasMercado = {
       tendencia: 'alza'
     },
     'Apartamento': {
+      zona: 'Sur',
       precioPromedio: 150000,
       precioMinimo: 100000,
       precioMaximo: 220000,
@@ -65,6 +69,7 @@ const datosMercadoSimulados: IZonasMercado = {
   },
   'Norte': {
     'Casa': {
+      zona: 'Norte',
       precioPromedio: 380000,
       precioMinimo: 220000,
       precioMaximo: 550000,
@@ -73,6 +78,7 @@ const datosMercadoSimulados: IZonasMercado = {
       tendencia: 'alza'
     },
     'Apartamento': {
+      zona: 'Norte',
       precioPromedio: 200000,
       precioMinimo: 130000,
       precioMaximo: 280000,
@@ -83,6 +89,7 @@ const datosMercadoSimulados: IZonasMercado = {
   },
   'Este': {
     'Casa': {
+      zona: 'Este',
       precioPromedio: 320000,
       precioMinimo: 190000,
       precioMaximo: 460000,
@@ -91,6 +98,7 @@ const datosMercadoSimulados: IZonasMercado = {
       tendencia: 'estable'
     },
     'Apartamento': {
+      zona: 'Este',
       precioPromedio: 170000,
       precioMinimo: 110000,
       precioMaximo: 240000,
@@ -101,6 +109,7 @@ const datosMercadoSimulados: IZonasMercado = {
   },
   'Oeste': {
     'Casa': {
+      zona: 'Oeste',
       precioPromedio: 300000,
       precioMinimo: 180000,
       precioMaximo: 430000,
@@ -109,6 +118,7 @@ const datosMercadoSimulados: IZonasMercado = {
       tendencia: 'estable'
     },
     'Apartamento': {
+      zona: 'Oeste',
       precioPromedio: 160000,
       precioMinimo: 105000,
       precioMaximo: 230000,
@@ -119,7 +129,6 @@ const datosMercadoSimulados: IZonasMercado = {
   }
 };
 
-// Añadir tipos de propiedades faltantes
 const completarTiposPropiedades = () => {
   const tiposAdicionales = ['Terreno', 'Local Comercial', 'Oficina'];
   const zonas = Object.keys(datosMercadoSimulados);
@@ -127,8 +136,8 @@ const completarTiposPropiedades = () => {
   for (const zona of zonas) {
     for (const tipo of tiposAdicionales) {
       if (!datosMercadoSimulados[zona][tipo]) {
-        // Crear datos por defecto para los tipos faltantes
         datosMercadoSimulados[zona][tipo] = {
+          zona,
           precioPromedio: tipo === 'Terreno' ? 200000 : tipo === 'Local Comercial' ? 250000 : 230000,
           precioMinimo: tipo === 'Terreno' ? 120000 : tipo === 'Local Comercial' ? 150000 : 140000,
           precioMaximo: tipo === 'Terreno' ? 300000 : tipo === 'Local Comercial' ? 380000 : 350000,
@@ -141,101 +150,123 @@ const completarTiposPropiedades = () => {
   }
 };
 
-// Inicializar datos completos
 completarTiposPropiedades();
+
 
 /**
  * Analiza un inmueble basado en su descripción y características opcionales
  */
 export const analizarInmueble = async (
-  descripcion: string, 
-  ubicacion: string = 'Centro', 
+  descripcion: string,
+  ubicacion: string = 'Centro',
   caracteristicas: Partial<ICaracteristicaInmueble> = {}
 ): Promise<IResultadoAnalisis> => {
   try {
-    // Análisis de texto para extraer características del inmueble usando IA
     const caracteristicasExtraidas = await geminiClient.extraerCaracteristicas(descripcion);
-    
-    // Combinar características extraídas con las proporcionadas
-    const caracteristicasCompletas: ICaracteristicaInmueble = {
+
+    if ('message' in caracteristicasExtraidas) {
+      return {
+        estimacion: {
+          precioEstimado: -1,
+          rangoMinimo: 0,
+          rangoMaximo: 0,
+          moneda: 'COP',
+          factoresConsiderados: {
+            precioBaseMercado: 0,
+            ajustesPorCaracteristicas: 0,
+          },
+          confianzaPrediccion: 0,
+        },
+        caracteristicasDetectadas: {
+          tipoPropiedad: '',
+          habitaciones: 0,
+          banos: 0,
+          metrosCuadrados: 0,
+          garaje: false,
+          piscina: false,
+          jardin: false,
+          terraza: false,
+        },
+        recomendaciones: [],
+        tendenciaMercado: {
+          tendencia: 'error',
+        demanda: 'No disponible',
+        prediccionCortoPlaza: 'No disponible',
+        tiempoPromedioVenta: 'No disponible',
+        factoresInfluyentes: ['Solo se responden preguntas relacionadas con inmuebles.']
+        }
+      };
+    }
+
+    // 🔽 Agrega la lógica real y el return final aquí abajo:
+    // Supongamos que caracteristicasExtraidas es válido
+
+    const caracteristicasCompletas = {
       ...caracteristicasExtraidas,
       ...caracteristicas,
-      ubicacion: ubicacion || caracteristicasExtraidas.ubicacion || 'Centro'
+      ubicacion,
     };
-    
-    // Validar que la ubicación exista en los datos de mercado
-    const ubicacionValida = caracteristicasCompletas.ubicacion && 
-      caracteristicasCompletas.ubicacion in datosMercadoSimulados ? 
-      caracteristicasCompletas.ubicacion : 'Centro';
-    
-    // Obtener datos del mercado para la ubicación y tipo de propiedad
-    const datosMercadoZona = datosMercadoSimulados[ubicacionValida];
-    
-    // Validar que el tipo de propiedad exista en los datos de mercado
-    const tipoValido = caracteristicasCompletas.tipoPropiedad in datosMercadoZona ? 
-      caracteristicasCompletas.tipoPropiedad : 'Casa';
-    
-    const datosTipoPropiedad = datosMercadoZona[tipoValido];
-    
-    // Calcular estimación de precio con IA
-    const estimacion = await geminiClient.estimarPrecio(caracteristicasCompletas, datosTipoPropiedad);
-    
-    // Recomendaciones basadas en el análisis con IA
+
+    const tipoPropiedad = caracteristicasCompletas.tipoPropiedad;
+    const datosZona = datosMercadoSimulados[ubicacion]?.[tipoPropiedad];
+
+    const estimacion = await geminiClient.estimarPrecio(caracteristicasCompletas, datosZona);
+
+    // 🔒 Validación: si es ErrorResponse, lanzamos excepción
+    if ('message' in estimacion) {
+      throw new Error(estimacion.message);
+    }
+
     const recomendaciones = await geminiClient.generarRecomendaciones(caracteristicasCompletas, estimacion);
-    
-    // Análisis de tendencia de mercado con IA
+
     const tendencia = await geminiClient.analizarTendenciaMercado(
-      ubicacionValida,
-      tipoValido,
-      datosTipoPropiedad
+      ubicacion,
+      tipoPropiedad,
+      datosZona
     );
-    
+
     return {
       estimacion,
       caracteristicasDetectadas: caracteristicasCompletas,
       recomendaciones,
-      tendenciaMercado: tendencia
+      tendenciaMercado: tendencia,
     };
+
   } catch (error) {
-    console.error('Error en el análisis del inmueble:', error);
-    
-    // Devolver un resultado por defecto en caso de error
+    // Manejo de error final
     return {
       estimacion: {
-        precioEstimado: 250000,
-        rangoMinimo: 225000,
-        rangoMaximo: 275000,
-        moneda: 'USD',
+        precioEstimado: -1,
+        rangoMinimo: 0,
+        rangoMaximo: 0,
+        moneda: 'COP',
         factoresConsiderados: {
-          precioBaseMercado: 250000,
-          ajustesPorCaracteristicas: 0
+          precioBaseMercado: 0,
+          ajustesPorCaracteristicas: 0,
         },
-        confianzaPrediccion: 0.7
+        confianzaPrediccion: 0,
       },
       caracteristicasDetectadas: {
-        tipoPropiedad: 'Casa',
-        habitaciones: 3,
-        banos: 2,
-        metrosCuadrados: 120,
+        tipoPropiedad: '',
+        habitaciones: 0,
+        banos: 0,
+        metrosCuadrados: 0,
         garaje: false,
         piscina: false,
         jardin: false,
         terraza: false,
-        ubicacion: ubicacion || 'Centro'
       },
-      recomendaciones: [
-        'Para una valoración más precisa, considere solicitar una visita de un tasador profesional.'
-      ],
+      recomendaciones: [],
       tendenciaMercado: {
-        tendencia: 'estable',
-        demanda: 'Media',
-        prediccionCortoPlaza: 'Se espera que los precios se mantengan estables en los próximos meses',
-        tiempoPromedioVenta: '90 días',
-        factoresInfluyentes: ['Condiciones económicas generales', 'Oferta y demanda local']
+        tendencia: 'error',
+        demanda: 'No disponible',
+        prediccionCortoPlaza: 'No disponible',
+        tiempoPromedioVenta: 'No disponible',
+        factoresInfluyentes: [(error as Error).message],
       }
     };
   }
-};
+}
 
 /**
  * Obtiene los filtros disponibles para el análisis de inmuebles
