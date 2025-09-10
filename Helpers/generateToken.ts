@@ -1,21 +1,19 @@
 import jwt from 'jsonwebtoken';
 
-let generateToken = (properties: any, minutes: number) => {
-    const secretKey = process.env.JWT_SECRET; 
-    
-    if (!secretKey) {
-        throw new Error("La clave secreta JWT no está definida en el archivo .env");
-    }
+const generateToken = (properties: any, minutes: number) => {
+  const secretKey = process.env.JWT_SECRET;
 
-    return jwt.sign( {
-    ...properties, // así todos los datos quedan al nivel raíz
-    exp: Math.floor(Date.now() / 1000) + minutes * 60,
-  },
-  secretKey);
+  if (!secretKey) {
+    throw new Error("JWT secret key is not defined in the .env file");
+  }
+
+  return jwt.sign(
+    {
+      ...properties, // all properties are placed at the root level of the token
+      exp: Math.floor(Date.now() / 1000) + minutes * 60,
+    },
+    secretKey
+  );
 };
 
 export default generateToken;
-
-
-
-

@@ -3,22 +3,22 @@ import { Request, Response } from "express";
 import nodemailer from "nodemailer";
 import promisePool from "../config/config-db";
 
-const generarCodigo = (): string => {
+const generateCode  = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
 };
 
-const validarCorreo = async (req: Request, res: Response) => {
+const validateEmail  = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "El correo es obligatorio." });
   }
 
-  const codigo = generarCodigo();
+  const codigo = generateCode ();
 
   try {
     // Guardar código en la base de datos
-    await promisePool.query("CALL sp_guardar_codigo_verificacion(?, ?)", [email, codigo]);
+    await promisePool.query("CALL sp_save_verification_code(?, ?)", [email, codigo]);
 
     // Configurar transporte de nodemailer
     const transporter = nodemailer.createTransport({
@@ -45,4 +45,4 @@ const validarCorreo = async (req: Request, res: Response) => {
   }
 };
 
-export default validarCorreo;
+export default validateEmail ;

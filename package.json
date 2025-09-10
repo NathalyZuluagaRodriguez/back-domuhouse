@@ -1,13 +1,17 @@
 {
-  "name": "correo-verificacion",
+  "name": "Back",
   "version": "1.0.0",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts"
+    "dev": "ts-node-dev src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/app.js",
+    "build": "tsc -p ."
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.1",

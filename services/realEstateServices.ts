@@ -56,6 +56,16 @@ const registerRealEstate = async (data: NewRealEstate) => {
     }
 };
 
+export const fetchAllRealEstates = async (): Promise<any[]> => {
+  return await realEstateRepo.getAllRealEstates();
+};
+
+export const getRealEstateStatistics = async () => {
+    return await realEstateRepo.getRealEstateStats();
+};
+
 export default {
     registerRealEstate,
+    fetchAllRealEstates,
+    getRealEstateStatistics
 };

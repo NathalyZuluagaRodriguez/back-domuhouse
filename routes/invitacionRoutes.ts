@@ -1,9 +1,9 @@
 // routes/invitacionRoutes.ts
 import { Router } from 'express';
-import { generarInvitacion } from '../controllers/invitacionController';
+import { generateInvitation } from '../controllers/invitationController';
 
 const router = Router();
 
-router.post('/generar-token', generarInvitacion);
+router.post('/generar-token', generateInvitation);
 
 export default router;
