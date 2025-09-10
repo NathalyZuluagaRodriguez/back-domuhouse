@@ -12,7 +12,4 @@ router.get('/filtros', iaController.obtenerFiltros);
 // RF03.3 - Obtener datos del mercado inmobiliario
 router.get('/mercado', iaController.obtenerDatosMercado);
 
-// Nueva ruta para análisis de tendencias avanzado
-router.post('/analisis-tendencias', iaController.analizarTendenciasAvanzado);
-
 export default router;

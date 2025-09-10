@@ -1,5 +1,5 @@
 export interface AdminRegisterDto {
-  first_name: string;
+  name_person: string;
   last_name: string;
   phone: string;
   email: string;

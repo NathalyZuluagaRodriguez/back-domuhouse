@@ -9,27 +9,36 @@ import {
   getProperties,
   getApprovedProperties,
   getPropertiesByType,
-  getPropertyById
+  getPropertyById,
+  getPropertyImages,
+  getPropertiesWithMainImages,
+  getPropertyMainImage,
+  getMyProperties
 } from '../controllers/propertyController';
+import { getUserProperties } from '../controllers/userPropertyController';
+import { verifyToken } from '../middleware/VerifyToken';
 
 const router = express.Router();
 
 // 🏠 RUTAS PÚBLICAS (sin autenticación)
-
+// f
 // ✅ Crear propiedad - CON UPLOAD DE IMÁGENES
-router.post('/', upload.array('images', 10), createProperty);
+router.post('/create', upload.array('images', 10), createProperty);
 
 // ✅ Editar propiedad
-router.put('/:id', editProperty);
+router.put("/editar/:id", upload.array("images", 10), editProperty);
 
 // ✅ Eliminar propiedad
-router.delete('/:id', deleteProperty);
+router.delete('/eliminar/:id', deleteProperty);
+
+// En tu archivo de rutas
+router.get('/details/:id/images', getPropertyImages);  
 
 // ✅ Aprobar propiedad
 router.patch('/:id/approve', approveProperty);
 
 // ✅ Obtener todas las propiedades
-router.get('/', getProperties);
+router.get('/get', getProperties);
 
 // ✅ Obtener propiedades aprobadas
 router.get('/approved', getApprovedProperties);
@@ -38,6 +47,16 @@ router.get('/approved', getApprovedProperties);
 router.get('/type/:property_type_id', getPropertiesByType);
 
 // ✅ Obtener propiedad por ID (debe ir al final para evitar conflictos)
-router.get('/:id', getPropertyById);
+router.get('/details/:id', getPropertyById);                  // GET /api/properties/details/:id
+
+router.get('/mis-propiedades', verifyToken, getUserProperties);
+
+router.get("/properties/approved", getApprovedProperties)
+
+// ✅ Nuevas rutas para imágenes
+router.get("/properties/with-images", getPropertiesWithMainImages)
+router.get("/properties/:id/main-image", getPropertyMainImage)
+router.get('/mis-propiedades/:personId', getMyProperties);
+
 
 export default router;

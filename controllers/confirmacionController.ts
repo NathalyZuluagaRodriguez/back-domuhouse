@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import pool from '../config/config-db';
 import nodemailer from 'nodemailer';
 
-export const confirmarRegistro = async (req: Request, res: Response) => {
+export const confirmRegister = async (req: Request, res: Response) => {
   const { correo } = req.params;
 
   try {
